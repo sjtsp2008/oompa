@@ -13,6 +13,17 @@ moving to git
 
 git init
 
+# add everything
+#
+# ??? had to add *~ to local .gitignore
+# ??? could not find git config folder in $HOME
+
+commit
+
+create the develop branch
+
+git checkout -b develop master
+
 
 
 

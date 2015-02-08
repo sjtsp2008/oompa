@@ -357,12 +357,12 @@ class SourceTracker:
                     print("  already exists: %s" % local_path)
                     continue
 
-                if not os.path.exists(parent_folder):
-                    os.makedirs(parent_folder)
-                    pass
-                
                 full_parent_folder = os.path.join(local_base, parent_folder)
 
+                if not os.path.exists(full_parent_folder):
+                    os.makedirs(full_parent_folder)
+                    pass
+                
                 # XXX code expects that we are checking out in to "os.cwd"
                 os.chdir(full_parent_folder)
                 
@@ -373,9 +373,6 @@ class SourceTracker:
                     pass
     
                 link_path      = self.track(project_folder)
-
-                # print("   tracker link path: %s" % link_path)
-                # print("breaking after one"); break
                 pass
             pass
         
