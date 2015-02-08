@@ -1,0 +1,636 @@
+
+[20140208]
+
+full import
+
+  fix goof with deeper and deeper relative paths
+
+----
+
+moving to git
+
+# remove .hg and .hgignore
+
+git init
+
+
+
+
+[20140207]
+
+added "urls" command, to export tracked projects from laptop,
+and "import" command, to check them out on new-mac
+
+only mildly tested import - just a few projects
+
+
+[20140201]
+
+tracker update >> ~/tracker-logs/$(date +%Y%m%d).tracker.log &
+
+  fixing some issues with fasle git conflicts ...
+
+
+
+updating /home/jeff/src/tracking/games/rpg/stendhal/maurauroa/marauroa
+  pull result: 1
+
+error: Your local changes to the following files would be overwritten by merge:
+	functional_tests/marauroa/clientconnect/ClientConnectTest.java
+	functional_tests/marauroa/helper/ResetMarauroaSingleton.java
+Please, commit your changes or stash them before you can merge.
+Aborting
+Updating 1459aa9..203f994
+
+  result: /home/jeff/src/tracking/games/rpg/stendhal/maurauroa/marauroa - 1
+
+
+cd /home/jeff/src/games/rpg/stendhal/maurauroa/git/marauroa
+
+# try it (what tracker does)
+
+git pull
+
+  <same problem>
+
+git branch
+
+  * master
+
+git reset --hard
+
+  HEAD is now at 1459aa9 deleted pom.xml because it does not work, yet.
+
+git pull
+
+  still no
+
+git reset --hard origin/master
+
+  HEAD is now at 203f994 Normalized line endings
+
+git pull
+
+  Already up-to-date.
+
+
+updating /home/jeff/src/tracking/games/ccg/mtg/jportal/jportaltgc-code
+
+svn: Network connection closed unexpectedly
+
+  XXX something wrong?  result: 1
+      cd /home/jeff/src/tracking/games/ccg/mtg/jportal/jportaltgc-code; svn update
+  result: /home/jeff/src/tracking/games/ccg/mtg/jportal/jportaltgc-code - 1
+
+
+updating /home/jeff/src/tracking/games/ccg/mtg/jportal/jportaltgc-code
+
+svn: Network connection closed unexpectedly
+
+  XXX something wrong?  result: 1
+      cd /home/jeff/src/tracking/games/ccg/mtg/jportal/jportaltgc-code; svn update
+  result: /home/jeff/src/tracking/games/ccg/mtg/jportal/jportaltgc-code - 1
+
+
+check .svn/entries
+
+  svn://svn.code.sf.net/p/jportaltgc/code
+
+  here is what sf says to check out:
+
+    # svn checkout svn://svn.code.sf.net/p/jportaltgc/code/ jportaltgc-code
+
+svn up
+
+  svn: Network connection closed unexpectedly
+
+# try another checkout.  hail mary
+
+mv jportaltgc-code jportaltgc-code-
+
+svn checkout svn://svn.code.sf.net/p/jportaltgc/code/ jportaltgc-code
+
+  worked!
+
+rm -rf jportaltgc-code-
+
+----
+
+updating /home/jeff/src/tracking/games/puzzles/nonogram/freenono/feenono-svn
+
+svn: Network connection closed unexpectedly
+
+  XXX something wrong?  result: 1
+      cd /home/jeff/src/tracking/games/puzzles/nonogram/freenono/feenono-svn; svn update
+  result: /home/jeff/src/tracking/games/puzzles/nonogram/freenono/feenono-svn - 1
+
+
+probably same issue as jportalgc, above
+
+cd /home/jeff/src/games/puzzles/nonogram/freenono/svn/feenono-svn
+
+  # ?  feenono-svn ?
+
+svn up
+
+  svn: Network connection closed unexpectedly
+
+mv feenono-svn feenono-svn-
+
+head feenono-svn-/.svn/entries 
+
+svn co svn://svn.code.sf.net/p/freenono/svn
+
+  svn: Network connection closed unexpectedly
+
+
+svn checkout svn://svn.code.sf.net/p/freenono/svn/trunk freenono-svn
+
+  worked.  so what is the difference?
+
+----
+
+updating /home/jeff/src/tracking/mining/gensim/gensim
+  pull result: 1
+
+You asked me to pull without telling me which branch you
+want to merge with, and 'branch.deep-tracing.merge' in
+your configuration file does not tell me, either. Please
+specify which branch you want to use on the command line and
+try again (e.g. 'git pull <repository> <refspec>').
+See git-pull(1) for details.
+
+If you often merge with the same branch, you may want to
+use something like the following in your configuration file:
+    [branch "deep-tracing"]
+    remote = <nickname>
+    merge = <remote-ref>
+
+    [remote "<nickname>"]
+    url = <url>
+    fetch = <refspec>
+
+See git-config(1) for details.
+
+  result: /home/jeff/src/tracking/mining/gensim/gensim - 1
+
+
+this one is probably trickier.  i *have* done a ton of work in a gensim 
+checkout, but i thought it was separate
+
+
+ah, right.  this was an experiment in trying to work on a branch
+in the same repo that i'm updating.  i don't think it worked
+
+just start over.  moved git to git-failed-attempted-deep-tracing-branch
+
+----
+
+updating /home/jeff/src/tracking/cloud/impala/impala
+
+  Username for 'https://github.com': 
+
+mv impala impala-
+
+git clone https://github.com/cloudera/Impala.git
+
+# XXX have to fix the tracker link
+
+
+
+
+
+
+
+
+
+
+[20131210]
+
+added another git pattern: http://git.code.sf.net/p/guitarix/git
+
+updated tests
+
+cd sandbox/oompa
+
+nosetests
+
+  failed.  not sure why, but not about this change
+
+cd tracking/tests
+
+nosetests
+
+  yep, works
+
+----
+
+this checkout (with an alternate name) is throwing the checkout off:
+
+instructions say "git clone http://git.code.sf.net/p/guitarix/git guitarix"
+
+tracker co http://git.code.sf.net/p/guitarix/git guitarix
+
+  the project is checked out as "git", not "guitarix"
+
+  write some tests in test_VCSBackend, and fix VCSBackend._determine_project_name
+
+tracker co http://git.code.sf.net/p/guitarix/git guitarix
+
+  figured out guitarix, but checked out in to git/git/guitarix
+
+enough for today.  just check out and track the hard way this time
+
+
+
+
+[20120219]
+
+added another git pattern - git://
+
+trying to find the problem with checkout - always crashes during the
+track part, at least with git - a folder exists where we are trying to
+make a symlink
+
+----
+
+trying to check out roundup, and i think sourceforge shut me down,
+though something was wrong, because i'm trying a checkout multiple
+times
+
+
+cd src/dev/issue-trackers
+
+tracker co git://roundup.git.sourceforge.net/gitroot/roundup
+
+fatal: The remote end hung up unexpectedly
+
+  XXX something wrong?  result: 128
+      cd /home/jeff/src/dev/issue-trackers/roundup/git; git clone git://roundup.git.sourceforge.net/gitroot/roundup 
+
+tried by hand, same thing.
+
+try again in a little while ...
+
+
+
+
+[20120218]
+
+hg output much better
+
+
+
+[20120213]
+
+cleaned up hg output a little bit
+
+  - don't care about these:
+    comparing with https://bitbucket.org/pypy/pypy
+    searching for changes
+    changeset:   52394:286b7a2ad62f
+    parent:      52392:f312b056bb07
+
+
+TODO: make this *optional* - maybe some people do care
+
+-----
+
+tabling this one.  it's nice to remember everything i want to track,
+and it's not that much noise (yet)
+
+- option to only report projects that have updates,
+  vs reporting all that we are about to try ...
+  - just wait to report "updating"
+    - might be tricky, i think those messages are separate
+
+
+
+[20120212]
+
+stopped reporting the second half of the mercurial output - the part
+that talks about "adding changeset", ...  the number of files changed
+does not matter in this context.  just more noise
+
+
+[20120204]
+
+starting over with source.  too much cruft, some of it 10 years old
+and no longer really useful
+
+moved sandbox/oompa to sandbox/oompa-old, and only copied 
+over enough to get tracker to run.
+
+hg init
+
+# add everything that's in there now
+#   XXX how to automatically ignore __pycache__ and .pyc?
+
+# create a .hgignore file
+
+  __pycache__
+  .*\.pyc$
+
+
+hg add
+
+hg commit -m "initial checkin"
+
+----
+
+switching over to list-based pattern detection, using tests
+
+based on a python testing taxonomy page, it seems like nose might be
+the best path
+
+  - test discovery
+  - extra support
+
+easy_install nose
+
+
+cd oompa
+
+nosetests
+
+cd oompa/tracking/tests
+
+nosetests
+
+  appears to gobble stdout?
+
+
+
+
+[20120203]
+
+tracker co https://bitbucket.org/genericcontainer/goblin-camp
+
+  XXX vcs_utils could not detect 
+
+added hack to dictate that bitbucket is hg.  XXX which is not always
+correct - bitbucket supports both
+
+  - may need to provide a clue, or try twice
+
+
+TODO: ask for a clue, and add to database
+  - answer, and why
+
+
+[20120127]
+
+hg checkout works:
+
+cd src/games
+
+tracker checkout http://openblox.hg.sourceforge.net:8000/hgroot/openblox/openblox 
+
+
+
+
+
+[20120118]
+
+fixed backend.push_folder, backend.pop_folder
+
+implemented git update (git pull)
+
+
+
+[20120116]
+
+pgu changed, so we have first svn changes
+  - actually caused a conflict in gui5.py
+    - had to interact by hand
+      - need a default mode
+  - svn still returns 0, even with the conflict
+    - i think we will have to examine the entire output
+
+
+
+[20120114]
+
+got tracker working under python3
+
+----
+
+updated to support capturing stdout/stderr, and caller
+has option to report or not.
+
+main point is to suppress "no updates" noise.
+
+applied to mercurial first
+
+----
+
+started hg management of project - based on hginit.com
+
+hg init
+
+----
+
+baby steps toward:
+
+- use tracker to check out from 
+    tracker co https://github.com/drewbuschhorn/gmail_imap.git
+  - must already be in the correct parent folder
+
+tracker co https://github.com/drewbuschhorn/gmail_imap.git
+
+
+[20120108]
+
+tracker checkout http://lwpgt.googlecode.com/svn/trunk/ lwpgt-read-only
+
+
+
+
+[20091017]
+
+a non-bug
+
+(B) i did something wrong with src/games/mud/evennia, trying to track it
+    - svn project
+    - 
+    - linked to tracking/games/mud/evennia -> evennia/svn
+    - but that only has an evennia folder, which is *not* svn ???
+      - by hand, have to "cd evennia; svn update"
+      - i think it's an issue with not really finding the root vsc_folder correctly
+    - still, shouldn't it dive in?
+
+it actually works - dives as deep as it needs to
+
+cd src/tracking/games/mud
+
+tracker update evennia
+
+updating /Users/jeff/src/tracking/games/mud/evennia/evennia
+
+At revision 786.
+----
+
+baby steps toward checkout
+
+cd src/games/pygame/libs
+
+tracker checkout http://lwpgt.googlecode.com/svn/trunk/ lwpgt-read-only
+
+
+  works
+
+    actually, not quite - 
+
+----
+
+cd src/cloud
+
+mkdir -p bixo
+cd bixo
+
+tracker checkout git://github.com/emi/bixo.git
+
+  that didn't work quite right - checked out bixo
+
+move that into git folder
+
+
+TODO:
+   - automatically track it
+
+TODO:
+    - specify dest/category - don't have to cd
+
+
+
+
+
+
+
+
+
+[20091010]
+
+modified tracker
+   (and refactored to have Project, VCSBackend, ...)
+
+tracker update
+
+----
+
+working out how we will check out code
+
+case study:
+
+  http://livelykernel.sunlabs.com/repository/lively-kernel/trunk/
+
+  note: no clues about type of repo
+    choices: 
+        - try flavors in order
+
+by hand:
+
+cd src 
+
+mkdir -p ui/lively-kernel/svn
+cd ui/lively-kernel/svn
+
+svn co http://livelykernel.sunlabs.com/repository/lively-kernel
+
+cd ../..
+
+tracker track lively-kernel
+
+
+
+tracker checkout http://livelykernel.sunlabs.com/repository/lively-kernel/trunk/
+
+#
+# will go in src/ui/lively-kernel/svn
+#
+tracker checkout http://livelykernel.sunlabs.com/repository/lively-kernel/trunk ui
+
+
+
+[20091007]
+
+dusting off tracker system (again)
+
+new challenge is the large number of new systems: svn, hg, bzr, git
+
+trying to use pyvcs  http://github.com/alex/pyvcs/
+
+cd packages/dev/vcs/pyvcs/git/pyvcs
+
+  git clone git://github.com/alex/pyvcs.git
+
+also says it needs pysvn
+
+python setup.py install
+
+  XXX no setuptools
+
+just try using from where it is
+
+PYTHONPATH=$PYTHONPATH:/Users/jeff/packages/dev/vcs/pyvcs/git
+
+  pretty crappy doc, no 
+
+add a script pyvcs-co 
+
+  actually, no: use oompa/scripts/checkout
+     (moved from oompa/cvsu/scripts)
+
+#
+# in track-utils.sh
+#
+PATH=$PATH:/Users/jeff/sandbox/oompa/scripts
+
+XXX there is nothing about checking out
+
+
+which track
+
+track 
+
+
+cd ~/src/python/pypy
+
+track pypy
+
+  now there is a link from /users/jeff/src/tracking/python/pypy
+
+
+TODO: change "track" to "tracker track",
+so that we can use "tracker update" as cvsu-py
+
+tracker track pypy
+
+
+
+----
+
+next challenge - 
+
+cd src/web/google-wave/wave-protocol
+
+did not check out into 
+
+  just moving it, for now.  clever discovery later.
+
+  it's really better to have explicit folder for hg, svn, ...
+    - lets you also have versioned tarballs, ...
+
+
+cd src/web/gogle-wave
+
+tracker track wave-protocol
+tracker track wave-robot-python-client-read-only
+
+tracker update
+
+XXX problem: in tracker tree, there is not an explicit "hg" folder
+
+[20030214]
+
+dusting off cvsu.py

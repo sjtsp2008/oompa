@@ -1,0 +1,160 @@
+#! /usr/bin/env python3
+#
+# tracker
+#
+#   utility for linking a version-controlled tree (svn, cvs, hg, git, ...)
+#   into a tree of projects to be tracked
+# 
+# TODO:
+#    - automatically pick log file ("today") for update
+#    - use real config, for declaring where tracking folder is, ...
+#    - need CommandHandler support
+#
+
+_usage_str = """usage: tracker <command> <folder> [...]
+
+  track
+
+    --replace
+
+  checkout (aka co)
+
+  update [project] [...]
+  up
+
+  untrack <src-folder> [...]     (*not* the src/tracking/... folder)
+
+"""
+
+import datetime
+import os
+import sys
+
+from pylib.util     import opt_utils
+from pylib.util     import usage
+
+from oompa.tracking.SourceTracker import SourceTracker
+
+
+
+#
+# 
+#
+
+_options = [
+
+    "replace",
+
+    'check',       # just check what would be done
+
+    "help",
+
+    ]
+
+options, args   = opt_utils.parse_options(_options)
+
+# XXX load a config
+config = None
+
+if not args:
+    usage.usage()
+    pass
+
+#
+# TODO: allow logging to stdout (for dev/debug)
+#
+
+out_stream = sys.stdout
+
+tracker    = SourceTracker(config, out_stream)
+
+# XXX use CommandHandle
+command = args[0]
+args    = args[1:]
+
+if command == 'track':
+    #
+    # track a project that's been checked out
+    #
+    if not args:
+        usage.usage()
+        pass
+
+    replace = options.replace
+
+    for project_folder in args:
+        link_path = tracker.track(project_folder, replace = replace)
+        print("%s" % link_path)
+        pass
+    pass
+
+elif command == 'untrack':
+
+    #
+    # TODO: option to delete the source, too
+    #
+
+    if not args:
+        usage.usage()
+        pass
+
+    for project_folder in args:
+        tracker.untrack(project_folder)
+        pass
+    pass
+
+elif command in [ 'co', 'checkout' ]:
+
+    if not args:
+        usage.usage()
+        pass
+
+    source_spec    = args[0]
+    rest           = args[1:]
+
+    project_folder = tracker.checkout(source_spec, *rest)
+
+    # XXX check that project_folder is not None
+    if project_folder is None:
+        xxx
+        pass
+    
+    print("   TRACKING: %r" % project_folder)
+
+    link_path      = tracker.track(project_folder)
+
+    print("   tracker link path: %s" % link_path)
+
+elif command == 'update' or command == "up":
+
+    log_base = os.path.join(os.environ.get("HOME"), "tracker-logs")
+    log_path = os.path.join(log_base, 
+                            "%s.tracker.log" % datetime.datetime.today().strftime("%Y%m%d"))
+
+    print("logging to: %s" % log_path)
+
+    # make sure folder exists
+    log_folder = os.path.dirname(log_path)
+    if not os.path.exists(log_folder):
+        os.makedirs(log_folder)
+        pass
+    
+    out_stream = open(log_path, "a")
+
+    tracker.setOutStream(out_stream)
+
+    result     = tracker.update(*args)
+
+elif command == "urls":
+    #
+    # dump all the source urls in a format that can be used to 
+    # set up tracking on another system
+    #
+    result     = tracker.dumpSourceURLs(*args)
+
+elif command == "import":
+    #
+    # "import" (re-check-out) projects dump from another "tracker urls"
+    #
+    result     = tracker.importDumpedURLs(*args)
+    pass

@@ -1,0 +1,1576 @@
+Oompa TODO list
+---------------
+
+- oompa tracker uses "normal" python opt parsing, vs my pylib
+
+- move to git, from hg
+
+- able to check out with a simpler "spec", since github is predictable
+  - tracker co github flink
+  - find the project
+    - may have to disambiguate?
+
+- real logging, esp. with timestamps
+  - basis for analyzing
+  - simpler view is just a transform
+
+- analytics
+  - dead projects
+    - no updates in
+    - last update N days ago
+  - active projects
+  - number of committers
+
+- explore re-adding triggers to projects when updated
+  - luigi better than old oompa code?
+
+- able to move projects around, locally
+  - moves the tracking symlinks, too
+
+- support exploring why we get "fatal: The remote end hung up unexpectedly"
+  - and maybe repairing/replacing
+  - usually, the repo moved, and maybe was replaced by another technology (e.g., svn to git)
+
+- git updating - support for submodule updating, if necessary
+
+- git support - use github3.py for special access
+
+- finish support for alternate project name
+  - we properly detect now, but still check out in to "git/git/guitarix"
+    - XXX what was the tracker co line ???
+
+- support tracking users/companies (e.g. *new* repos) in github
+  - for a user, query, whatever
+  - charlotte-y
+  - or the api
+  - multi-page, but actvity usually on the first page
+  
+- support specifying, or defaulting with config, a base
+  - don't have to cd to src/audio to check out guitarix
+    - can specify --base src/audio, or even just --folder audio (under config'ed base)
+
+
+- per-project output handlers/cleaner-uppers
+  - pypy is amazingly noisy/high-veloctiy
+    - in general, i don't really care who made changes,
+      and the date does not matter - it was "recently"
+    - could aggregate by branch, too
+    - but that *only* applies to pypy
+
+- need to make it easy to cat a file that has been updated
+  - currently, the reported path is relative to project root, and the
+    full path is a pain to assemble
+  - parse and "sed" the correct paths in to the vcs output?
+  - gui?
+ 
+- maybe start logging all checkout activity
+  - so that we could recreate source and tracking tree later 
+    - e.g., on another machine
+  - could share, ...
+  - we currently know what projects we are tracking, but not where
+    they came from
+    - that's not really true.  we have to be able to get source from
+      every checkout
+    - but still, would be nice to know initial checkout date, ...
+
+- able to stop tracking something
+  - with option to remove source
+  - and remove any empty folders, recursively upward
+  - kind of a pain finding the folder under src/tracking
+
+  ----
+
+very old stuff
+
+- probably remove ftp support?
+
+- shell that learns what you tend to do next for each project
+    - can share that ...
+
+- archive/database all changes, so that we can study over time
+  - note: better to just use the vcs for that?
+
+current version: 0.0
+
+Priority 6:	Required for 0.1 to be useable
+----------
+		Deadline:		2/28/99
+		Original Hours:		20
+		Hours left:		42.75 (3 unspecified entries)
+
+Major features
+--------------
+    - architecture is solid, supports all STORIES
+    * watchdb/watch back up to state it was in tcl
+    - oompa supports check, update, build, install, 
+	- from ftp, http, cvs
+	- (but only one type - no support for hopping btwn from cvs, ftp)
+    * capable of building a full cross-compiler set in a
+      separate build dir, with a local prefix
+    - cmd line (or text file) interface with PackageInfoDB
+    - completely logs what it's doing
+    - you can "ls" html pages, (guess at modification dates ???)
+    - note: *not* full AI from start.  just use state to shortcut steps
+
+- OompaShell:
+    - capture commands into repeatable bundles
+	- possible paramaterize
+    - Environment widget
+    - figure out possible environment variables
+	- list of "experts/advisors"
+	- e.g., if there's a "configure" file, run it, parse the
+		options, report the unususual options
+    - pops up when a long-running task is done
+	- adds it to a list of things that are ready to go
+
+- use OompaShell to:
+    - build glib in a different build dir
+    - install glib in a different place (/usr/local/gnome2.0)
+
+- add typing to environment
+    - PATH and filepath are fundamental, like int/string/boolean
+
+- another heuristic:
+    - configure.in, but no configure -> run autoconf
+    - XXX must come *after* some other checks
+	- when must you run aclocal, automake?
+
+- properties need to go in an environment
+    
+- handle templates
+
+- "mimic": build a config based on another host
+    - the goal host runs a mimic-server, which accepts requests for 
+      package lists and versions
+    - can supply environment names, to pick up alternate-installs, ...
+    - plugins for getting versions
+
+- ant-style "doing the right thing with "/" vs "\", ":" vs ";"
+    - OompaXMLHandler already does this
+    - need to be lazy
+    - i think that attrs need types to support this
+	- i.e., don't want to do the sub if it's not a path 
+
+- properly support building python/xml
+    - trick is expat, which has no real install process
+        - need to download expat
+        - make
+        - cd parser
+        - cp .h /usr/local/include
+        - cp .a /usr/local/lib
+    - drag that up above the python build
+    - then build python 2.1
+
+- include cvs tags/timestamps
+    - e.g., mahogany cvs relies on some wx cvs version
+    - others are able to expand the range of options
+	- e.g., "also worked with ..."
+
+- fork what worked on a certain version, over to another
+    - e.g., evolution: 0.8 --> cvs
+    - same structure, but *every* package picks up a different version/source
+
+- port OompaShell to pwtk, under gtk/wx, so that drag/drop works
+
+- as soon as there's a successful build (and test?) on a platform 
+  that's not been reported before (to the mother database), prepare
+  a message to fire off: "it worked.  here are the details, ..."
+    - how does this relate to tinderbox?
+
+- extend db-test to show a cvs log
+    - incl freshmeat-style "summary" 
+	- # changes, ...
+    - able to open file from tree
+
+- build evolution "with one click"
+    - tons of new packages, via ftp
+    - all in a separate world, so that default env not affected
+
+- use ant + rdf inference?
+    - if ant cannot yet support external refs (to xml snippets),
+      just synthesize a build.xml
+
+- for all dependencies, show that there are new versions available
+    - can try, but can roll-back
+
+- database design
+    - work out dependencies again
+    - db-centric vs project-centric vs platform-centric vs host-centric
+	- drag a project onto irand1
+
+- work out a project description
+    - how would you transmit an entire 
+
+- work out platform-specific tweaks
+    - building evolution on mandrake
+    - worked on redhat-6.1, have full config
+    - but, glib has a special tweak
+
+- emphasize ability to have very complicated LDPATHs, ...
+    - mix and match dependency libraries
+
+- work out the gui:
+    - when you pick a certain package and version, the tree of possibilities
+      changes below that point
+
+- support for various packaging schemes
+    - rpm, ...
+    - user has pref for src, ...
+
+- signatures on configs
+
+  --
+
+- put a date at the top of the cvs update log
+
+- start keeping cvs metadata
+    - # changes
+    - # changes in last week
+    - avg # changes per week for last:
+	- month
+	- year
+	- ...
+
+- update: make use of cvs co -c
+    - get list of module names
+    - can tell if there's no toplevel
+
+- support sourceforge ftp/http shapshot lurking
+
+- when oompa rolls across a month/year, rearrange the logs database
+
+- different views into database
+    - themes
+    - 2-d
+
+- project dependencies can look like paths:
+    - relative, absolute, ".."
+    - "glib", under gnome, means gnome/glib
+    - "../gnu/automake"
+    - "/gnome/glib"
+
+- CVSSource: better feedback than "oops.  something went wrong
+
+- if there's a problem with a cvs repository (i.e., "oops.  something went
+  wrong ..."), skip any others at that repository, schedule to try again
+  in an hour, ...
+
+- handle OMD
+    - module name different than project name
+
+- baby step: cvs update glib, from the xml package
+
+- refactor:
+    - PackageInfo split into Package/PackageVersion
+    - Package:
+	- name
+	- description/notes
+	- attrs (like what?)
+	- parent
+	    - acquire attrs from parent
+	    - e.g. shared source bases
+	- build_style
+	    - may imply an action sequence
+	    - optional
+	- action_sequence
+	- depends_on
+    - PackageVersion
+	- package
+	- version info
+	- source
+	- action_overrides
+	- dependency overrides
+	    - e.g. specific versions
+    - PackageAlias
+    - BuildSpec
+	- package_version
+	- source_dir
+	- build_dir (optional)
+	- install_dir
+	- test_suite
+	- environment
+    - XXX issues
+	- does this support composites (like gnome)
+
+- add a date_added to projects
+
+- handle mozilla cvs update
+    - actually easiest to do a "make -f client.mk update"
+
+- brige between the old system and the new
+    - e.g., glib is xml, everything else is the old way
+    - would be very nice to be able to add projects from cmd line
+
+- when adding a sourceforge project, automatically log in immediately
+
+- experiment with a new database directory structure
+    - packages/
+    - build/
+    - environment
+
+- baby steps: load glib xml
+    - build package
+
+- baby step: save a build spec
+    - refers to external glib spec
+    - note: can drill into a package db, zope-style
+
+- baby step: gtk+
+    - depends on glib
+
+- baby step: gnome (with a couple of children)
+    - with xlinks to packages
+
+- store dependencies, etc., as xml
+
+- develop design for maintenance/regression testing framework
+    - map to machines/environments on which you will run the builds/tests
+    - can submit requests for support/verification
+    - integrated with bug tracker
+
+- add notes to projects
+
+- can we do inference in RIL/RDF?
+    - only has two inputs per rule, can we branch out enough?
+
+- may need to add watchers on templates
+    - for gui, ...
+
+- store package db as xml
+    - can edit by hand, or add projects with a script, rather than
+      mess with prime_*_db()
+    - first step is just to load prime_..., save it out, and reload it
+
+- use the basic ideas from PeopleGarden (UIST 99?)
+    - gauge the activity in a project
+    - has a project suddenly come alive
+    - how many commits
+    - some sort of decay function
+    - can probably get # diff committers, from cvs logs
+
+- integrate with nautilus
+    - special manager
+    - visit the changes files, or see the diffs
+
+- recognize cvs conflict errors
+    - rather than just saying "oops"
+
+- work on capturing full configs as xml
+    - for exchange in newsgroups/mailing lists, ...
+
+- visualize full dependency graph
+    - use graph layout framework
+
+- design support for everything in its own --prefix
+    - impossible by hand, but makes it much easier to do regression testing
+
+- simple gui container experiment
+    - start with a project, and a container
+    - when you drag the project onto the container, it is built
+    - glib
+
+- handle sourceforge projects whose cvs directories aren't named
+  the same as the package
+    - e.g., pyjama -> groupchat-transport, jabber-transport, jpy
+    - by hand, need to do a "cvs -z3 co ."
+    - with charlotte, could add all of the modules to the pacakge
+
+- extend container experiment:
+    - edit config args
+
+- create_sourceforge_cvs_package
+    - if multiple top-level sources are supplied, create a virtual package
+      with the project name
+    - format examples:
+
+        ( "cricket",
+          "~/projects2/src/analysis" ),
+
+	    - cvs host name is same as project source name
+		
+        ( "fipa-os",
+          os.path.join(_source_base, "ai/agents/fipa-cvs"),
+          "fipaos" ),
+
+	    - 
+
+        ( "blah",
+          os.path.join(_source_base, "ai/agents/fipa-cvs"),
+          [ "toplevel1", "toplevel2", ]),
+        
+
+- get it to a point where it would be useful to Anthony
+
+(3) merge multi-day results in a tree
+
+- try out a two-local-tree system
+    - two full cvs checkouts, one is always stable
+	- when one builds/tests, then switch to the other, update until
+	  it builds/tests, ...
+    - XXX diffs between two versions will always be with respect to
+          stable tree, not with respect to last update
+    - possibly uses tons of space for stability and the ability to easily
+      track changes
+
+- need a network-wide database
+    - updating on scar and building on a linux box is out of synch
+    - note: as a preference.  still must be able to do it simply
+
+- add worldforge (brokerworld/cyphesis) to laptop
+    - how much space does it take?
+
+- start running oompa from cron
+    - need ability to halt updates of certain packages
+      (even the two-cvs-tree approach won't be used always)
+
+(1) DropZone
+    - add ftp support
+	- use ftplib, but wrap it behind a url download
+    - launch a thread for each download
+	- currently halts browser
+    - keep a log of everything that's been done, so i don't forget
+
+(1) DropZone, rev 2: figures out where they go, based on past history
+    - maybe even has a gnome-fm-style view
+
+(1) DropZone, rev 3: tries to build, based on the hosts previously built for,
+    and the configuration info previously used
+    - general trigger system, by tag
+
+(1) graphical download manager
+    - mostly for dropzone, right now, but will be more generally useful
+    - able to prioritize downloads
+	- use the netscape network library?
+	- or, hack: threads just sleep a little bit, to give others some time
+	    - need something intuitive, like "this band is 2x faster", ...
+	- can even support "priority" bands, to drag onto
+    - able to cancel/stop a download
+    - able to completely pause a download
+	- if server supports partial gets, just stop
+	- otherwise, tie up resources and sleep
+
+- drop-zone: support different rule sets:
+    - e.g., "everything goes in to-laptop, ..."
+
+- skulker:
+    - option to copy or move, per source directory
+    - keep a history of what's been transferred, log it
+
+
+(.5) use env variables as a quick hack to avoid the here vs home nonsense
+
+- stop using DateTime
+    - use timestamps instead
+
+- simple shell,. based on pygic
+    - XXX can't run full pyexpect, can't do patterns on prompts, ...
+    - records commands, and changes to environment
+    - can work on different hosts (by type, not by name)
+        - figures out that you need specific commands for a host type
+	    - e.g., extra configs, ...
+    - error handler
+	- when something goes wrong
+	- how to identify it
+	    - pattern?
+	- commands to recover
+    - can edit the command list, to package an oompa action
+    - new commands:
+	- host scar
+	    - use rsh to scar (if possible)
+	    - figure out host type, ...
+	- host-type solaris
+	    - pick one of the solaris hosts that we know about
+    - will probably eventually need nautilus
+
+- aliases
+    - like netscape - show in italics/gray/...
+
+  --
+
+(R) remove depdendence on DateTime package
+    - or at least provide a python-only option
+    - determine what's missing
+
+- build on one host, install on others
+    - e.g., don't have space on laptop for full gnome tree
+
+(1) cvs dropzone
+    - cut/paste cvs instructions, add to oompa database
+
+(2) a full time watcher on a laptop
+    - lurks on a particular directory (e.g., ~/src/to-laptop)
+    - any time files show up there, they are sucked onto the laptop
+    - two types of lurking:
+	- copy:  ~/src/web/zope/packages
+	- snarf: ~/src/to-laptop
+
+(2) simple gui manager for adding projects, without having to edit prime...
+
+(1) distinguish between all of the possible problems on a cvs checkout
+    - can't make local directory
+    - server doesn't exist
+    - bad password
+
+(3) get "oompa update libtool" to work again
+    - non-cvs
+    - checks ftp.gnu.org, ...
+
+(2) add some non-cvs to prime:
+    - automake
+	- (depends on perl, with config dialog - can't just default)
+    - autoconf (depends on gnu m4 >= 1.1)
+    - libtool
+    - gettext
+    - db (with --enable-compat185)
+
+(1) need a tool to cat out all logs for a project
+    - in tree form
+    - ability to quickly truncate logs
+
+(1) better error messages when things fail
+    - is network up, ...
+
+  --
+
+- log partial results even when an exception is thrown
+    - losing why cvs updates fail
+
+- get watch to work again
+
+- dropzone
+    - keep trying if you can't log in at first
+    - nice little list of progress bars, in a single window
+    - add to short-term-plates when a download is finished
+	- callbacks
+	    - can be filtered/triggered by regex ???
+	- can be unix cmds, or python code, entered in ide
+
+- package manager - multiple views
+    - by sourceforge-style categories
+    - alphabetical
+    - favorites, ...
+ 
+- support for displaying what changes, before updating
+    - cvs diff first?
+	- must be able to parse it easily
+	- cvs diff does not appear to work remotely ???
+    - integrate with pyide
+
+- gnome strangeness:
+    - had to do the following to build on maple
+    - ORBit: cvs -z3 co -D 11/1/1999 ORBit
+    - gconf: cvs -z3 co -D 12/5/1999 gconf
+    - need to support backtracking a day at a time, until it builds
+
+- update/actions: flush output/logs after every action, so we don't lose
+  anything from crashes, or ctrl-c
+
+- build a full gnome package, for some version (e.g., 1.26)
+
+(2) oompa-app: prototype tree-view of packages
+    - PackageInfo is a subclass of BaseTreeModelNode
+    - first step is just to show what's there
+	- don't even show subjunk yet
+
+(1) CVSSource can now decide if anything interesting happened,
+    (now that it uses cStringIOs)
+
+(1) output to a single log, but tag it all with C:, O:, or E:
+    - can write filters to show any combination 
+    - *all* output should go to a log.  the stdout option is just to
+      copy output to stdout
+    - right now, hard to build anything past gtk
+
+- installing gtk from scratch on scar requires:
+    - note: run autogen on some other machine ???
+    - automake
+	- requires perl
+
+- need way to merge all logs together, since last viewed
+    - currently have to look through a bunch of different files
+
+- build (but not fetch) from scratch, based on an ftp-ed stable version
+  of gnome
+    - probably, just build the latest version of each in gnome/stable/
+
+- note:
+    - when building python on linux (redhat 6.1), you need to edit
+      Modules/Setup, to uncomment the *shared* line
+
+- gui provides a shell for experimenting
+
+- oompa learns what is needed/works
+    - db-2.7.3
+	- cd build-unix
+	- ../dist/configure --enable-...
+ 	- *requires* that CC=gcc
+	    - no --enable-gcc
+
+- fetch, build glib from scratch, given a version number
+    - XXX can i even ftp?
+
+- need way to build entire set of gnome tools, from the ftp site
+    - parameterized by version number
+
+(.5) rather than a full log, each action should keep it's own mini-log,
+     which can be concatenated (through a filter)
+    - more applicable to the gui
+
+(H,2) fully design interaction with gui
+    - adding/managing packages
+	- easily setting up dependencies
+    - doing actions
+	- where to put the list of actions that you can do?
+	- suppress all output by default
+	- create a list of actions that are to be done
+	     - trace progress, by highlighting
+	     - color lines red that failed
+	- highlight what *can* be done
+	- highlight what failed
+	    - can drill into any of command_log, output_log, or error_log
+		- need timestamps on entries, so we can merge?
+
+  -- 
+
+- print a date/time with "oompa has been updated recently"
+
+- can i write a layer on top of mc?
+    - drag a .gz onto a folder, and oompa takes off with it
+    - would have to specially mark the folder
+
+- two separate "kits", one for gnome-cvs, one for gnome-1.2.xxx
+    - so that we don't have to worry about --target, ...
+    - when something goes wrong, just reinstall all of 
+
+- build gnome-python completely from scratch, from an xml-based spec
+
+    - gnome-python
+	- libglade
+	    - gtk+
+		- glib
+	    - gnome-libs
+		- ORBit
+		- OAF
+		- GCONF
+		- libxpm, libpng, libtiff, zlib, libjpeg, libungif
+	        - db 2.x, 1.86 compatibility enabled
+	        - imlib
+	    - libxml (can't get from cvs)
+	    - ORBit
+	- gnome-libs
+	- gnome-core
+	- control-center ???
+
+	- all require:
+	    - gettext >= 0.10.35
+
+
+- "why" must be a stack
+
+- simple droppable box, that takes a bunch of text, and figures out the
+  right package info for cvs:
+
+"""
+CVS server for source code distribution
+
+To get the latest version, please use anonymouse cvs:
+
+%cvs -d :pserver:anonymous@belmont-shores.ics.uci.edu:/home/cvs login
+
+The password is "anonymous".
+
+To get all source code related to the Apache Test Framework project, use:
+
+%cvs -d :pserver:anonymous@belmont-shores.ics.uci.edu:/home/cvs co ApacheTestFramework
+
+After that, please logout:
+
+%cvs logout
+"""
+
+- i think i broke cvs-login
+
+- need to fix problem of cvs module name being different than what it's
+  checked out into:
+    - e.g., test talk --> "ApacheTestFramework" --> "prj/ApacheTestFramework"
+
+- separate error log from output log
+    - may be able to analyze independently ???
+
+- oompa-app: items turn red when there's new versions, something to do, ...
+
+- build mozilla using oompa
+    - different set of actions
+
+- support a glib-config style of getting directories, ...
+    - cd `oompa config install-dir glib --target i686-linux-gnu ...`
+    - LD_LIBRARY_PATH=`oompa config ...`:$LD_LIBRARY_PATH
+
+- either store oompa_log in separate chunks, or add markers, to make it
+  easy to analyze whether something significant happened
+    - or, do analysis up front, don't worry about logs
+
+- better notification about what actions *are* found
+    - took me a long time to figure out that a dumb hack was keeping
+      me from finding *any* actions
+
+(1) experiment with the jess backward chaining trick in python,
+    try to come back to pure-python
+
+- use mysql to store oompa db, and package db
+    - or some smaller db?
+    - berkeley db?
+    - main requirement is support for concurrent writing
+
+- try out backward chaining trick in holmes
+    - any rule of the form (need-foo ) looks for a rule than can supply foo
+
+- figure out how to prevent forward/backward storms
+    - i think it's a scheduling problem
+
+  -- 
+
+- scenarios:
+    - update and build the latest gnome-cal
+	- need to update and build all the way back through 
+
+- support multiple layers of test environment
+   - differnt installation points, ...
+   - create scripts that i can source to pick up the right stuff
+
+- jess rules for finding new stuff on an ftp site
+    - seems like something jpython would be better at
+
+- figure out how to add plugins to rule base
+
+- support having to revert to an older revision of cvs sometimes
+    - ORBit wouldn't compile, had to "cvs -z3 co -D 11/1/1999 ORBit"
+      to make progress
+
+- possible jess design
+    - python sweeper, that checks who must be updated, and adds facts
+      (e.g., (updated 'cvs "glib"))
+
+- add a "build-env" script, so that we can get all environment dependencies
+    - java-env, ...
+
+- use the new gtk tree stuff for design for managing the database
+    - plug in different panes for different types of packages
+    - integrate glade right into tool?
+    - XXX won't be able to use bond directly
+
+- prototype a simple oompa rule in Jess
+    - working in jess-test, oompa-rules.clp, and jtests/PackageInfo.java
+    - need a concept of now() in oompa-rules.clp, or another object that
+      represents now
+    - would it be better to use python/java to sweep across the 
+      database, marking things as not-checked-recently, or should a jess
+      rule do it?
+
+    - base it on ai/update_rule.py
+    - XXX what is the basic object that will be a bean?
+    - the trickiest part will be when "newer" changes, but i think
+      the pump/tank jess example shows how to deal with that
+    - XXX need to allow arbitrary python code in actions, or at least
+          a callout to a python function
+
+- store PackageInfoDB as a tree (possibly with symlinks?)
+    - right now, listing is difficult
+
+- gui interface on the oompa db
+    - it's getting to be too much to work in prime...
+
+(2) watch/watchdb/watch.py
+	- extend to watch http "directories"
+	- handle ftp url's
+	- filter ".", ".."
+	- pretty output
+	    - only print a host/dir if it has entries
+		- add checks to host/dir classes: isEmpty()
+
+(1) use CTree to display package database
+	- show which files have actually been updated during cvs update
+
+(1) begin cron-based oompa updates
+	- mail results to master
+
+  -- 
+
+- the drop target uses a rule base for:
+	- placing the code
+		- based on where it came from
+			- ftp.gnu.org --> ~/src/gnu
+			- crystal...  --> ~/src/3d
+			- defaults to ~/src/staging
+	- figuring out how to unbundle
+	- figuring out if it's "gnu" 
+		- has configure, ...
+
+- different experts (RuleBases) for different tasks
+	- unbundler
+	- configurer
+
+- properly handle priority management
+
+- add a "clean" rule, which can be fired after test/install
+
+- log all of the files updated during a cvs update
+	- so you can review all of the files that changed
+	- integrate with cvs changelogs, ...
+
+- zulu: cannot handle cvs package "CalendarClient", when it checks out into
+        mozilla
+	- separate cvs module name from package name ???
+		- why doesn't this work already?
+
+- CVSSource
+	- filter the cvs update output
+		- don't print so much crap
+
+- watch-tool: 
+	- simple python-gnome tool that accepts drags from netscape,
+	  adds to watch db
+	- has an entry box for adding by hand, too
+
+- CVSSource
+	- support getting what changed since the last update
+
+- HTMLLister: 
+	- keep database of the files from each 
+	- can check new files that way:
+		- what was not on the list before ...
+	- XXX does not work for files with the same name that change, ...
+
+- XXX ORBit currently has to be built in top-level directory
+	- cannot make distclean
+
+- versioning
+	- when package depends on egcs, find the latest one in our dbase
+	- same for subpackages
+
+- databases must be concurrent
+
+- build libtool automatically if it's not there
+
+- convert oompa to just call do_action(), instead of checking
+  for each type of command
+
+- really need gui for creating packages, trying things out, ...
+	- it's getting too hard to work in PackageInfoDB::prime()
+
+- when user asks for build, make sure it's unbundled; may
+  even have to fetch it
+
+- handle directories that already exist
+	- e.g., oompa build autoconf, when autoconf-2.13 is already 
+	        unbundled
+
+(.25) after a fetch, PackageInfo gets <package_dir> from Source object
+
+(1) log everything
+    - tag commands, so you can filter them easily
+    - maybe two logs?
+    - one log for everything
+
+(4) remove all built-in actions from PackageInfo/BuildInfo
+
+(1) get the ftp listing data structures right
+
+(1) oompa_ls(url) - ftp
+
+(3) oompa_ls(url) - html
+
+(.25) remove check_freshness from PackageInfo
+	- just don't lose it yet
+
+(1) could we replace subpackages with sophisticated aliasing?
+
+(1) move Bundle info into FTPSource
+	- FTPSource responsible for turning it into a directory
+
+(3) simple gnome-python drag/drop target that accepts urls from netscape
+	- does "oompa build <url>"
+	- try to use the watch rules to figure out where it goes, ...
+
+(1) generalize Version to superclasses
+
+(1) test the multi-ftp-site code in PackageInfo::check
+	- e.g. ftp.gnome.org then one of the mirrors
+
+(.5) logging does not capture stderr
+
+(.5) watchdb: support remove
+
+(.5) check_up_on host dir [date]
+(.5) check_host host do_touch [date [recursive]]
+(.5) check_hosts host_list do_touch [date [recursive]]
+(.5) check_all_hosts do_touch [date [recursive]]
+
+(.5) recursive_all_newer $ftp $dir $date
+(.5) check_host_recursive $host $dir
+
+(1) audit every step oompa takes
+	- OompaLog
+
+(1) pickle the ls listings
+
+(3) document entire class structure in argo
+
+(3) test cases (see regress for full list)
+	- python-xml, from cvs
+	- kaffe, from cvs
+	- kde/koffice
+		- might be mixture of cvs/ftp
+	- guile/gush
+	- egcs
+		- must be able to manage two different versions
+		- installed to two different directories, so you can
+		  set your path to pick on or other
+	- linux/ppc
+		- build tools via ftp, from a number of places
+		- linux via cvs
+	- zlib
+		- non-standard build env
+	- tcl/tk
+		- non-standard build env
+	- from-floppy uses PackageInfoDB to determine where things go,
+	  how to update
+	
+
+Priority 5:	Required for 0.1 to be useful
+----------
+		Deadline: 		10/30/98
+		Original Hours:		120
+		Hours worked:		 3
+		Hours left:		5.5 (50 unspecified entries)
+		Num Entries:		56
+
+
+Major features
+--------------
+	- no more major changes to state/knowledge base
+	- can extract mirrors from an ftp "refused login" banner
+	- integration of watch system and oompa
+		- automatic fetch, build, test of watch entries that you 
+		  flag as "constant update"
+	- keeps statistics about the best hosts to use, from a list
+	  of mirrors
+		- choose best one any time you have to update
+	- supports non-gnu builds
+		- e.g., berkeley db has configure in dist directory
+	- tracks freshmeat, can make good guesses about where to put
+	  things, ...
+	- can reasonably compare two different versions: 
+		- egcs-1.1.1 vs egcs-19990210
+	- launch remote builds for other platforms
+	- support updating from patches rather than fetching a whole file
+		- at least two naming styles:
+			- patch-foo-version1-version2.gz
+			- foo-version1-version2-diff.gz
+	- everything undoable
+
+
+- support building dirk from scratch
+	- interesting because it's a different "build paradigm", 
+ 	  and it should be easy to search for new modules
+
+	- need to update perl itself
+
+	- build AppleFile plugin
+
+	- Gtk plugin
+
+	- LWP
+		- URI
+			- MIME-Base64
+		- HTML-Parser
+		- libnet
+		- Digest::MD5
+
+	- building perl modules:
+		- if there's a Makefile.PL, then "perl Makefile.PL" first
+
+	- tool knows to look around CPAN for the latest versions
+
+- get smart about what hosts do what
+	- dellbert is best at cvs update, no matter what
+
+- internet-wide database, where agents exchange hints about building
+  different packages
+
+- xml for hints about building on certain hosts, ...
+
+- mess with scheduling
+	- as soon as glib is here, can build it
+
+- be graceful if user forgets something like package_dir
+
+- bundle standard actions as a group
+	- gnu-actions = configure, build, install
+
+- good way to specify dependencies
+
+- consider ways to buffer state changes, so we don't have to save
+  whole file every time
+	- just use a dbase for state changes
+
+- should be able to get a list of all versions of egcs that we have locally
+  from the database
+
+- need way to *force* an update (i.e., override the freshness test)
+  
+- handle CVS branches
+	- cvs checkout -r glib-1-2 glib
+
+(0) state must support multiple targets
+	[('glib',        'updated',   <version>, <time>),
+	 ('glib',        'autogened', <version>, <time>),
+	 ('egcs-1.1.1',  'built',     'powerpc-unknown-linux-gnu', <time>),
+	 ('egcs-1.0.3a', 'built',     'powerpc-unknown-linux-gnu', <time>),
+	 ('egcs-cvs',    'installed', <version>, <target>, <time>)]
+
+- need "tcp wrappers" for ORBit
+
+- i think ORBit might not build in an alternate dir
+
+- i think gnome-libs has to be built in src dir
+
+- i'm not sure actions are structured to deal with subpackages properly
+	- when you autoconf gnome, does that mean autoconf everyone?
+	- might be a per-action propagation, per-action dependency?
+
+- make sure "forward-chaining" works
+	- do an action, see what else you can do afterward
+
+- move the timestamp checks into prerequisites?
+	- 
+
+- use autoconf for testing if programs exist ???
+
+- pass a logger into do_command
+	- knows how to filter commands from command output
+
+- if cvs update fails due to timeout, schedule to try again in
+  a couple of minutes
+	- but give up after some number of tries
+
+- libpng-1.0.3
+    - http://www.hensa.ac.uk/ftp/mirrors/uunet/graphics/png/src/libpng-1.0.3.tar.gz
+
+- Watch Trigger:
+	- url-regexp: ftp://ftp.gnu.org/gnu/autoconf/autoconf*gz 
+	  predicate:  version.newer(url, 
+			            pkg_info_db.get_latest_version('autoconf'))
+	  action:     update autoconf --hint <url>
+	- need a template to start fetch
+
+- set of postconditions are things that are true after executing
+	- need these to develop a plan
+
+- option to oompa to build an unknown package in dir other than source dir
+	- i.e., with no packageInfo
+
+- expect tool to watch how you answer linux config, and do it again later
+
+- make sure that you don't do redundant/conflicting operations
+	- e.g., two different threads decide to ftp the same package
+
+- dependencies must be more sophisticated
+	- installed_version('glib') >= 1.1.15
+	- arbitrary predicates on state and/or package_db
+
+- no built-in commands.  everything is an action
+	- note: need to iron out option handling
+
+- oompa option to display the installed directory for some package
+	- so you can set environment with an oompa statement
+	- e.g., for when you want to build something by hand
+
+- don't do a cvs update if it's been done in the past hour or so
+
+- don't invalidate anything if cvs update does nothing
+	- tricky, requires parsing cvs output
+	
+- gui for managing the naming/versioning styles
+
+(2) i think the gnome "spec" files have a lot of info that i can use.
+    what tools does gnome have to process these?
+
+(.5) can't handle naming for bzip2-0.9.0b.tar.gz
+
+- able to easily exchange actions/rules 
+
+- oompa install autoconf-2.13
+
+- would be nice to "compile" the constraints, so that events are
+  automatically distributed to whomever cares
+	- difficult if pre/post are actual code
+
+- track egcs 
+	- funky directory structure, best to use LATEST-IS-...
+
+- actions for building to all of the different linux package formats
+
+- "watchers" on state database
+	- see a state change, can fire further actions
+
+- i think the automatic updating is a constraint satisfaction problem
+	- ('always (timestamp 'built) > (timestamp 'fetched))
+	- need to be able to develop and analyze a complete plan before
+	  taking any action
+
+- constraint:
+	- no files in ~/src/staging
+	  (i.e., once they are put there, someone must distribute them
+	         properly)
+
+- CVSSource::update will have to parse cvs output to decide if changed or not
+
+- constraints for automatic cvs updates
+	- > 23 hours since last update
+	- master has not halted updates
+
+- action editor
+	- actually edit, debug python code
+	- integrate into python ide?
+
+- need to "take a guess" at the current state of the system
+	- look at libraries, run egcs --version, ...
+
+(0,.5) State only saves if it actually changed
+(0,.5) PackageInfoDB only saves if it actually changed
+
+- handle corrupt pickled files
+
+- oompa update supports http url's
+
+(1) "oompa clean glib"
+
+(1) "oompa remove glib"
+
+- keep notion of "current_environment", so that we don't have to 
+  undo/redo the changes over and over
+
+- keep track of how much disk space is used
+	- optimize space usage
+	- clean things up when they are not used for a while, and
+	  can be rebuilt
+	- one of the constraints to constantly satisfy
+
+- encode depends in READMES, ...
+	- or, parse HACKING files, look for "will make your life easier"
+	- maybe use gnome spec files, if they catch on
+
+- maybe don't have temp_install/finall_install, but two different targets?
+	- as long as it's easy enough to manage, that would be better
+
+- integrating watch/oompa
+	- watch rules database:
+		- host path-regexp action
+		- XXX maybe a url-regexp?
+
+	- for example,:
+		- rule: egcs.cygnus.com *egcs* "update egcs"
+
+	- XXX pass in the specific ftp-url to the update method?
+		- no, watch shouldn't decide if bz2, gz, or patch is best
+	- needs to know if something is newer than local
+
+(1) "oompa update all"
+
+- option, for testing speed: time an ls operation to each known mirror,
+  before you fetch.  use the host with the best time
+
+- interact with user whenever unsure about something
+
+- transparent local caches of ftp/url listings
+	- this means that you don't want to glob at ftp time
+
+- build tcl (or something) on irix, solaris x86, and solaris sparc
+
+- track the CS tech report archive: xxx.lanl.gov/...
+	- seems too close to webwatcher or whatever
+
+- BuildInfo should support a specific host, or a host type
+	- can't assume that any x86-linux box is equal ???
+
+- stubborn_login should log the number of tries to a database, for
+  later use in finding the best server to use
+
+- must support *forcing* an update, even if db thinks we're fresh
+
+- Package: add new field:
+	- tars_into (or something like that)
+		- might be a list
+		- to know what might get clobbered
+	- can add method "clean_tar?()"
+
+- can bundle oompa files with packages, it will update everything necessary
+  to build this tool
+
+- develop a planning interface
+	- preconditions
+	- postconditions
+	- find a path from current state to goal state
+	- i think this is really a constraint system on state
+		- built timestamp always fresher than fetched, ...
+
+- man pages, full source documentation
+
+
+Priority 4:	Required for 0.1 to be complete
+----------
+
+Major features
+--------------
+	- clean "plug-in" framework for new versioning schemes
+	- simple gui interface to PackageInfoDB
+	- support uninstall
+		- might not be possible without rpm-style database
+		  of changes to headers, libs, ...
+	- full dependency support
+
+
+- work out a makefile-based approach
+
+- CVSBundle as subclass of Bundle?
+    - "fresh" if any update activity
+    - or, *always* do a cvs update 
+	(check_freshness always reports 'remote_newer')
+
+- unhack prefix in BuildInfo
+
+- update rftp to call watchdb add, rather than updating the db itself
+
+- handle packages that cannot support multiple builds at once
+    - e.g., tcl/tk
+    - either sequentialize the builds, or unbundle the source to
+      multiple places
+
+- forward-propagate event to all depdendents when a package changes,
+  like egcs
+
+
+Priority 3:	Required for 0.2 to be useable
+----------
+
+Major features
+--------------
+	- gui interface to watch db
+		- integrate with midnight commander?
+	- drag urls from netscape onto gui
+		- start tracking it
+	- oompa gets progressively better at parsing configure, make output
+		- can identify certain classes of problems automatically
+		- uses expect to "watch over your shoulder" during
+		  problem solving
+			- e.g., sees user set environment variables, 
+				sees special args to configure
+		- fetch an arbitrary package, go as far as you can
+			- "does it have configure?"
+			- does it have autogen.sh
+			- maybe even parse a README/INSTALL file
+	- corba interface to databases
+		- can access from anywhere in gnome
+
+-----
+
+- hierarchies of state
+
+- scheduler for activity
+	- can start fetching gtk+ while building glib, ...
+	- never too many makes at once, 
+
+- use neural net to learn what master does with files found at watch sites
+
+
+- encode package info in xml, can post on web sites, mailing lists, ...
+
+- support moving large parts of directory
+	- e.g., all gnome packages are now in gnome, not gnome/cvs
+	
+- get/build/update all take optional, explicit version
+	- but it defaults to latest
+
+- make a good guess as to where to find a piece of software, given a 
+  hint
+	- e.g., libtool is gnu software
+		- go to ftp.gnu.org
+		- look in pub
+		- look in pub/gnu
+		- see libtool, as directory
+		- check in there for latest
+
+- info db may get out of sync with local
+	- need operation to check local versions of everything
+
+- find latest local config, build
+	- there may be more than one bundle laying around
+	- one may be unnamed, ...
+
+- think about hierarchical naming
+	- gnome/glib, "depends on gnome/glib"
+	- maybe just aliases?
+
+- switch from-floppy to use PackageInfoDB to know where to put stuff
+	- ask user whenever unsure
+
+- clean up myFTP to handle errors internally
+	- callers have to field too many exceptions
+
+- i cannot get ftp to work from home.  could it be a firewall problem?
+	- why would it work from netscape
+
+  - by hand
+checking for killpg in -lucb... yes
+checking for Qt... configure: error: Qt >= 1.42 (headers and libraries) not found. Please check your installation! 
+
+
+  - from build-pkg
+checking for killpg in -lucb... yes
+checking for Qt... 
+
+  -- 
+
+- take advantage of LATEST-... notes in ftp listings
+
+- merge the listings databases from multiple days
+
+- can use an oompa db to recover from a crash
+
+- BuildInfo - need some sort of progress indicators during do_command
+
+- support RPM, etc., as one of the preferred fetch styles
+
+- may need to set a limit on work done in a single night
+
+- mail a summary of activity to master
+
+- "feedback" gui, with buttons to reinforce a good choice ("carry on"),
+  and a means to teach when oompa makes a bad choice
+
+  -- 
+
+- try to determine if already configured properly.  if so, can skip a
+  potentially lengthy step
+	- might need to parse config.status, see what's different
+
+(8) given a list of vague new stuff in RADAR, graphical tool goes to
+    that top level (of http or ftp), and asks for help.  you point
+    out what to do, then it carries on as usual
+	- depends on tons of stuff from py-lib, ...
+
+(8) use the agent book
+	- store info about best place to get a file
+	- watch what user does to build packages, ...
+
+- consider supporting microsoft/(netscape on windows?)-isms
+	- turns . to _
+		- e.g., gdb-4.17.tar.gz --> gdb-4_17_tar.gz
+
+- (option) if a package has gnu versioning in the tar name, but
+  unbundles without the version, rename it ???
+	- esp. foo -> foo-1.10
+
+- use something like ganesha to determine best place to get file from
+
+- oompa can help send bug reports
+
+- dependency system is too rigid
+    - assuming "installed" is the dependency.  no other choice
+
+- action: need way to determine if a version is newer
+	- and, if there are > 1, which order to apply, or which to just discard
+	- e.g., you are 3 versions behind.  could patch, ...
+
+- if there's a .bz2 and a .gz, action should know that they are the same
+  (by comparing versions), and make the right choice
+	- need the listings in a tree structure, so we can easily 
+	  see if there are multiple versions, ...
+
+- would be nice if we could encode in the action regexp: 
+	"anything at or below this level", to support looking into new
+	directories
+
+- combine all ftp_fetches for a single host, so you don't have to
+  close/reopen all the time
+
+- hostdb/watch: handle url-style ftp sites
+
+oompa:	allow command-line args to override *all actions*
+	- e.g., oompa configure dev-tools --target=...
+	
+- update may have to handle multiple patches
+	- e.g., currently, i'm at 2.1.115, newest patch is 2.1.117
+		- fetch both, apply properly
+
+- support ignores
+
+- spider that keeps looking around, starting from bookmarks, ...
+
+- oompa shares info with other oompa's on the net
+	- best way to configure xxx for host type yyy
+
+-----
+
+- tool that runs configure, builds a checkbox list of possible
+  options
+
+- oompa as a vfs under midnight commander
+	- drag onto the various actions
+
+- based on TARGETS, choose an appropriate host for the build
+	- prefer native
+	- who has which cross-tools?
+	- use rexec
+	- need dbase of host_type to host
+
+- maintain a cache of sources
+	- flush old stuff, as long as you know how to fetch again
+
+- easy graphical manipulation of results
+	- add a new watch directory, ...
+
+- interact with user when we get confused
+
+- policy on whether you trust binaries or not:
+	- if so, try to fetch RPM first
+
+- some info specific to users?
+	- some sort of hierarchy?
+
+- look in a local source repository first?
+
+- watch: can i just use the ignore mechanism as prune points for recursion?
+	- if not, we need prune points
+
+
+hostdb
+------
+- manipulate ignore lists
+- on add, be able to specify multiple directories
+- new commands:
+	- set recursive host dir
+	- unset recursive host dir
+	- add ignore {filenames}
+	- add ignore host {filenames}
+	- add ignore host dir {filenames}
+
+hosts.tcl
+---------
+- start keeping track of non-responsive/slow hosts
+
+- read http spec, to see how you can just check the characteristics, without 
+  a full read and checksum
+- add a url to db if it's not there
+  (i.e., you can add it right from url-watch, instead of using urldb)
+- be able to use the netscape bookmark folders as category listings
+	- <dl> marks the beginning of each folder
+	- any way to use the html_library parser, with
+	  callbacks for dl, ...
+		- Not worth it - simpler just to do a line
+		  by line grep for dl, ...
+
+rftp
+----
+- keep track of all gets in msql, so you can do searches:
+	- so oompa can know where to "get the newest ..."
+	- so oompa can let you know when particular files of interest are 
+	  updated.
+	- schema should contain: {host directory file date}
+- make a fetch/get end up back in the starting dir (client AND server)
+
+
+- wait for user to log on (or break xlock), and then interact regarding
+  things that have occured
+
+- be able to drag from a watch window to an interest window
+
+- ways to find out if a version is newer than another
+	- store version AND date
+
+- gather the info on all tools used (gcc: 2.6.2, gas: 2.5.2, ...)
+	- in order to rebuild older packages, ...
+
+- use annotated lists for extending actions
+	- {fetch {working_dir}}
+	- {build {deposit_dir {{host type} ...}}}
+	- UI automatically gets reconfigured, ...
+- use expect to control the different types of hosts
+- deal with time zones ???
+- to build 2.6.3, should know that you can get there with 2.6.1 and
+	2.6.1-2.6.2.diff and 2.6.2-2.6.3.diff
+- learning
+	- automatically try the usual rules.
+	- if something fails, get help:
+		- ask for explanation, and what to do
+	- keep scripts to help with explanation
+	- keep list of rule:code pairs
+	- rules should go from specific to generic
+
+
+rftp
+----
+- return code 530 may actually mean access denied, too, so it
+  may be stupid to keep trying
+- possible 530 values:
+	530 User ftp unkown.
+	530 User ftp access denied.
+- can't use ~
+- update ~fetch to be able to get multiple dirs
+- if you get a "421 Timeout" message, then re-login, re-cd and try
+  again
+- may need to be smart about symlinks.  If they point to something
+  in the current dir, just make the link.  but if they point to
+  ../foo, then you will need to get them, ...
+- add logic to restart a big get if it breaks (possible?)
+
+
+misc
+----
+- regexp "style" editor
+	- to edit things like "FSF" (which means 1.08.5)
+- code editor/librarian
+- recursive directory create (welch book)
+- proc to update tclIndex on the fly (welch book)
+
+
+hostedit
+--------
+- update to include new host fields (recursive, max_depth, prune list)
+- finish Dir_Watch
+- finish Display_New_Files
+- change does not work
+- add recursive option to each directory, to specify if you
+  want to dive deep or not
+- combo box for hosts
+
+
+Interface
+---------
+samples of language:
+
+get glibc
+get lites latest
+get lites 941218
+get glibc
+get glibc 1.09.2
+get glibc latest
+
+build lites latest
+build glibc latest mach noftp    ; latest that's already here 
+build glibc latest netbsd
+build emacs latest all
+
+#
+# adds action rules to keep this up to date
+#
+maintain egcs
+
+
+#
+# "global" rules for setting up dependencies for builds
+#
+rule: all depends on gcc
+rule: lites depends on mach
+
