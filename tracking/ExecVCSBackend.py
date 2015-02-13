@@ -24,7 +24,7 @@ class ExecVCSBackend(VCSBackend):
     STDOUT = subprocess.STDOUT
 
 
-    def print(self, message = None):
+    def log(self, message = None):
 
         if message is None:
             message = ""
@@ -123,6 +123,21 @@ class ExecVCSBackend(VCSBackend):
         return output
 
 
+    def _getChildOutput(self, child_stdout):
+        """
+
+        clean up output from a child process.
+        
+        returns a string - full output text
+
+        subclasses can implement _clean_up_output to remove noise, and
+        the final string is stripped, so may possibly be empty
+
+        """
+
+        return self._clean_up_output(child_stdout.getvalue().decode("utf-8"))
+
+    
     def _dump_output(self, child_stdout, out_stream = None):
         """
 
@@ -134,6 +149,8 @@ class ExecVCSBackend(VCSBackend):
         stdout is an io.bytes
         """
 
+        xxx_dont_use_any_more_use_get_and_log
+        
         if out_stream is None:
             out_stream = sys.stdout
 
@@ -145,9 +162,9 @@ class ExecVCSBackend(VCSBackend):
         output = self._clean_up_output(output)
 
         if output:
-            self.print()
-            self.print(output)
-            self.print()
+            self.log()
+            self.log(output)
+            self.log()
             pass
 
         return

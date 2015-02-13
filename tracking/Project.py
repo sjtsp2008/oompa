@@ -40,6 +40,10 @@ class Project:
 
         self.out_stream  = out_stream
 
+        # XXX ???
+        # XXX bridging to new logging system
+        self._out_stream = self._tracker.out_stream
+        
         return
 
 
@@ -61,20 +65,15 @@ class Project:
         return self._backend
 
 
-    def print(self, message):
-        self._tracker.print(message)
-
+    def log(self, message = None):
+        self._tracker.log(message)
+        return
+        
     def update(self):
 
-        # XXX bridging to new logging system
-        self._out_stream = self._tracker.out_stream
+        return self._get_backend().update(self)
 
-        self.print("updating %s" % ( self.path, ))
-
-        backend = self._get_backend()
-
-        return backend.update(self)
-
+    
     def getSourceURL(self):
 
         return self._get_backend().getSourceURL(self)

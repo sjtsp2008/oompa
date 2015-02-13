@@ -7,6 +7,9 @@ Oompa TODO list
 
 - oompa tracker uses "normal" python opt parsing, vs my pylib
 
+- clean up logging
+  - using tree of self._output_stream
+
 - fix relative-path code in checkout
   - should always be explicit
 

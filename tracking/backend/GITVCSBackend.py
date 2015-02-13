@@ -55,14 +55,17 @@ class GITVCSBackend(ExecVCSBackend):
         run git pull (all branches of origin)
         """
 
-        # XXX need to update the constructor
-        self._out_stream = project._out_stream
-
+        # project.log("updating %s" % ( self.path, ))
+        
         vcs_folder = project.get_vcs_folder()
         vcs_type   = self._type
 
+        showedProject = False
+        
         if self.verbose:
-            self.print("cd %s" % vcs_folder)
+            self.log("updating %s" % ( self.path, ))
+            self.log("  cd %s" % vcs_folder)
+            showedProject = True
             pass
 
         self.push_folder(vcs_folder)
@@ -77,10 +80,22 @@ class GITVCSBackend(ExecVCSBackend):
                             stderr = child_stderr)
 
         if result != 0:
-            self.print("  pull result: %s" % result)
+            project.log("  XXX pull result: %s" % result)
+            project.log()
             pass
 
-        self._dump_output(child_stdout, self._out_stream)
+        child_out = self._getChildOutput(child_stdout)
+
+        if child_out:
+            if not showedProject:
+                project.log("updating %s" % ( project.path, ))
+                pass
+            project.log()
+            project.log(child_out)
+            project.log()
+            pass
+
+        # project.dump_output(child_stdout)
 
         self.pop_folder()
 

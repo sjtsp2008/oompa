@@ -61,7 +61,7 @@ class SourceTracker:
 
         return
 
-    def print(self, message = None):
+    def log(self, message = None):
 
         if message is None:
             message = ""
@@ -105,11 +105,11 @@ class SourceTracker:
         project         = Project(project_path, tracker = self)
         vcs_root        = project.get_vcs_folder()
 
-        # self.print("Sourcetracker.track(): %s - %s" % ( project.path, vcs_root ))
+        # self.log("Sourcetracker.track(): %s - %s" % ( project.path, vcs_root ))
 
         if vcs_root is None:
-            self.print("  XXX could not identify a vcs subfolder for for project: %s" %
-                       project.path)
+            self.log("  XXX could not identify a vcs subfolder for for project: %s" %
+                     project.path)
             return None
 
 
@@ -119,12 +119,12 @@ class SourceTracker:
         #
         path_in_tracker = self.get_path_in_tracker_tree(project.path)
 
-        # self.print("   path_in_tracker: %s" % path_in_tracker)
+        # self.log("   path_in_tracker: %s" % path_in_tracker)
         
         if os.path.exists(path_in_tracker):
 
             if not replace:
-                self.print("  not replacing existing path in tracker: %s" % path_in_tracker)
+                self.log("  not replacing existing path in tracker: %s" % path_in_tracker)
                 return
 
             os.remove(path_in_tracker)
@@ -132,7 +132,7 @@ class SourceTracker:
 
         file_utils.create_folder_for(path_in_tracker)
         
-        self.print("ln -s %s %s" % ( path_in_tracker, vcs_root ))
+        self.log("ln -s %s %s" % ( path_in_tracker, vcs_root ))
 
         os.symlink(vcs_root, path_in_tracker)
         
@@ -149,7 +149,7 @@ class SourceTracker:
         project         = Project(project_path)
         vcs_root        = project.get_vcs_folder()
 
-        # self.print("Sourcetracker.untrack(): %s - %s" % ( project.path, vcs_root ))
+        # self.log("Sourcetracker.untrack(): %s - %s" % ( project.path, vcs_root ))
 
         #
         # figure out where we will put the project, within the tracking
@@ -157,12 +157,12 @@ class SourceTracker:
         #
         path_in_tracker = self.get_path_in_tracker_tree(project.path)
 
-        self.print("   removing path_in_tracker: %s" % path_in_tracker)
+        self.log("   removing path_in_tracker: %s" % path_in_tracker)
 
         if os.path.exists(path_in_tracker):
             os.remove(path_in_tracker)
         else:
-            self.print("  not tracking project")
+            self.log("  not tracking project")
             pass
 
         return
@@ -178,7 +178,7 @@ class SourceTracker:
         vcs_type = vcs_utils.detect_vcs_type_from_source(source_spec)
 
         if vcs_type is None:
-            self.print("SourceTracker.checkout(): unknown vcs type: %s" % source_spec)
+            self.log("SourceTracker.checkout(): unknown vcs type: %s" % source_spec)
             return None
         
         backend  = VCSBackendFactory.get_backend(project_type = vcs_type,
@@ -199,7 +199,7 @@ class SourceTracker:
         if result is not None and result != 0:
             self.out_stream.write("  result: %s - %s\n" % ( project_path, result, ))
             # XXX only if something happened
-            self.print()
+            self.log()
             pass
 
         self.out_stream.flush()
@@ -214,7 +214,7 @@ class SourceTracker:
 
         vcs_type = vcs_utils.determine_vcs_type(project_path = folder)
 
-        # self.print("SourceTracker.update_folder(): %s (vcs_type: %s)" % ( folder, vcs_type ))
+        # self.log("SourceTracker.update_folder(): %s (vcs_type: %s)" % ( folder, vcs_type ))
 
         if vcs_type:
             return self.update_project(folder)
@@ -248,9 +248,9 @@ class SourceTracker:
         may or may not be under tracking tree
         """
         
-        self.print()
-        self.print("# %s - start tacker update" % datetime.datetime.today().strftime("%Y%m%d-%H:%M"))
-        self.print()
+        self.log()
+        self.log("# %s - start tacker update" % datetime.datetime.today().strftime("%Y%m%d-%H:%M"))
+        self.log()
 
         if not projects:
             return self.update_all()
@@ -258,6 +258,10 @@ class SourceTracker:
         for project in projects:
             result = self.update_folder(project)
             pass
+
+        self.log()
+        self.log("# %s - finished tacker update" % datetime.datetime.today().strftime("%Y%m%d-%H:%M"))
+        self.log()
 
         return
 
