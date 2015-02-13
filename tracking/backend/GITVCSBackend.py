@@ -23,7 +23,7 @@ class GITVCSBackend(ExecVCSBackend):
 
         project_name         = self._determine_project_name(source_spec)
 
-        print("  project name: %s" % project_name)
+        # print("  project name: %s" % project_name)
         
         # assuming in current folder
         base_folder          = os.getcwd()
@@ -33,7 +33,7 @@ class GITVCSBackend(ExecVCSBackend):
 
         cmd = "%s clone %s %s" % ( self._type, source_spec, " ".join(args))
 
-        print("  cmd: %s" % project_name)
+        print("  cmd: %s" % cmd)
 
         result = self._run(cmd)
 

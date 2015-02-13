@@ -180,7 +180,7 @@ class MercurialVCSBackend(ExecVCSBackend):
         if result != 0:
             print("  XXX something wrong?  result: %s" % result)
             print("      cd %s; %s" % ( vcs_folder, cmd ))
-            pass
+            xxx
 
         folder       = self.pop_folder()
 

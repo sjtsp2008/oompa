@@ -1,7 +1,7 @@
 
 [20140208]
 
-full import
+finish full import of projects on laptop
 
   fix goof with deeper and deeper relative paths
 
@@ -23,6 +23,113 @@ commit
 create the develop branch
 
 git checkout -b develop master
+
+#
+# my email and name were not set up
+#
+
+git config --global user.name "Jeff Turner"
+git config --global user.email sjtsp2008@gmail.com
+
+git commit --amend --reset-author -m "fix author after fixing git config"
+
+
+----
+
+install github3.py, with goal of tracking companies/developers (i
+frequently want to see what else someone is working on, once i like
+one of their projects)
+
+
+sudo pip install github3.py
+
+note: pulls in a nice-looking library called "requests":
+
+Requests: HTTP for Humans
+
+Most existing Python modules for sending HTTP requests are extremely
+verbose and cumbersome. Python's builtin urllib2 module provides most
+of the HTTP capabilities you should need, but the api is thoroughly
+broken. It requires an enormous amount of work (even method overrides)
+to perform the simplest of tasks.
+
+Things shouldn't be this way. Not in Python.
+
+>>> r = requests.get('https://api.github.com', auth=('user', 'pass'))
+>>> r.status_code
+204
+>>> r.headers['content-type']
+'application/json'
+>>> r.text
+...
+
+
+Requests allow you to send HTTP/1.1 requests. You can add headers,
+form data, multipart files, and parameters with simple Python
+dictionaries, and access the response data in the same way. It's
+powered by httplib and urllib3, but it does all the hard work and
+crazy hacks for you.
+
+Features
+
+    International Domains and URLs
+    Keep-Alive & Connection Pooling
+    Sessions with Cookie Persistence
+    Browser-style SSL Verification
+    Basic/Digest Authentication
+    Elegant Key/Value Cookies
+    Automatic Decompression
+    Unicode Response Bodies
+    Multipart File Uploads
+    Connection Timeouts
+    Thread-safety
+    HTTP(S) proxy support
+
+
+and anothe package:
+
+uritemplate
+
+Simple python library to deal with URI Templates. The API looks like
+
+from uritemplate import URITemplate, expand
+
+# NOTE: URI params must be strings not integers
+
+gist_uri = 'https://api.github.com/users/sigmavirus24/gists{/gist_id}'
+t        = URITemplate(gist_uri)
+
+print(t.expand(gist_id='123456'))
+
+# => https://api.github.com/users/sigmavirus24/gists/123456
+
+# or
+print(expand(gist_uri, gist_id='123456'))
+
+# also
+t.expand({'gist_id': '123456'})
+print(expand(gist_uri, {'gist_id': '123456'}))
+
+
+Where it might be useful to have a class
+
+import requests
+
+class GitHubUser(object):
+    url = URITemplate('https://api.github.com/user{/login}')
+    def __init__(self, name):
+        self.api_url = url.expand(login=name)
+        response = requests.get(self.api_url)
+        if response.status_code == 200:
+            self.__dict__.update(response.json())
+
+When the module containing this class is loaded, GitHubUser.url is
+evaluated and so the template is created once. It's often hard to
+notice in Python, but object creation can consume a great deal of time
+and so can the re module which uritemplate relies on. Constructing the
+object once should reduce the amount of time your code takes to run.
+
+
 
 
 

@@ -1,11 +1,16 @@
 Oompa TODO list
 ---------------
 
+- track: don't log a project until it has a change
+
+- integrate with luigi
+
 - oompa tracker uses "normal" python opt parsing, vs my pylib
 
-- move to git, from hg
+- fix relative-path code in checkout
+  - should always be explicit
 
-- able to check out with a simpler "spec", since github is predictable
+- able to check out with a simpler "spec", since github is (nearly) predictable
   - tracker co github flink
   - find the project
     - may have to disambiguate?
@@ -48,7 +53,6 @@ Oompa TODO list
 - support specifying, or defaulting with config, a base
   - don't have to cd to src/audio to check out guitarix
     - can specify --base src/audio, or even just --folder audio (under config'ed base)
-
 
 - per-project output handlers/cleaner-uppers
   - pypy is amazingly noisy/high-veloctiy
@@ -176,11 +180,6 @@ Major features
   that's not been reported before (to the mother database), prepare
   a message to fire off: "it worked.  here are the details, ..."
     - how does this relate to tinderbox?
-
-- extend db-test to show a cvs log
-    - incl freshmeat-style "summary" 
-	- # changes, ...
-    - able to open file from tree
 
 - build evolution "with one click"
     - tons of new packages, via ftp

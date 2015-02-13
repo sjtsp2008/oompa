@@ -88,10 +88,9 @@ class SourceTracker:
             xxx
             pass
 
-        tail    = pieces[index+1:]
-        path    = os.path.join(self.tracking_folder, *tail)
+        tail = pieces[index+1:]
         
-        return path
+        return os.path.join(self.tracking_folder, *tail)
 
 
     def track(self, project_path, replace = False):
@@ -106,7 +105,7 @@ class SourceTracker:
         project         = Project(project_path, tracker = self)
         vcs_root        = project.get_vcs_folder()
 
-        self.print("Sourcetracker.track(): %s - %s" % ( project.path, vcs_root ))
+        # self.print("Sourcetracker.track(): %s - %s" % ( project.path, vcs_root ))
 
         if vcs_root is None:
             self.print("  XXX could not identify a vcs subfolder for for project: %s" %
@@ -120,7 +119,7 @@ class SourceTracker:
         #
         path_in_tracker = self.get_path_in_tracker_tree(project.path)
 
-        self.print("   path_in_tracker: %s" % path_in_tracker)
+        # self.print("   path_in_tracker: %s" % path_in_tracker)
         
         if os.path.exists(path_in_tracker):
 
@@ -180,8 +179,7 @@ class SourceTracker:
 
         if vcs_type is None:
             self.print("SourceTracker.checkout(): unknown vcs type: %s" % source_spec)
-            xxx
-            pass
+            return None
         
         backend  = VCSBackendFactory.get_backend(project_type = vcs_type,
                                                  out_stream   = self.out_stream)
@@ -331,6 +329,11 @@ class SourceTracker:
 
                 local_path, type, url = line.split("\t")
 
+                # XXX temp
+                if type != "git":
+                    print("we don't check out %s projects yet - %s %s" % ( type, local_path, url ))
+                    continue
+                
                 # need to remove prefix from other machine
                 # (e.g., /home/jeff/src).  expects that /src/ is in path somewhere.
                 #
@@ -348,16 +351,19 @@ class SourceTracker:
                 local_path    = local_path.replace("tracking/",   "")
                 local_path    = os.path.dirname(local_path)
 
-                parent_folder = os.path.dirname(local_path)
-                
-                print("  %s %s %s" % ( parent_folder, type, url ))
-                # print("  local_path: %s" % local_path)
-                
-                if os.path.exists(local_path):
-                    print("  already exists: %s" % local_path)
-                    continue
+                full_local_path    = os.path.join(local_base, local_path)
 
+                # print("full_local_path: %s" % full_local_path)
+
+                if os.path.exists(full_local_path):
+                    # if verbose:
+                    # print("  already exists: %s" % full_local_path)
+                    continue
+                
+                parent_folder      = os.path.dirname(local_path)
                 full_parent_folder = os.path.join(local_base, parent_folder)
+                
+                print("  %s %s %s" % ( full_parent_folder, type, url ))
 
                 if not os.path.exists(full_parent_folder):
                     os.makedirs(full_parent_folder)
@@ -369,8 +375,8 @@ class SourceTracker:
                 project_folder = self.checkout(url)
 
                 if project_folder is None:
-                    xxx
-                    pass
+                    print("  could not check out: %s" % url)
+                    continue
     
                 link_path      = self.track(project_folder)
                 pass
