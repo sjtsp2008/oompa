@@ -27,6 +27,7 @@ _usage_str = """usage: tracker <command> <folder> [...]
 """
 
 import datetime
+import logging
 import os
 import sys
 
@@ -60,13 +61,29 @@ if not args:
     usage.usage()
     pass
 
-#
-# TODO: allow logging to stdout (for dev/debug)
-#
 
-out_stream = sys.stdout
+log_base = os.path.join(os.environ.get("HOME"), "tracker-logs")
+log_path = os.path.join(log_base, 
+                        "%s.tracker.log" % datetime.datetime.today().strftime("%Y%m%d"))
 
-tracker    = SourceTracker(config, out_stream)
+print("logging to: %s" % log_path)
+
+# make sure folder exists
+log_folder = os.path.dirname(log_path)
+if not os.path.exists(log_folder):
+    os.makedirs(log_folder)
+    pass
+
+# set log_path to None to test/debug logging itself (will go to console)
+# log_path = None
+
+logging.basicConfig(filename = log_path,
+                    level    = logging.INFO,
+                    format   = '%(asctime)s %(levelname)s %(message)s',
+                    datefmt  = '%Y%m%d-%H:%M:%S')
+
+
+tracker    = SourceTracker(config)
 
 # XXX use CommandHandle
 command = args[0]
@@ -127,22 +144,7 @@ elif command in [ 'co', 'checkout' ]:
 
 elif command == 'update' or command == "up":
 
-    log_base = os.path.join(os.environ.get("HOME"), "tracker-logs")
-    log_path = os.path.join(log_base, 
-                            "%s.tracker.log" % datetime.datetime.today().strftime("%Y%m%d"))
-
-    print("logging to: %s" % log_path)
-
-    # make sure folder exists
-    log_folder = os.path.dirname(log_path)
-    if not os.path.exists(log_folder):
-        os.makedirs(log_folder)
-        pass
     
-    out_stream = open(log_path, "a")
-
-    tracker.setOutStream(out_stream)
-
     result     = tracker.update(*args)
 
 elif command == "urls":

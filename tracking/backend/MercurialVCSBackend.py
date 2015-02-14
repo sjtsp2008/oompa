@@ -195,7 +195,7 @@ class MercurialVCSBackend(ExecVCSBackend):
         """
 
         # XXX need to update the constructor
-        self._out_stream = project._out_stream
+        # self._out_stream = project._out_stream
 
         #
         # note that updating in hg, with useful output, is actually
@@ -242,7 +242,7 @@ class MercurialVCSBackend(ExecVCSBackend):
             # there are differences.  now really pull them
             #
 
-            self._dump_output(child_stdout, self._out_stream)
+            self._dump_output(child_stdout, project)
             self.print()
 
             child_stdout  = io.BytesIO()
@@ -259,7 +259,7 @@ class MercurialVCSBackend(ExecVCSBackend):
                 self.print("      cd %s; %s" % ( vcs_folder, command ))
 
                 # output from command
-                self._dump_output(sys.stdout, self._output)
+                self._dump_output(child_stdout, project)
                 self.print()
 
                 pass

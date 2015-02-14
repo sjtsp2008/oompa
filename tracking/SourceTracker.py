@@ -8,6 +8,7 @@ packge oompa.tracking
 """
 
 import datetime
+import logging
 import os
 import sys          # for stdout
 
@@ -28,6 +29,9 @@ class SourceTracker:
     
     """
 
+    logger = logging.getLogger(__name__)
+
+    
     def __init__(self, config = None, out_stream = None):
         """
         require a config
@@ -46,17 +50,16 @@ class SourceTracker:
         self.tracking_folder = tracking_folder
         
         # TODO: maybe should use real logging?
-
-        if out_stream is None:
-            out_stream = sys.stdout
-            pass
-
-        self.out_stream = out_stream
+        # if out_stream is None:
+        #    out_stream = sys.stdout
+        #    pass
+        # self.out_stream = out_stream
 
         return
 
     def setOutStream(self, out_stream):
 
+        xxx
         self.out_stream = out_stream
 
         return
@@ -67,7 +70,9 @@ class SourceTracker:
             message = ""
             pass
 
-        self.out_stream.write("%s\n" % message)
+        # self.out_stream.write("%s\n" % message)
+        # logging.info("%s" % message)
+        self.logger.info("%s" % message)
         
         return
 
@@ -132,7 +137,7 @@ class SourceTracker:
 
         file_utils.create_folder_for(path_in_tracker)
         
-        self.log("ln -s %s %s" % ( path_in_tracker, vcs_root ))
+        self.log("  ln -s %s %s" % ( path_in_tracker, vcs_root ))
 
         os.symlink(vcs_root, path_in_tracker)
         
@@ -175,14 +180,15 @@ class SourceTracker:
         
         """
 
+        self.log("SourceTracker.checkout(): %s %s" % ( source_spec, rest ))
+        
         vcs_type = vcs_utils.detect_vcs_type_from_source(source_spec)
 
         if vcs_type is None:
             self.log("SourceTracker.checkout(): unknown vcs type: %s" % source_spec)
             return None
         
-        backend  = VCSBackendFactory.get_backend(project_type = vcs_type,
-                                                 out_stream   = self.out_stream)
+        backend  = VCSBackendFactory.get_backend(project_type = vcs_type)
         result   = backend.checkout(source_spec, *rest)
 
         return result
@@ -197,12 +203,12 @@ class SourceTracker:
         result   = project.update()
 
         if result is not None and result != 0:
-            self.out_stream.write("  result: %s - %s\n" % ( project_path, result, ))
+            self.log("  result: %s - %s\n" % ( project_path, result, ))
             # XXX only if something happened
             self.log()
             pass
 
-        self.out_stream.flush()
+        # self.out_stream.flush()
 
         return
 

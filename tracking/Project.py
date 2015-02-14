@@ -34,15 +34,15 @@ class Project:
         
         self._backend    = None
 
-        if out_stream is None:
-            out_stream = tracker.out_stream
-            pass
-
-        self.out_stream  = out_stream
-
-        # XXX ???
-        # XXX bridging to new logging system
-        self._out_stream = self._tracker.out_stream
+        # if out_stream is None:
+        #    out_stream = tracker.out_stream
+        #    pass
+        #
+        # self.out_stream  = out_stream
+        # 
+        # # XXX ???
+        # # XXX bridging to new logging system
+        # self._out_stream = self._tracker.out_stream
         
         return
 

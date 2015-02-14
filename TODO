@@ -1,14 +1,21 @@
 Oompa TODO list
 ---------------
 
-- track: don't log a project until it has a change
+(B) broke logging - can't check out new projects - out_Stream issue
 
-- integrate with luigi
+- simplest github3.py test
+  - just submit some request and get results
 
 - oompa tracker uses "normal" python opt parsing, vs my pylib
 
-- clean up logging
-  - using tree of self._output_stream
+- provide cleaner the simpler view is just a transform
+
+- log checkouts, so that we can track over time, remember when
+  i found something
+
+- tracker move <project-folder> <dest-folder>
+  - in src tree (not src/tracking)
+  - maybe move *everything*?
 
 - fix relative-path code in checkout
   - should always be explicit
@@ -18,10 +25,6 @@ Oompa TODO list
   - find the project
     - may have to disambiguate?
 
-- real logging, esp. with timestamps
-  - basis for analyzing
-  - simpler view is just a transform
-
 - analytics
   - dead projects
     - no updates in
@@ -29,8 +32,15 @@ Oompa TODO list
   - active projects
   - number of committers
 
+  ----
+
 - explore re-adding triggers to projects when updated
   - luigi better than old oompa code?
+
+- integrate with luigi
+  - graphical - drag on rules for what to do next
+
+
 
 - able to move projects around, locally
   - moves the tracking symlinks, too

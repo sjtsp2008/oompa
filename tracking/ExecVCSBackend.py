@@ -138,7 +138,7 @@ class ExecVCSBackend(VCSBackend):
         return self._clean_up_output(child_stdout.getvalue().decode("utf-8"))
 
     
-    def _dump_output(self, child_stdout, out_stream = None):
+    def _dump_output(self, child_stdout, project = None):
         """
 
         clean up and possibly print output from a child process.
