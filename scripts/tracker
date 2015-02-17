@@ -75,6 +75,7 @@ if not os.path.exists(log_folder):
     pass
 
 # set log_path to None to test/debug logging itself (will go to console)
+# TODO: set up the tee - add another handler
 # log_path = None
 
 logging.basicConfig(filename = log_path,
@@ -143,7 +144,6 @@ elif command in [ 'co', 'checkout' ]:
     print("   tracker link path: %s" % link_path)
 
 elif command == 'update' or command == "up":
-
     
     result     = tracker.update(*args)
 

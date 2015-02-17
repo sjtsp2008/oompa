@@ -70,9 +70,9 @@ class SourceTracker:
             message = ""
             pass
 
-        # self.out_stream.write("%s\n" % message)
-        # logging.info("%s" % message)
-        self.logger.info("%s" % message)
+        for line in message.splitlines():
+            self.logger.info("%s" % line)
+            pass
         
         return
 
@@ -259,12 +259,13 @@ class SourceTracker:
         self.log()
 
         if not projects:
-            return self.update_all()
-
-        for project in projects:
-            result = self.update_folder(project)
+            self.update_all()
+        else:
+            for project in projects:
+                result = self.update_folder(project)
+                pass
             pass
-
+        
         self.log()
         self.log("# %s - finished tacker update" % datetime.datetime.today().strftime("%Y%m%d-%H:%M"))
         self.log()

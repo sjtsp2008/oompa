@@ -19,21 +19,18 @@ class GITVCSBackend(ExecVCSBackend):
         
         print("%s.checkout(): %s, %r" % ( self.__class__.__name__, source_spec, args ))
 
-        # XXX option to check into some specific folder/category
+        # TODO option to check into some specific folder/category
 
-        project_name         = self._determine_project_name(source_spec)
-
-        # print("  project name: %s" % project_name)
-        
-        # assuming in current folder
+        # XXX stop assuming current folder
         base_folder          = os.getcwd()
+        project_name         = self._determine_project_name(source_spec)
         vcs_path             = self._create_vcs_folder(project_name, base_folder)
 
         self.push_folder(vcs_path)
 
         cmd = "%s clone %s %s" % ( self._type, source_spec, " ".join(args))
 
-        print("  cmd: %s" % cmd)
+        print("  cmd:      %s" % cmd)
 
         result = self._run(cmd)
 

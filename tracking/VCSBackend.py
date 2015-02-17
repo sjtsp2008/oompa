@@ -44,6 +44,7 @@ class VCSBackend:
 
     def _determine_project_name(self, source_spec):
         """
+
         figure out project name from a url, or url and requested project name
 
           http://git.code.sf.net/p/guitarix/git guitarix  -> guitarix
@@ -52,15 +53,22 @@ class VCSBackend:
 
         """
 
-        # if 
         pieces = source_spec.split()
 
         if len(pieces) == 2:
             return pieces[1]
 
-        result               = urlparse(source_spec)
-        tail                 = os.path.basename(result.path)
-        project_name, suffix = os.path.splitext(tail)
+        result = urlparse(source_spec)
+
+        # XXX hack - need a plugin set of rules
+
+        if result.netloc == "git.code.sf.net":
+            # pick "guitarix" from /p/guitarix/git
+            project_name = os.path.basename(os.path.dirname(result.path))
+        else:
+            tail                 = os.path.basename(result.path)
+            project_name, suffix = os.path.splitext(tail)
+            pass
 
         return project_name
 

@@ -1,7 +1,9 @@
 Oompa TODO list
 ---------------
 
-(B) broke logging - can't check out new projects - out_Stream issue
+(B) need to handle checkout from sourceforge better
+  - checks out in to a folder called "git"
+  
 
 - simplest github3.py test
   - just submit some request and get results
@@ -16,6 +18,9 @@ Oompa TODO list
 - tracker move <project-folder> <dest-folder>
   - in src tree (not src/tracking)
   - maybe move *everything*?
+
+- tracker rm <project>
+  - both source and tracking link
 
 - fix relative-path code in checkout
   - should always be explicit
@@ -33,6 +38,12 @@ Oompa TODO list
   - number of committers
 
   ----
+
+- report last time each project was updated
+  - log analysys
+
+- able to search if i've already started tracking a project, but just forgot where
+  i put it in the tree
 
 - explore re-adding triggers to projects when updated
   - luigi better than old oompa code?

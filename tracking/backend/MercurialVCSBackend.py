@@ -241,9 +241,8 @@ class MercurialVCSBackend(ExecVCSBackend):
             #
             # there are differences.  now really pull them
             #
-
-            self._dump_output(child_stdout, project)
-            self.print()
+            project.log(self._getChildOutput(child_stdout))
+            project.log()
 
             child_stdout  = io.BytesIO()
             child_stderr  = child_stderr
@@ -258,10 +257,8 @@ class MercurialVCSBackend(ExecVCSBackend):
                 self.print("  XXX something wrong?  hg pull result: %s" % result)
                 self.print("      cd %s; %s" % ( vcs_folder, command ))
 
-                # output from command
-                self._dump_output(child_stdout, project)
-                self.print()
-
+                project.log(self._getChildOutput(child_stdout))
+                project.log()
                 pass
             pass
 

@@ -1,4 +1,78 @@
 
+[20140217]
+
+XXX not checking out from sourceforge git properly
+
+tracker co git://git.code.sf.net/p/guitarix/git
+
+
+GITVCSBackend.checkout(): git://git.code.sf.net/p/guitarix/git, ()
+  vcs_path: /Users/jeff/src/audio/git/git
+  cmd: git clone git://git.code.sf.net/p/guitarix/git 
+Cloning into 'git'...
+remote: Counting objects: 33884, done.        
+remote: Compressing objects: 100% (11612/11612), done.        
+remote: Total 33884 (delta 27075), reused 28123 (delta 21990)        
+Receiving objects: 100% (33884/33884), 47.80 MiB | 1.24 MiB/s, done.
+Resolving deltas: 100% (27075/27075), done.
+Checking connectivity... done.
+   TRACKING: '/Users/jeff/src/audio/git'
+   tracker link path: None
+
+
+figure out the problem - sf has you check out to a specified name:
+
+  git clone git://git.code.sf.net/p/crosti/git crosti-git
+
+  but, the export couldn't (or didn't) capture that
+    (maybe could have detected that folder name is different than piece of
+     git url)
+
+
+updated VCSBackend._determine_project_name to gracefully handle just
+the git: pieces of a sorceforge checkout
+
+
+have to fix (re-check-out) a number of projects
+
+  - crosti
+  - 
+
+
+
+[20140216]
+
+my changes to use logging have made it harder to see the changes
+  - which projects
+  - what were the interesting changes
+  - ...
+
+need to write the simplifier/prettifier
+
+----
+
+XXX checking this one out (from sourceforge git), created a mis-named project:
+
+tracker co git://git.code.sf.net/u/ssj71/rakarrack u-ssj71-rakarrack
+
+GITVCSBackend.checkout(): git://git.code.sf.net/u/ssj71/rakarrack, ('u-ssj71-rakarrack',)
+  vcs_path: /Users/jeff/src/audio/rakarrack/git
+  cmd: git clone git://git.code.sf.net/u/ssj71/rakarrack u-ssj71-rakarrack
+Cloning into 'u-ssj71-rakarrack'...
+remote: Counting objects: 10796, done.        
+remote: Compressing objects: 100% (2980/2980), done.        
+remote: Total 10796 (delta 8604), reused 9792 (delta 7811)        
+Receiving objects: 100% (10796/10796), 7.64 MiB | 2.10 MiB/s, done.
+Resolving deltas: 100% (8604/8604), done.
+Checking connectivity... done.
+   TRACKING: '/Users/jeff/src/audio/rakarrack'
+   tracker link path: /Users/jeff/src/tracking/audio/rakarrack
+
+this is *not* the official rakarrack project
+
+  it's a fork
+
+
 [20140208]
 
 finish full import of projects on laptop
