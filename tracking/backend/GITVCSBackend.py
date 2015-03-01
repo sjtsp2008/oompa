@@ -92,8 +92,6 @@ class GITVCSBackend(ExecVCSBackend):
             project.log()
             pass
 
-        # project.dump_output(child_stdout)
-
         self.pop_folder()
 
         return result

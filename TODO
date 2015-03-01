@@ -1,9 +1,17 @@
 Oompa TODO list
 ---------------
 
-(B) need to handle checkout from sourceforge better
-  - checks out in to a folder called "git"
-  
+- tracker find neon
+  - i'm starting to have trouble remember where, or if, i already checked something out
+
+- tracker move <project-folder> <dest-folder>
+  - in src tree (not src/tracking)
+  - maybe move *everything*?
+
+- tracker rm <project>
+  - both source and tracking link
+
+- support symlinks
 
 - simplest github3.py test
   - just submit some request and get results
@@ -14,13 +22,6 @@ Oompa TODO list
 
 - log checkouts, so that we can track over time, remember when
   i found something
-
-- tracker move <project-folder> <dest-folder>
-  - in src tree (not src/tracking)
-  - maybe move *everything*?
-
-- tracker rm <project>
-  - both source and tracking link
 
 - fix relative-path code in checkout
   - should always be explicit

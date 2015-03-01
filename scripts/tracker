@@ -6,7 +6,6 @@
 #   into a tree of projects to be tracked
 # 
 # TODO:
-#    - automatically pick log file ("today") for update
 #    - use real config, for declaring where tracking folder is, ...
 #    - need CommandHandler support
 #
@@ -62,6 +61,26 @@ if not args:
     pass
 
 
+tracker = SourceTracker(config)
+
+command = args[0]
+args    = args[1:]
+
+# XXX switch to command handler
+
+if command == "find":
+    #
+    # "import" (re-check-out) projects dump from another "tracker urls"
+    #
+    result     = tracker.findProjects(*args)
+
+    sys.exit()
+
+    pass
+
+
+
+
 log_base = os.path.join(os.environ.get("HOME"), "tracker-logs")
 log_path = os.path.join(log_base, 
                         "%s.tracker.log" % datetime.datetime.today().strftime("%Y%m%d"))
@@ -84,11 +103,7 @@ logging.basicConfig(filename = log_path,
                     datefmt  = '%Y%m%d-%H:%M:%S')
 
 
-tracker    = SourceTracker(config)
 
-# XXX use CommandHandle
-command = args[0]
-args    = args[1:]
 
 if command == 'track':
     #
@@ -159,4 +174,5 @@ elif command == "import":
     # "import" (re-check-out) projects dump from another "tracker urls"
     #
     result     = tracker.importDumpedURLs(*args)
+
     pass

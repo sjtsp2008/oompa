@@ -101,6 +101,7 @@ _patterns_flavors = [
     ( ".*?bitbucket.org", "hg" ),
 
     ( ".*?hg\.",          "hg" ),
+    ( ".*?/hg/",          "hg" ),
 
     # does freshfoo support any other flavors?
     ( ".*?freshfoo.com", "hg" ),

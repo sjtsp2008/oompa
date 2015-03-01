@@ -67,7 +67,8 @@ class SourceTracker:
     def log(self, message = None):
 
         if message is None:
-            message = ""
+            # we need one line
+            message = "\n"
             pass
 
         for line in message.splitlines():
@@ -116,7 +117,6 @@ class SourceTracker:
             self.log("  XXX could not identify a vcs subfolder for for project: %s" %
                      project.path)
             return None
-
 
         #
         # figure out where we will put the project, within the tracking
@@ -187,10 +187,12 @@ class SourceTracker:
         if vcs_type is None:
             self.log("SourceTracker.checkout(): unknown vcs type: %s" % source_spec)
             return None
-        
+
         backend  = VCSBackendFactory.get_backend(project_type = vcs_type)
         result   = backend.checkout(source_spec, *rest)
 
+        self.log()
+        
         return result
 
 
@@ -273,33 +275,45 @@ class SourceTracker:
         return
 
 
-    def dumpSourceURLsInFolder(self, folder):
-        
 
-
-        # print("dumpSourceURLsInFolder(): %s" % folder)
+    def getProjects(self, folder):
+        """
+        generate stream of all Projects at and below folder
+        """
 
         try:
-            project  = Project(folder, self)
-
-            print("%s\t%s\t%s" % ( project.get_vcs_folder(), project.vcs_type, project.getSourceURL() ))
-
+            yield Project(folder, self)
         except NotAProjectException:
             #
-            # not a project.  dive in to children to find projects
+            # folder was not a project.  dive in to children to find projects
             #
             children = os.listdir(folder)
             
             for child in children:
-                path = os.path.join(folder, child)
-                if os.path.isdir(path):
-                    self.dumpSourceURLsInFolder(path)
+                childFolder = os.path.join(folder, child)
+                if os.path.isdir(childFolder):
+                    for project in self.getProjects(childFolder):
+                        yield project
+                        pass
                     pass
                 pass
             pass
 
         return
+        
 
+    
+    def dumpSourceURLsInFolder(self, folder):
+
+        # print("dumpSourceURLsInFolder(): %s" % folder)
+
+        for project in self.getProjects(folder):
+            print("%s\t%s\t%s" % ( project.get_vcs_folder(), project.vcs_type, project.getSourceURL() ))            
+            pass
+
+        return
+
+    
     def dumpSourceURLs(self, *projects):
         """
         
@@ -341,7 +355,7 @@ class SourceTracker:
                 local_path, type, url = line.split("\t")
 
                 # XXX temp
-                if type != "git":
+                if type == "svn":
                     print("we don't check out %s projects yet - %s %s" % ( type, local_path, url ))
                     continue
                 
@@ -358,11 +372,11 @@ class SourceTracker:
                 if src_index == -1:
                     xxx
                 
-                local_path    = local_path[src_index+5:]
-                local_path    = local_path.replace("tracking/",   "")
-                local_path    = os.path.dirname(local_path)
+                local_path      = local_path[src_index+5:]
+                local_path      = local_path.replace("tracking/",   "")
+                local_path      = os.path.dirname(local_path)
 
-                full_local_path    = os.path.join(local_base, local_path)
+                full_local_path = os.path.join(local_base, local_path)
 
                 # print("full_local_path: %s" % full_local_path)
 
@@ -394,6 +408,29 @@ class SourceTracker:
             pass
         
         return
+
+
+    def findProjects(self, *patterns):
+
+        # TODO: create a regex over all args
+        
+        for project in self.getProjects(self.tracking_folder):
+
+            matched = False
+
+            for pattern in patterns:
+                if project.path.find(pattern) != -1:
+                    matched = True
+                    break
+                pass
+
+            if matched:
+                print("  P: %s" % project.path)
+                pass
+            pass
+        
+        return
+                     
     
     pass
     
