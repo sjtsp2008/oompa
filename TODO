@@ -1,9 +1,6 @@
 Oompa TODO list
 ---------------
 
-- tracker find neon
-  - i'm starting to have trouble remember where, or if, i already checked something out
-
 - tracker move <project-folder> <dest-folder>
   - in src tree (not src/tracking)
   - maybe move *everything*?

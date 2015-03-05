@@ -168,11 +168,13 @@ elif command == "urls":
     # set up tracking on another system
     #
     result     = tracker.dumpSourceURLs(*args)
-
 elif command == "import":
-    #
     # "import" (re-check-out) projects dump from another "tracker urls"
-    #
     result     = tracker.importDumpedURLs(*args)
-
+elif command == "mv" or command == "move":
+    # move a project, in both source and tracked
+    result     = tracker.moveFolders(*args)
+else:
+    xxx
     pass
+

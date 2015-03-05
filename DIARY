@@ -1,4 +1,31 @@
 
+[20140305]
+
+working on tracker move
+
+# scenario - found another docker-related project (helios), and i want
+# to move src/cloud/docker/* in to src/cloud/infrastructure
+
+# requirements:
+#   - dest folder must exist
+#     - otherwise, we assume typo and don't want to make mistakes
+
+cd src/cloud
+
+mkdir infrastructure
+
+tracker mv docker/* infrastructure
+
+  note that that is different than "tracker mv docker infrastructure"
+
+
+
+
+----
+
+
+
+
 [20140217]
 
 XXX not checking out from sourceforge git properly

@@ -78,15 +78,14 @@ class SourceTracker:
         return
 
 
-    def get_path_in_tracker_tree(self, project):
+    def getPathInTrackerTree(self, projectPath):
         """
         """
 
         #
         # get the tail below "src"
         #
-        pieces  = project.split(os.sep)
-        
+        pieces  = projectPath.split(os.sep)
         index   = pieces.index("src")
 
         if index == -1:
@@ -98,6 +97,53 @@ class SourceTracker:
         
         return os.path.join(self.tracking_folder, *tail)
 
+
+    def findTrackingLinks(self, projectPath, root = None):
+        """
+        return all links under root that point to specified project
+
+        recursive
+
+        if root not specified, start at self.tracking_folder
+        """
+        
+        if root is None:
+            root = self.tracking_folder
+            pass
+        
+        # print("findTrackingLinks(): %s  %s" % ( projectPath, root ))
+
+        # i tried using os.walk, and something did not work quite right
+        
+        for child in os.listdir(root):
+
+            # XXX cheating
+            if child == "git":
+                continue
+            
+            childPath = os.path.join(root, child)
+
+            # print("    child: %s" % childPath)
+
+            if os.path.islink(childPath):
+
+                realPath = os.path.realpath(childPath)
+                # print("     link -> %s" % realPath)
+
+                if realPath.startswith(projectPath):
+                    # print("       WINNER")
+                    yield childPath
+                    pass
+                pass
+            elif os.path.isdir(childPath):
+                for link in self.findTrackingLinks(projectPath, childPath):
+                    yield link
+                    pass
+                pass
+            pass
+
+        return
+    
 
     def track(self, project_path, replace = False):
         """
@@ -111,7 +157,7 @@ class SourceTracker:
         project         = Project(project_path, tracker = self)
         vcs_root        = project.get_vcs_folder()
 
-        # self.log("Sourcetracker.track(): %s - %s" % ( project.path, vcs_root ))
+        self.log("Sourcetracker.track(): %s - %s" % ( project.path, vcs_root ))
 
         if vcs_root is None:
             self.log("  XXX could not identify a vcs subfolder for for project: %s" %
@@ -122,7 +168,7 @@ class SourceTracker:
         # figure out where we will put the project, within the tracking
         # tree
         #
-        path_in_tracker = self.get_path_in_tracker_tree(project.path)
+        path_in_tracker = self.getPathInTrackerTree(project.path)
 
         # self.log("   path_in_tracker: %s" % path_in_tracker)
         
@@ -148,11 +194,12 @@ class SourceTracker:
         """
 
         TODO: option to delete the src, too
+        TODO: use code from self.moveFolder to untrack *all* symlinks to project
 
         """
 
-        project         = Project(project_path)
-        vcs_root        = project.get_vcs_folder()
+        project   = Project(project_path)
+        vcs_root  = project.get_vcs_folder()
 
         # self.log("Sourcetracker.untrack(): %s - %s" % ( project.path, vcs_root ))
 
@@ -160,7 +207,7 @@ class SourceTracker:
         # figure out where we will put the project, within the tracking
         # tree
         #
-        path_in_tracker = self.get_path_in_tracker_tree(project.path)
+        path_in_tracker = self.getPathInTrackerTree(project.path)
 
         self.log("   removing path_in_tracker: %s" % path_in_tracker)
 
@@ -173,6 +220,7 @@ class SourceTracker:
         return
 
 
+    
     def checkout(self, source_spec, *rest):
         """
         
@@ -195,6 +243,80 @@ class SourceTracker:
         
         return result
 
+
+    def moveFolders(self, *args):
+        """
+        move specified project folders and update tracking symlinks
+
+          src ... dest
+
+        """
+        
+        # assumes we are in "real" source folder, versus tracking folder
+
+        if len(args) < 2:
+            xxx
+            pass
+        
+        # TODO: support fully recursive glob
+
+        destFolder    = args[-1]
+        sourceFolders = args[:-1]
+
+        absDestFolder = os.path.abspath(destFolder)
+        
+        # print("  dest: %s" % absDestFolder)
+
+        assert os.path.exists(destFolder)
+
+        for sourceFolder in sourceFolders:
+
+            # TODO: is it a folder or a glob?
+
+            sourceFolder    = os.path.abspath(sourceFolder)
+            tail            = os.path.basename(sourceFolder)
+            newSourceFolder = os.path.join(absDestFolder, tail)
+
+            trackingLinks   = self.findTrackingLinks(sourceFolder)
+            trackingLinks   = list(trackingLinks)
+
+            if len(trackingLinks) > 1:
+                # which of them is "the original" (that should be deleted and moved), versus the one that needs to be replaced?
+                xxx
+                pass
+            
+            # identify *all* links the project in tracking tree)
+            #   (there may be multiple)
+
+            # move the project
+
+            print("  move %s -> %s" % ( sourceFolder, newSourceFolder ))
+            os.rename(sourceFolder, newSourceFolder)
+            
+            # replace the links
+            # may have to
+            #    just delete the link, and then do a new track
+
+            for trackingLink in trackingLinks:
+
+                print("    rm %s" % trackingLink)
+                os.remove(trackingLink)
+
+                print("    track: %s" % newSourceFolder)
+                self.track(newSourceFolder)
+                
+                # if original tracking parent is now empty, delete it (and on up ...)
+
+                linkParentFolder = os.path.dirname(trackingLink)
+
+                print("    try deleting the parent of the link: %s" % linkParentFolder)
+                
+                pass
+            
+            pass
+        
+        return
+    
 
     def update_project(self, project_path):
         """
@@ -411,7 +533,10 @@ class SourceTracker:
 
 
     def findProjects(self, *patterns):
-
+        """
+        simple grep over source tree folders/files
+        """
+        
         # TODO: create a regex over all args
         
         for project in self.getProjects(self.tracking_folder):
@@ -425,12 +550,11 @@ class SourceTracker:
                 pass
 
             if matched:
-                print("  P: %s" % project.path)
+                print("%s" % project.path)
                 pass
             pass
         
         return
                      
-    
     pass
     
