@@ -1,0 +1,246 @@
+#! /usr/bin/env python
+#
+# github3-tests
+#
+
+import argparse
+import os
+import sys
+
+import github3
+
+# XXX wrong home
+from oompa.tracking.github               import github_utils
+from oompa.tracking.github.GitHub3Helper import GitHub3Helper
+
+
+#
+# main
+#
+
+parser = argparse.ArgumentParser()
+
+parser.add_argument("command", help = "command")
+parser.add_argument("extraArgs", nargs = "*")
+
+args          = parser.parse_args()
+
+# XXX
+config = None
+
+
+# XXX get password from a predictable place
+gituser      = "sjtsp2008"
+
+githubHelper = Github3Helper(config, username = gituser)
+
+# github_utils.dumpSlots(github3, "github3 module")
+
+
+if args.command == "repos":
+
+    for kind, name, obj in githubHelper.getKindNameAndObject(args.extraArgs):
+        print("%s: %s - %s" % ( kind, name, obj.name ))
+        gitHelper.printRepos(user)
+        pass
+    pass
+
+elif args.command == "info":
+    #
+    # get info about a user or organization
+    #
+
+    # TODO: can probably just integrate this in to generator
+    # XXX refactor
+    firstArg = args.extraArgs[0]
+
+    if firstArg == "me":
+
+        me  = gitHelper.github.me()
+
+        github_utils.dumpSlotValues(me)
+
+        # default rate is 5000/hr
+        # print("  remaining rate limit: %s" % me.ratelimit_remaining)
+
+        sys.exit()
+        
+    elif firstArg == "github3":
+        github_utils.dumpSlots(github3, "github3 module")
+        sys.exit()
+    elif firstArg == "github":
+        github_utils.dumpSlots(gitHelper.github, "github obj")
+        sys.exit()
+        pass
+    
+    for kind, name, obj in gitHelper.getKindNameAndObject(args.extraArgs):
+
+        print("%s: %s - %s" % ( kind, name, obj.name ))
+
+        # common across User and Organization
+        print("  url:          %s" % obj.html_url)
+        
+        if kind == "user":
+
+            user = obj
+
+            print("  bio:      %s" % obj.bio)
+            print("  company:  %s" % obj.company)
+            print("  location: %s" % obj.location)
+            print("  blog:     %s" % user.blog)
+            print("  plan:     %r" % user.plan)
+
+            dumpList(obj, "followers")
+            dumpList(obj, "following")
+            dumpList(obj, "organizations")
+            dumpList(obj, "starred_repositories")
+            dumpList(obj, "subscriptions")
+            
+            # XXX why is this access different?
+            for repository in github3.repositories_by(user.login):
+                print("  repo:           %s" % repository)
+                pass
+
+            pass
+
+        elif kind == "org":
+
+            print("  bio:      %s" % obj.bio)
+            print("  company:  %s" % obj.company)
+            print("  location: %s" % obj.location)
+
+            dumpList(obj, "public_members")
+            dumpList(obj, "repositories")
+            
+        elif kind == "repo":
+
+            # was it forked from something?
+            print("  full_name:     %s" % obj.full_name)
+            print("  source:        %s" % obj.source)
+            print("  parent:        %s" % obj.parent)
+            print("  description:   %s" % obj.description)
+            print("  homepage:      %s" % obj.homepage)
+            print("  language:      %s" % obj.language)
+            print("  last_modified: %s" % obj.last_modified)
+            print("  updated_at:    %s" % obj.updated_at)
+
+            # branches()
+
+            # code_frequency()
+
+            # XXX blocked - requires authentication
+            # dumpList(obj, "collaborators")
+
+            # comments()
+
+            # commit_activity()
+            # commits()
+
+            # contributor_statistics()
+
+            dumpList(obj, "contributors")
+
+            # default_branch
+
+            # deployments() ???
+
+            # events()
+
+            dumpList(obj, "forks")
+            
+            # hooks() ???
+
+            # issues()
+
+            # keys() ???
+
+            # labels() ???   i think these are tags used in issues/planning
+
+            dumpList(obj, "languages")
+
+            # milestones()
+
+            # notifications()
+
+            # open_issues_count ???
+
+            # owner  (a User object)
+
+            # pull_requests
+
+            # readme()
+
+            # refs() ???
+
+            # releases() ???
+
+            # size (what are units?)
+
+            # statuses() ?
+            
+            dumpList(obj, "stargazers")
+            dumpList(obj, "subscribers")
+
+            # tags()
+
+            # tree()
+
+            # teams()
+
+            # weekly_commit_count
+
+            print("  weekly_commit_count:   %s" % obj.weekly_commit_count)
+            
+        else:
+            xxx
+            pass
+
+        print("")
+        pass
+    pass
+
+elif args.command == "who-starred":
+
+    # interesting - need to supply an owner and a repo
+
+    for ownerReponame in args.extraArgs:
+
+        repository = getGithubObject("repo", ownerReponame, github)
+
+        print("  repo: %r" % repository)
+
+        # github_utils.dumpSlotValues(repository)
+
+        for stargazer in repository.stargazers:
+            print("    stargazer: %r" % stargazer)
+            pass
+        
+        pass
+    pass
+        
+elif args.command == "two-out-projects":
+
+    # get users working on a repo, and the other repos they have, or contributed to
+    
+    pass
+    
+elif args.command == "slots":
+
+    for kind, name, obj in githubHelper.getKindNameAndObject(args.extraArgs):
+        github_utils.dumpSlots(obj, kind)
+        pass
+    pass
+
+elif args.command == "values":
+
+    for kind, name, obj in githubHelper.getKindNameAndObject(args.extraArgs):
+        github_utils.dumpSlotValues(obj, kind)
+        pass
+    pass
+
+else:
+
+    print("XXX we don't do command: %s" % args.command)
+
+    pass
+            

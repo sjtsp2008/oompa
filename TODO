@@ -1,24 +1,42 @@
 Oompa TODO list
 ---------------
 
-- tracker move <project-folder> <dest-folder>
-  - in src tree (not src/tracking)
-  - maybe move *everything*?
 
-- tracker rm <project>
-  - both source and tracking link
+- tracker discover chriswhong
+  - first step is just snapshot repos
+  
+- tracker discover cloudera
 
-- support symlinks
+- fix whatever i broke with refactoring github3-tests
 
-- simplest github3.py test
-  - just submit some request and get results
+- github3-tests - authentication with OAUTH
+
+- github3-tests info <repo> - indicate age as derivative
+
+- figure out why etag is not working
+
+- use github3.py to track organations and users
+  - baby steps
+    - list repos every day for a set of tracked orgs
+      - whenever there is a new one
+      - stash etags
+    - track new repos
+      - have to opt in
+    - auto-opt-in
+
+- github3 to discover a new project
+  - indicate dead projects
+  - get readme() for all repos
+
+- use d3 (or neo?) to viz small piece of graph
+
+  ----
+
+- support extra symlinks (e.g., cloud/geo/geomesa and geo/cloud/geomesa)
 
 - oompa tracker uses "normal" python opt parsing, vs my pylib
 
-- provide cleaner the simpler view is just a transform
-
-- log checkouts, so that we can track over time, remember when
-  i found something
+- provide cleaner view of logs - the old simpler view is just a transform
 
 - fix relative-path code in checkout
   - should always be explicit
@@ -38,18 +56,16 @@ Oompa TODO list
   ----
 
 - report last time each project was updated
-  - log analysys
-
-- able to search if i've already started tracking a project, but just forgot where
-  i put it in the tree
+  - log analysis
 
 - explore re-adding triggers to projects when updated
   - luigi better than old oompa code?
 
-- integrate with luigi
+- integrate with luigi, to "do something next"
   - graphical - drag on rules for what to do next
 
-
+- tracker rm <project>
+  - both source and tracking link
 
 - able to move projects around, locally
   - moves the tracking symlinks, too
@@ -358,16 +374,8 @@ Major features
     - for gui, ...
 
 - store package db as xml
-    - can edit by hand, or add projects with a script, rather than
-      mess with prime_*_db()
-    - first step is just to load prime_..., save it out, and reload it
-
-- use the basic ideas from PeopleGarden (UIST 99?)
-    - gauge the activity in a project
-    - has a project suddenly come alive
-    - how many commits
-    - some sort of decay function
-    - can probably get # diff committers, from cvs logs
+  - can edit by hand, or add projects with a script, rather than mess with prime_*_db()
+  - first step is just to load prime_..., save it out, and reload it
 
 - integrate with nautilus
     - special manager

@@ -1,4 +1,109 @@
 
+[20140307]
+
+organization for tracking
+
+src/github/{user,org}
+
+  not distinguishing users and orgs here, since github urls don't
+
+  (10 minutes later, i already changed my mind - easier for me if i know
+   it's a user or org)
+
+  src/github/user/...
+  src/github/organization/...
+
+
+note: doing things this way is going to put pressure on symlinks for
+the "folksonomy" organization
+
+
+baby step: "tracker discover"
+  - list projects 
+    - stash what i saw
+  - list new projects
+    - describe them
+    
+
+# github is implied, for now
+
+tracker discover chriswhong
+
+
+
+
+tracker discover amplab
+
+
+
+
+TODO: generate simple bayes classifier, with project name/description, and maybe readme, as features
+
+  - train with the projects that i have checked out
+  
+  - eventually: not just yes/no, but what tags would i apply?
+
+
+
+[20140306]
+
+progress toward tracking and discovery
+
+github3-tests info org:locationtech
+ORG: <Organization [locationtech:LocationTech]>
+org: locationtech - LocationTech
+  bio:      None
+  blog:     http://locationtech.org
+  company:  None
+  location: Global
+    member: fosslc
+    repo:         locationtech/udig-platform
+    repo:         locationtech/geomesa
+    repo:         locationtech/geogig
+    repo:         locationtech/geoff
+
+
+github3-tests info fosslc
+
+
+----
+
+github3-tests who-starred keith-turner/fluo
+
+
+  Repository.source is another Repository - where it was forked from
+
+
+----
+
+chain out from densitydesign/raw
+
+github3-tests info densitydesign/raw
+
+github3-tests info org:densitydesign
+
+
+
+
+
+
+
+----
+
+cleaned up/refactored
+
+github3-tests slots org:locationtech
+
+github3-tests slots user:keith-turner
+
+
+
+----
+
+
+
+
+
 [20140305]
 
 working on tracker move
@@ -19,9 +124,35 @@ tracker mv docker/* infrastructure
   note that that is different than "tracker mv docker infrastructure"
 
 
-
-
 ----
+
+playing with github3.py
+
+
+
+github3-tests --orgs twitter,locationtech
+
+github3-tests --users joshelser
+
+
+
+TODO: followers/following
+
+TODO: dynamic graphs
+  - maybe ping yee's radial stuff?
+
+TODO: storylines
+
+
+XXX version installed under anaconda is very old, rel to the
+
+installed latest from git
+
+  python setup.py install
+
+
+now the code matches readthedocs
+
 
 
 

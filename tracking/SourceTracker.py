@@ -49,23 +49,14 @@ class SourceTracker:
         
         self.tracking_folder = tracking_folder
         
-        # TODO: maybe should use real logging?
-        # if out_stream is None:
-        #    out_stream = sys.stdout
-        #    pass
-        # self.out_stream = out_stream
-
         return
 
-    def setOutStream(self, out_stream):
-
-        xxx
-        self.out_stream = out_stream
-
-        return
 
     def log(self, message = None):
-
+        """
+        log the message at info level
+        """
+        
         if message is None:
             # we need one line
             message = "\n"
@@ -80,6 +71,11 @@ class SourceTracker:
 
     def getPathInTrackerTree(self, projectPath):
         """
+
+        return the tracking symlink 
+        
+        XXX there can now be many links for a given project
+
         """
 
         #
@@ -146,9 +142,8 @@ class SourceTracker:
     
 
     def track(self, project_path, replace = False):
-        """
+        """establish tracking for the project.
 
-        establish tracking for the project.
         assumes that project_path has some sort of checkout child
         folder
 
@@ -192,6 +187,9 @@ class SourceTracker:
 
     def untrack(self, project_path):
         """
+        stop tracking a project
+
+        does not delete the source project, just the tracking links
 
         TODO: option to delete the src, too
         TODO: use code from self.moveFolder to untrack *all* symlinks to project

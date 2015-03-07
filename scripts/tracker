@@ -25,6 +25,7 @@ _usage_str = """usage: tracker <command> <folder> [...]
 
 """
 
+import argparse
 import datetime
 import logging
 import os
@@ -51,7 +52,14 @@ _options = [
 
     ]
 
+# XXX still in transition
+parser = argparse.ArgumentParser()
+
+
+
 options, args   = opt_utils.parse_options(_options)
+
+
 
 # XXX load a config
 config = None
@@ -68,6 +76,38 @@ args    = args[1:]
 
 # XXX switch to command handler
 
+
+# TODO: only certain commands what a log
+
+dont_need_log = [
+    "find",
+    "discover",
+    ]
+
+if command not in dont_need_log:
+    log_base = os.path.join(os.environ.get("HOME"), "tracker-logs")
+    log_path = os.path.join(log_base, 
+                            "%s.tracker.log" % datetime.datetime.today().strftime("%Y%m%d"))
+    
+    print("logging to: %s" % log_path)
+    
+    # make sure folder exists
+    log_folder = os.path.dirname(log_path)
+    if not os.path.exists(log_folder):
+        os.makedirs(log_folder)
+        pass
+
+    # set log_path to None to test/debug logging itself (will go to console)
+    # TODO: set up the tee - add another handler
+    # log_path = None
+
+    logging.basicConfig(filename = log_path,
+                        level    = logging.INFO,
+                        format   = '%(asctime)s %(levelname)s %(message)s',
+                        datefmt  = '%Y%m%d-%H:%M:%S')
+    pass
+
+
 if command == "find":
     #
     # "import" (re-check-out) projects dump from another "tracker urls"
@@ -75,34 +115,7 @@ if command == "find":
     result     = tracker.findProjects(*args)
 
     sys.exit()
-
     pass
-
-
-
-
-log_base = os.path.join(os.environ.get("HOME"), "tracker-logs")
-log_path = os.path.join(log_base, 
-                        "%s.tracker.log" % datetime.datetime.today().strftime("%Y%m%d"))
-
-print("logging to: %s" % log_path)
-
-# make sure folder exists
-log_folder = os.path.dirname(log_path)
-if not os.path.exists(log_folder):
-    os.makedirs(log_folder)
-    pass
-
-# set log_path to None to test/debug logging itself (will go to console)
-# TODO: set up the tee - add another handler
-# log_path = None
-
-logging.basicConfig(filename = log_path,
-                    level    = logging.INFO,
-                    format   = '%(asctime)s %(levelname)s %(message)s',
-                    datefmt  = '%Y%m%d-%H:%M:%S')
-
-
 
 
 if command == 'track':
@@ -168,13 +181,30 @@ elif command == "urls":
     # set up tracking on another system
     #
     result     = tracker.dumpSourceURLs(*args)
+
 elif command == "import":
+
     # "import" (re-check-out) projects dump from another "tracker urls"
     result     = tracker.importDumpedURLs(*args)
+
 elif command == "mv" or command == "move":
+
     # move a project, in both source and tracked
     result     = tracker.moveFolders(*args)
+
+elif command == "discover":
+
+    from oompa.tracking.github.GitHubTracker import GitHubTracker
+
+    # XXX
+    gituser   = "sjtsp2008"
+    
+    githubTracker = GitHubTracker(config, username = gituser)
+
+    result = githubTracker.discover(*args)
+    
 else:
-    xxx
-    pass
+    raise Exception("no-such-command", command)
+
+
 
