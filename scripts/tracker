@@ -31,11 +31,18 @@ import logging
 import os
 import sys
 
+# XXX wtf? PYTHONPATH is not being respected?  the github3 egg is earlier ???
+# sys.path.insert(0, '/Users/jeff/src/tracking/dev/github3.py/git/github3.py')
+
 from pylib.util     import opt_utils
 from pylib.util     import usage
 
 from oompa.tracking.SourceTracker import SourceTracker
 
+from oompa.tracking.github.GitHubTracker import GitHubTracker
+from oompa.tracking.github               import github_stats
+from oompa.tracking.github               import github_utils
+    
 
 
 #
@@ -55,14 +62,12 @@ _options = [
 # XXX still in transition
 parser = argparse.ArgumentParser()
 
-
-
 options, args   = opt_utils.parse_options(_options)
 
 
 
-# XXX load a config
-config = None
+# XXX load a config, from yaml
+config = {}
 
 if not args:
     usage.usage()
@@ -82,6 +87,9 @@ args    = args[1:]
 dont_need_log = [
     "find",
     "discover",
+
+    "nash-stats",
+    "graph-viz",
     ]
 
 if command not in dont_need_log:
@@ -113,7 +121,6 @@ if command == "find":
     # "import" (re-check-out) projects dump from another "tracker urls"
     #
     result     = tracker.findProjects(*args)
-
     sys.exit()
     pass
 
@@ -173,19 +180,19 @@ elif command in [ 'co', 'checkout' ]:
 
 elif command == 'update' or command == "up":
     
-    result     = tracker.update(*args)
+    result = tracker.update(*args)
 
 elif command == "urls":
     #
     # dump all the source urls in a format that can be used to 
     # set up tracking on another system
     #
-    result     = tracker.dumpSourceURLs(*args)
+    result = tracker.dumpSourceURLs(*args)
 
 elif command == "import":
 
     # "import" (re-check-out) projects dump from another "tracker urls"
-    result     = tracker.importDumpedURLs(*args)
+    result = tracker.importDumpedURLs(*args)
 
 elif command == "mv" or command == "move":
 
@@ -194,14 +201,117 @@ elif command == "mv" or command == "move":
 
 elif command == "discover":
 
-    from oompa.tracking.github.GitHubTracker import GitHubTracker
+    # if --log
+    if 0:
+        # XXX the urllib3 logging doesn't work?
+        import logging
 
-    # XXX
-    gituser   = "sjtsp2008"
+        stream_handler = logging.StreamHandler()
+        formatter      = logging.Formatter('%(asctime)s %(levelname)s %(message)s')
+
+        stream_handler.setFormatter(formatter)
+        
+        logger = logging.getLogger('requests.packages.urllib3')
+        logger.setLevel(logging.DEBUG)
+        logger.addHandler(stream_handler)
+        
+        logger = logging.getLogger('github3')
+        logger.addHandler(stream_handler)
+        
+        logger.setLevel(logging.DEBUG)
+        pass
+    
+
+    # XXX get from config
+    gituser       = "sjtsp2008"
     
     githubTracker = GitHubTracker(config, username = gituser)
+    githubHelper  = githubTracker.githubHelper
 
-    result = githubTracker.discover(*args)
+    verbose       = False
+    # verbose       = True
+    
+    print("rate points before: %s" % githubHelper.checkRatePointsLeft())
+    result        = githubTracker.discover(*args, verbose = verbose)
+    print("rate points after:  %s" % githubHelper.checkRatePointsLeft())
+
+    
+elif command == "nash-stats":
+
+    # https://docs.google.com/spreadsheets/d/1Mg01ZUdHSYZfJre9ZyD5VMq4zv_xyZHmFjPTbklo-5Q/edit#gid=0
+    #
+    # Data Sheet
+    #   Project
+    #   Type
+    #   People with 20+ Recent Commits
+    #   Committers in Last 6 Months
+    #   Total Contributors
+    #   Number of contributors (code page)
+    #   GitHub Birth
+    #   GitHub Months Old
+    #   Forks
+    #   Stars
+    #   Watchers
+    #   Pull requests open
+    #   Pull requests closed
+    #   Total pull requests
+    #   Source
+
+    # Bubble Chart sheet
+    #
+    #   Project
+    #   People with 20+ Recent Commits
+    #   Committers in Last 6 Months
+    #   Type
+    #   Total Contributors
+
+    # Forks sheet
+    #
+    #   Project	Forks	Stars	Watchers	GitHub Months Old	Forks Per Month
+
+    # Stars sheet
+    #
+    #   Project	Forks	Stars	Watchers	GitHub Months Old	Stars Per Month
+
+    # Love over Life sheet
+    #
+    #   Project	Forks	Stars	Watchers	GitHub Months Old	Stars Per Month
+
+    
+    # XXX
+    gituser       = "sjtsp2008"
+    
+    githubTracker = GitHubTracker(config, username = gituser)
+    helper        = githubTracker.githubHelper
+    
+    print("rate points before: %s" % githubTracker.checkRatePointsLeft())    
+
+    for kind, name, obj in helper.getKindNameAndObject(args):
+
+        print("  %s - %s - %s" % ( kind, name, obj ))
+
+        # TODO: support other types
+        repo = obj
+        
+        # print("breaking after one"); break
+
+        
+        
+        features = github_stats.uniqueRecentContributors(repo)
+
+        print("    unique recent contributors: %s" % features)
+        
+        pass
+    
+    print("rate points after:  %s" % githubTracker.checkRatePointsLeft())
+    
+
+elif command == "graph-viz":
+
+    # TODO: generate d3
+    # TODO: web server underneath, for exploration
+
+    xxx
     
 else:
     raise Exception("no-such-command", command)

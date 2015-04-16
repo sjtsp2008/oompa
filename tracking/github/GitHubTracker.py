@@ -22,159 +22,130 @@ class GitHubTracker:
     support for tracking users, organizations, fork trees, etc.
     """
     
-    _kinds = [ "User", "Organization" ]
     
     def __init__(self, config, username = None):
         """
         TODO: need a log
         """
 
-        # XXX get everything from config
-        
-        self.root = os.path.join(os.environ["HOME"], "src", "github")
-
         if username is None:
             xxx
             pass
 
-        self.githubHelper = GitHub3Helper(config, username)
+        self.githubHelper   = GitHub3Helper(config, username)
+
+        # XXX mid-refactor.  this should be more invisible
+        self._metadataStore = self.githubHelper._metadataStore
         
         return
 
-
-    def getFolder(self, kind, name):
-
-        return os.path.join(self.root, kind.lower(), name)
-
     
-    def findEntityFolder(self, name):
 
-        for kind in self._kinds:
-            folder = self.getFolder(kind, name)
-            if os.path.exists(folder):
-                return folder
-            pass
+    def showEntity(self, entityMetadata):
 
-        return None
-        
-    def createFolder(self, kind, name):
-
-        folder = self.getFolder(kind, name)
-
-        if os.path.exists(folder):
+        if self._showed_entity:
             return
 
-        os.mkdir(folder)
-
-        return folder
+        print("GitHubTracker.discover(): %-25s (%s)" % ( entityMetadata.name, entityMetadata.kind ))
         
-    
-    def _getMetadataPath(self, folder):
-
-        return os.path.join(folder, "tracker.meta.json")
-
-
-    
-    def _getEntityMetadata(self, folder):
-
-        metadataPath = self._getMetadataPath(folder)
-        
-        # TODO: need to wrap the json
-        
-        if os.path.exists(metadataPath):
-            return json.load(open(metadataPath))
-
-        return {}
-
-    def _saveEntityMetadata(self, folder, metadata):
-
-        metadataPath = self._getMetadataPath(folder)
-
-        if not os.path.exists(folder):
-            xxx
-            pass
-
-        file = open(metadataPath, "w")
-        json.dump(metadata, file)
-        file.close()
+        self._showed_entity = True
 
         return
     
-    
-    def discover(self, *args):
 
-        helper = self.githubHelper
+    def reportListUpdates(self, field, github_obj, entityMetadata, valueAttr):
+
+        # XXX be more focused
+        # use_etag = True
+        # use_etag = False
+        # if not use_etag:
+        #    print("# not using etag in GitHubTracker.reportListUpdates()")
+        #    pass
+        # newValue = self.githubHelper.list(field, github_obj, use_etag = use_etag)
+
+        newValue = self.githubHelper.list(field, github_obj)
+
+        # print("reportListUpdates: %s - %s" % ( name, field ))
+        # print("   new: %s" % newValue)
         
-        # try to find in /user or /organization
+        if not newValue:
+            return False
+        
+        self.showEntity(entityMetadata)
 
-        for name in args:
+        prevValue = entityMetadata.setdefault(field, [])
+        
+        entityMetadata.diffLists(field, newValue, prevValue, valueAttr)
 
-            folder = self.findEntityFolder(name)
-            
-            if folder is None:
+        entityMetadata.updateList(field, newValue, valueAttr)
 
-                github_obj = helper.getGithubObject(name)
+        return
+                
+        
+    def discover(self, *args, verbose = False):
+        """
+        
+        """
 
-                if github_obj:
-                    print("    github_obj: %s - %r" % ( github_obj.type, github_obj ))
-                    # helper.dumpSlotValues(github_obj)
+        helper        = self.githubHelper
+        
+        for entityMetadata in helper.getEntityMetadatas(*args, mustExist = False):
 
-                    folder = self.createFolder(github_obj.type, name)
+            # XXX
+            self._showed_entity = False
 
-                    print("  created folder: %s" % folder)
-                else:
-                    print("    name not found (user or org): %s" % name)
-                    pass
+            if verbose:
+                self.showEntity(entityMetadata)
                 pass
-            else:
-                kind       = os.path.basename(os.path.dirname(folder))
-                github_obj = helper.getGithubObject(name, kind)
-                pass
+
+            # XXX this has to happen differently now
+            # if folder is None:
+            #    print("    name not found (user or org): %s" % name)
+            #    continue
+
+            name = entityMetadata.name
+            kind = entityMetadata.kind
             
-            print("GitHubTracker.discover(): %-20s %s" % ( name, folder ))
-
-            entityMetadata = self._getEntityMetadata(folder)
-            since          = entityMetadata.get("etag")
-
-            # if since:
-            #    print("   using since: %s" % since)
-            #    pass
+            github_obj     = helper.getGithubObject(name, kind)
             
-            repos     = helper.getRepos(github_obj,
-                                        sort  = "time-newest-first",
-                                        since = since)
+            repos          = helper.getRepos(github_obj,
+                                             sort  = "time-newest-first")
 
-
-            knownRepos = entityMetadata.setdefault("repoNames", [])
-            newRepos   = [ repo for repo in repos if repo.full_name not in knownRepos ]
+            # TODO: switch to generic listing
+            # TODO: support for filtering *anything* through already-known
+            knownRepos     = entityMetadata.setdefault("repoNames", [])
+            newRepos       = [ repo for repo in repos if repo.full_name not in knownRepos ]
 
             if newRepos:
+
+                self.showEntity(entityMetadata)
+
+                print("  %d new repos" % len(newRepos))
                 helper.printRepos(repos = newRepos)
-            else:
-                print("  no new repos")
-                pass
-
-            # print("  etag %s - %s  %s" % ( github_obj.type, name, github_obj.etag ))
-
-            # saving should be transparent
-
-            changed = False
-            
-            if github_obj.etag != entityMetadata.get("etag"):
-                entityMetadata["etag"]      = github_obj.etag
-                changed = True
                 pass
 
             if newRepos:
                 for repo in newRepos:
-                    entityMetadata["repoNames"].append(repo.full_name)
+                    entityMetadata.append("repoNames", repo.full_name)
                     pass
-                changed = True
                 pass
 
-            if changed:
-                self._saveEntityMetadata(folder, entityMetadata)
+            # XXX organizations have followers_count and following_count, but no
+            #     followers() or following()
+
+            if github_obj.type == "User":
+
+                self.reportListUpdates("followers",            github_obj, entityMetadata, "login")
+                self.reportListUpdates("following",            github_obj, entityMetadata, "login")
+                self.reportListUpdates("starred_repositories", github_obj, entityMetadata, "full_name")
+                
+            elif github_obj.type == "Organization":
+
+                self.reportListUpdates("public_members", github_obj, entityMetadata, "login")
+
                 pass
+
+            entityMetadata.flush()
             
             pass
         

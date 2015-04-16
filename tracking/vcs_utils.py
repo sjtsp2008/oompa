@@ -19,7 +19,7 @@ from pylib.util import file_utils
 # local clues - if these folders exist in a folder,
 # it is a certain flavorr of vcs
 #
-# XXX discover from plugins, or get from config
+# XXX use the backends to discover "their" types, or get from config
 # 
 # _vcs_types  = [ 'hg', 'bzr', 'svn', 'git', 'cvs' ]
 
@@ -99,7 +99,8 @@ _patterns_flavors = [
     #     we may need to try twice
     # ( ".*?bitbucket.org", "hg|git" )
     ( ".*?bitbucket.org", "hg" ),
-
+    ( "https://code.google.com/p/.*", "hg" ),
+    
     ( ".*?hg\.",          "hg" ),
     ( ".*?/hg/",          "hg" ),
 
@@ -115,9 +116,7 @@ def detect_vcs_type_from_source(source_spec):
 
     walks a prioritized list of patterns and 
 
-
     source_spec is almost always a url
-
 
     """
 
@@ -129,10 +128,6 @@ def detect_vcs_type_from_source(source_spec):
         if re.match(pattern, source_spec):
             return flavor
         pass
-
-    return None
-
-    xxx
 
     return None
 
@@ -181,4 +176,3 @@ def find_vcs_folder(project_path = None,
     #
     
     return None
-

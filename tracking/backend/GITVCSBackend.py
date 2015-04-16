@@ -15,11 +15,21 @@ class GITVCSBackend(ExecVCSBackend):
     def checkout(self, source_spec, *args):
         """
 
+        appears to assume that source_spec has already been identifies as git
+
         """
         
-        print("%s.checkout(): %s, %r" % ( self.__class__.__name__, source_spec, args ))
+        self.log("%s.checkout(): %s, %r" % ( self.__class__.__name__, source_spec, args ))
 
-        # TODO option to check into some specific folder/category
+        # kind of a hack, for easier integration with discovery tools and github3.py -
+        # if caller has not supplied the ".git"
+
+        if source_spec.startswith("https://github.com/") and not source_spec.endswith(".git"):
+            source_spec += ".git"
+            self.log("%s.checkout(): %s, %r" % ( self.__class__.__name__, source_spec, args ))
+            pass
+        
+        # TODO option to checkout into some specific folder/category
 
         # XXX stop assuming current folder
         base_folder          = os.getcwd()
@@ -30,13 +40,13 @@ class GITVCSBackend(ExecVCSBackend):
 
         cmd = "%s clone %s %s" % ( self._type, source_spec, " ".join(args))
 
-        print("  cmd:      %s" % cmd)
+        self.log("  cmd:      %s" % cmd)
 
         result = self._run(cmd)
 
         if result != 0:
-            print("  XXX something wrong?  result: %s" % result)
-            print("      cd %s; %s" % ( vcs_path, cmd ))
+            self.log("  XXX something wrong?  result: %s" % result)
+            self.log("      cd %s; %s" % ( vcs_path, cmd ))
             pass
 
         folder       = self.pop_folder()
@@ -54,14 +64,13 @@ class GITVCSBackend(ExecVCSBackend):
 
         # project.log("updating %s" % ( self.path, ))
         
-        vcs_folder = project.get_vcs_folder()
-        vcs_type   = self._type
+        vcs_folder    = project.get_vcs_folder()
 
         showedProject = False
         
         if self.verbose:
-            self.log("updating %s" % ( self.path, ))
-            self.log("  cd %s" % vcs_folder)
+            project.log("GITVCSBackend.update(): %s" % ( project.path, ))
+            project.log("  cd %s" % vcs_folder)
             showedProject = True
             pass
 
@@ -85,10 +94,11 @@ class GITVCSBackend(ExecVCSBackend):
 
         if child_out:
             if not showedProject:
-                project.log("updating %s" % ( project.path, ))
+                project.log("UPDATING %s" % ( project.path, ))
                 pass
             project.log()
             project.log(child_out)
+            project.log()
             project.log()
             pass
 

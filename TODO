@@ -1,38 +1,214 @@
 Oompa TODO list
 ---------------
 
+- github3-tests dump-neo netflix/vector STARRED 
+  - get the full list of stargazers, via api
+  - note: gui defaults to limiting to top 25, so graph "stays simple"
 
-- tracker discover chriswhong
-  - first step is just snapshot repos
-  
-- tracker discover cloudera
+- github3-tests feed-neo netflix/vector
+  - include other relationships (contributes, subscribed)
 
-- fix whatever i broke with refactoring github3-tests
+- github3-tests feed-neo <user>
 
-- github3-tests - authentication with OAUTH
+- get neo4j graph running in graphene/heroku
 
-- github3-tests info <repo> - indicate age as derivative
+- tracker find does not search in src/tracking
+  - i always have to remove "/tracking" from what is found
 
-- figure out why etag is not working
 
-- use github3.py to track organations and users
-  - baby steps
-    - list repos every day for a set of tracked orgs
-      - whenever there is a new one
-      - stash etags
-    - track new repos
-      - have to opt in
-    - auto-opt-in
+- neo - add timestamps to edges
 
-- github3 to discover a new project
-  - indicate dead projects
-  - get readme() for all repos
+- neo - update really (only) updates (vs full force-feed) - only add if not already in graph
+  - transaction?
+  - and remove if no longer ...
 
-- use d3 (or neo?) to viz small piece of graph
+- figure out a way to visually encode *new* info
+  - maybe that does not matter in the short term, but important to watch evolution of graph
+
+
+- before i go any further with the two-out experiment
+  - need way to indicate that we have something cached, but we are *not* tracking it
+  - easiest is to just use a different root
+
+- github3-tests two-out baby-step:
+    - github_utils.dumpTwoOutFromRepo
+  - GitHubHelper.py cache *only* option in GitHub3Helper.list()
+  - transparent cache-through
+  - different way of getting to metadata - create a repo (or object)
+    - i guess then wrap it in metadata
+
+
+- begin (gradual?) refactor of MetadataStore out of GitHubTracker
+  - must be owned by Github3Helper
+
+- try out a simple sqlite subclass of MetadataStore
+
+- (my) metadata system/impl is weird
+  - why update a list, instead of just replace?
+  - setdefault does not make sense
+    - just get the value, or not
+  - the helper has most of the functionality that should be in the metadata
+
+- discover - something is wrong with followers (maybe lists in general)
+  - the symptom is a burst of new followers, and then a strange burst of empty "not on list":
+  - the issue is a bunch of '', '', '' on *previous*
+    - maybe a missing "page" in webservice results?
+    - maybe all residue?
+  - i think i need to handle the situation where the iterator is not filled immediately, and i have to re-check
+    (there are notes about that in github3 docs)
+
+- slightly better readme snippet - if first line just appears to be a one or two word title,
+  include second paragraph, too
+  - esp if it starts with a "#"
 
   ----
 
+
+
+- github3-tests two-out <something>
+  - GitHubHelper.py cache *only* option in GitHub3Helper.list()
+  - transparent cache-through
+  - need timestamps on *each* slot, and policy for deciding "its-been-too-log"
+  - i think caching on a repo is brand new
+  - XXX and caching is at the tracker layer, not the helper, right now
+  - 
+  - need support for use-cached-if-available, and if not fault-in
+    - this is going to get expensive
+  - next: repos of each gazer
+  - need to cache values, for more experiments
+    - i think one repo could take a full hour's points
+
+- githubHelper stashes stuff in a sqlite db, instead of file tree
+
+- discover - if a project is empty when discovered, check again a
+  couple of times, over the next couple of days, until there is a
+  readme
+
+- use d3 (or neo4j?) to viz small piece of graph
+  - just one "thing", and two-out
+
+- be able to work with kallithea (fully open source ~github clone (in python))
+  - https://kallithea-scm.org/
+  - start with kallithea itself (not much else yet)
+    - https://kallithea-scm.org/repos/kallithea
+  - git or hg
+    - i think hard to tell, from the url
+  - i think has a full webservice api, like github3
+  - there may be a bunch of mini/semi-private ones
+
+- github3-tests info <repo> - indicate age as derivative feature
+  - baby step toward "moneyball"
+  - initially, hack it
+  - later, register as a virtual feature
+
+- build/install neo4j
+
+- is this true?  (in github3.py docs)
+    - we migh not be properly getting fork/parent info ...
+  "When listing repositories in any context, GitHub refuses to return
+   a number of attributes, e.g., source and parent. If you require
+   these, call the refresh method on the repository object to make a
+   second call to the API and retrieve those attributes."
+
 - support extra symlinks (e.g., cloud/geo/geomesa and geo/cloud/geomesa)
+
+  ----
+
+- tracker discover is not detecting new projects as forks of others properly
+  - says parent and source are None
+  - is there something about having to refresh?
+
+- summarize update logs
+  - number of files changed, maybe a little bit about the nature of the changes
+    - folders, ...?
+    - or the git logs?
+
+- need way to manage "out of hourly points" (rate limit)
+  - queue up things i want to track, ...
+
+- able to ignore etags for thing, or thing/type
+  - e.g., "Organization/google", "public_members", during testing
+
+- discover - figure out how to include the small blurb at the top of github "normal" page
+  - usually more useful than a full readme
+
+- "tracker discover" (no args)
+  - make sure we are tracking all interesting features/slots for users and organizations
+    - use github3-tests info <user/org>, and check the code to see what we
+      are *not* current reporting
+
+- properly check out hg projects from https://code.google.com
+  - getting parent folder and symlinks wrong
+
+- discover - log everything, then can generate the report as log analysis
+  - and we can discover new stuff about tracked projects (and *my* starred projects, ...)
+  
+- tracker update also performs "tracker discover"
+  - for unified tracking
+
+- able to roll-up changes across multiple runs of track or discover
+
+- able to go back and study someone's  (user, org) starred projects (or following, or whatever)
+    - it's all there in the cache
+  - tlpinney
+  - mbostock
+  following: <User [jasondavies:]>
+  following: <User [tmcw:]>
+  following: <User [RandomEtc:]>
+  following: <User [straup:]>
+  following: <User [migurski:]>
+  following: <User [shawnbot:]>
+  following: <User [vogievetsky:]>
+  following: <User [MoritzStefaner:]>
+  following: <User [shashashasha:]>
+  following: <User [NelsonMinar:]>
+  following: <User [koblin:]>
+  following: <User [m1arc00:]>
+  following: <User [kpq:]>
+  starred_repositories: 'Caged/portland-atlas'
+  starred_repositories: 'samuelleach/uk-atlas'
+  starred_repositories: 'NYTimes/svg-crowbar'
+  starred_repositories: 'dwtkns/gdal-cheat-sheet'
+  starred_repositories: 'alexstrat/cube-get'
+  starred_repositories: 'codykrieger/cube-ruby'
+  starred_repositories: 'mbostock/mbostock.github.com'
+  starred_repositories: 'majormajors/cubism'
+  starred_repositories: 'd3/d3-plugins'
+  starred_repositories: 'square/cubism'
+  starred_repositories: 'square/crossfilter'
+  starred_repositories: 'jondot/graphene'
+  starred_repositories: 'jasondavies/d3-cloud'
+  starred_repositories: 'mbostock/queue'
+  starred_repositories: 'mbostock/stack'
+  starred_repositories: 'square/cube'
+  starred_repositories: 'mbostock/vows'
+  starred_repositories: 'mbostock/node-mongodb-native'
+  starred_repositories: 'mbostock/mongo-mock'
+  starred_repositories: 'tamc/Sankey'
+  starred_repositories: 'mbostock/pixymaps'
+  starred_repositories: 'mbostock/node-mappy'
+  starred_repositories: 'mbostock/dependency-tree'
+  starred_repositories: 'mbostock/d3'
+  starred_repositories: 'mbostock/bl.ocks.org'
+  starred_repositories: 'simplegeo/polymaps'
+  starred_repositories: 'mbostock/protovis'
+  starred_repositories: 'mongodb/node-mongodb-native'
+  starred_repositories: 'vowsjs/vows'
+
+- github3-tests - authentication with OAUTH
+
+  ----
+
+- prevent user from checking out a project in to src/tracking/...
+  - sometimes i get over there by accident
+
+- indicate dead projects - not updated in N days/weeks/months
+  - are there any active forks?
+
+- when checking a project out, do a quick check if it already exists
+
+- github-tracker: can cache some features that won't change, or only change rarely
+  - e.g., created_at, to query on how often they create projects, without spending points
 
 - oompa tracker uses "normal" python opt parsing, vs my pylib
 
@@ -56,7 +232,7 @@ Oompa TODO list
   ----
 
 - report last time each project was updated
-  - log analysis
+  - log analysis across all days
 
 - explore re-adding triggers to projects when updated
   - luigi better than old oompa code?

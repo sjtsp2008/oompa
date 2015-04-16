@@ -98,9 +98,6 @@ class SVNVCSBackend(ExecVCSBackend):
         TODO: refactor - this is now exactly the same code as BazaarVCSBackend
         """
 
-        # XXX need to update the constructor
-        self._out_stream = project._out_stream
-
         vcs_folder = project.get_vcs_folder()
 
         self.push_folder(vcs_folder)
@@ -113,11 +110,13 @@ class SVNVCSBackend(ExecVCSBackend):
                             stdout = child_stdout,
                             stderr = child_stderr)
 
-        self._dump_output(child_stdout, self._out_stream)
-
+        # XXX what about stderr?
+        project.log(self._getChildOutput(child_stdout))
+        project.log()
+        
         if result != 0:
-            self.print("  XXX something wrong?  result: %s" % result)
-            self.print("      cd %s; %s" % ( vcs_folder, cmd ))
+            project.log("  XXX something wrong?  result: %s" % result)
+            project.log("      cd %s; %s" % ( vcs_folder, cmd ))
             pass
 
         self.pop_folder()

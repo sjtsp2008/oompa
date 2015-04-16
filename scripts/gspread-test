@@ -1,0 +1,82 @@
+#! /usr/bin/env python
+#
+#
+
+import argparse
+import os
+import sys
+
+
+import gspread
+
+parser = argparse.ArgumentParser()
+
+parser.add_argument("username", help = "google username")
+parser.add_argument("rest", nargs = "*")
+
+args          = parser.parse_args()
+
+username = args.username
+passwd   = open("%s.passphrase" % username).read().strip()
+
+account  = gspread.login(username, passwd)
+
+# XXX i don't see an api for listing available sheets
+
+# XXX i can't get open_by_url to work - NoValidURLKeyFound
+# sht2 = gc.open_by_url('https://docs.google.com/spreadsheet/ccc?key=0Bm...FE&hl')
+
+name       = "Data Science Tools"
+# sheet      = account.open(name)
+# worksheet1 = sheet.worksheet("Sheet1")
+
+name = "Open Source Projects (shared)"
+sheet = account.open(name)
+worksheet = sheet.worksheet("Data")
+
+
+# Getting a Cell Value
+
+# With label
+# val = worksheet.acell('B1').value
+
+# With coords
+# val = worksheet.cell(1, 2).value
+
+# Getting All Values From a Row or a Column
+
+# Get all values from the first row
+# row1_values = worksheet.row_values(1)
+# print("ROW1: %s" % row1_values)
+
+# Get all values from the first column
+# col1_values = worksheet.col_values(1)
+# print("COL1: %s" % col1_values)
+
+
+# Getting All Values From a Worksheet as a List of Lists
+
+rows   = worksheet.get_all_values()
+
+# first row is schema/headers
+fields = rows[0]
+
+print("schema:")
+for i, field in enumerate(fields):
+    print("  %2d  %s" % ( i, field ))
+    pass
+
+
+print("table:")
+for row in rows[1:]:
+
+    # XXX turning in to a very specific project
+
+    
+    print("  -- %s" % row)
+
+
+    pass
+
+
+# worksheet.export()

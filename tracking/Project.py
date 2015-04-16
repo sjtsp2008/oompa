@@ -25,13 +25,13 @@ class Project:
         self.path      = os.path.abspath(path)
         self._tracker  = tracker
 
-        self.vcs_type    = vcs_utils.determine_vcs_type(project = self)
+        self.vcs_type  = vcs_utils.determine_vcs_type(project = self)
 
         if self.vcs_type is None:
             raise NotAProjectException(path)
 
         self._vcs_folder = vcs_utils.find_vcs_folder(project = self)
-        
+
         self._backend    = None
 
         # if out_stream is None:
@@ -70,10 +70,8 @@ class Project:
         return
         
     def update(self):
-
         return self._get_backend().update(self)
 
-    
     def getSourceURL(self):
 
         return self._get_backend().getSourceURL(self)

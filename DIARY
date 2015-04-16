@@ -1,7 +1,622 @@
 
-[20140307]
 
-organization for tracking
+[20150414]
+
+page about using d3 to visualize
+
+http://neo4j.com/developer/guide-data-visualization/
+
+:POST /db/data/transaction/commit
+  {"statements":[{"statement":"MATCH path = (n)-[r]->(m) RETURN path",
+                  "resultDataContents":["graph"]}]}
+		  
+
+
+that's not exactly d3 format - 
+
+Which can be converted to our visualization format by collecting the
+nodes and relationships of the different rows into two lists. Just
+make sure that each node is unique in the list and that the
+relationships refer to the array-index (not the id) of the node.
+
+function idIndex(a,id) {
+  for (var i=0;i<a.length;i++) {
+    if (a[i].id == id) return i;}
+  return null;
+}
+var nodes=[], links=[];
+res.results[0].data.forEach(function (row) {
+   row.graph.nodes.forEach(function (n) {
+     if (idIndex(nodes,n.id) == null)
+       nodes.push({id:n.id,label:n.labels[0],title:n.properties.name});
+   });
+   links = links.concat( row.graph.relationships.map(function(r) {
+     return {start:idIndex(nodes,r.startNode),end:idIndex(nodes,r.endNode),type:r.type};
+   }));
+});
+viz = {nodes:nodes, links:links};
+
+
+
+they recommend using alchemy instead of d3, for graphs
+
+
+<script src="http://cdn.graphalchemist.com/alchemy.min.js"></script>
+<script type="text/javascript">
+  alchemy.begin({
+        dataSource: "actors.json",
+        nodeCaption: 'name',
+        nodeMouseOver: 'name',
+        cluster: true,
+        clusterColours: ["#1B9E77","#D95F02","#7570B3","#E7298A","#66A61E","#E6AB02"]})
+</script>
+
+
+
+
+[20150412]
+
+yesterday, ran out of points, had to pause feeding neo
+
+github3-tests feed-neo netflix/vector
+
+  finished.
+
+  maybe should have picked a less-popular project as a first experiment - >2000 stargazers
+
+
+in gui:
+
+MATCH ()-[r:STARRED]->() RETURN r
+
+
+
+[20150411]
+
+made good progress with basic neo4j and py2neo yesterday
+
+
+# try to find a fairly small project to start with.
+(netflix/vector is big)
+
+github3-tests info netflix/vector
+
+github3-tests feed-neo netflix/vector
+
+  - can be update or first-feed
+
+
+
+
+
+
+
+[20150410]
+
+i had been worrying about two-out experiments messing up caching, etags, etc.
+
+just use a different root
+
+----
+
+(B)
+
+tracker discover glueviz
+
+  File "/Users/jeff/sandbox/oompa/tracking/github/FileMetadataStore.py", line 235, in getEntityMetadatas
+    kind = github_obj.type.lower()
+AttributeError: 'NoneType' object has no attribute 'type'
+
+
+github3 does not return a user nor an organiation
+
+
+github3-tests info netflix
+
+github3-tests info glueviz
+
+  nothing
+
+duh.  helps if you spell it right
+
+
+
+tracker discover glue-viz
+
+----
+
+experimenting with installing neo4j, and accessing from bulbs
+
+download
+
+unpack, in ~/packages/neo4j
+
+cd packages/neo4j/neo4j-community-2.2.0
+
+bin/neo4j start
+
+
+visit: http://localhost:7474/
+
+  default user - neo4j
+
+    required password change - "neotest"
+
+
+
+part of neo walkthrough
+
+
+  CREATE (ee:Person { name: "Emil", from: "Sweden", klout: 99 })
+
+    () means "node"
+    {} surround attrs
+    Person is the label
+    
+
+  MATCH (ee:Person) WHERE ee.name = "Emil" RETURN ee;
+
+complex creation:
+
+MATCH (ee:Person) WHERE ee.name = "Emil"
+CREATE (js:Person { name: "Johan", from: "Sweden", learn: "surfing" }),
+(ir:Person { name: "Ian", from: "England", title: "author" }),
+(rvb:Person { name: "Rik", from: "Belgium", pet: "Orval" }),
+(ally:Person { name: "Allison", from: "California", hobby: "surfing" }),
+(ee)-[:KNOWS {since: 2001}]->(js),(ee)-[:KNOWS {rating: 5}]->(ir),
+(js)-[:KNOWS]->(ir),(js)-[:KNOWS]->(rvb),
+(ir)-[:KNOWS]->(js),(ir)-[:KNOWS]->(ally),
+(rvb)-[:KNOWS]->(ally)
+
+pattern matching:
+
+MATCH (ee:Person)-[:KNOWS]-(friends)
+WHERE ee.name = "Emil" RETURN ee, friends
+
+
+
+
+
+Pattern matching can be used to make recommendations. Johan is
+learning to surf, so he may want to find a new friend who already
+does:
+
+  MATCH (js:Person)-[:KNOWS]-()-[:KNOWS]-(surfer)
+  WHERE js.name = "Johan" AND surfer.hobby = "surfing"
+  RETURN DISTINCT surfer
+
+    ()        empty parenthesis to ignore these nodes
+    DISTINCT  because more than one path will match the pattern
+    surfer    will contain Allison, a friend of a friend who surfs
+
+
+
+the movie demo is great
+
+http://neo4j.com/developer/cypher-query-language/
+
+
+note: evaluating both bulbs and py2neo
+
+  http://py2neo.org/2.0/
+
+
+----
+
+XXX trouble getting bulbs to work - authentication
+
+    try py2neo
+    
+
+http://py2neo.org/2.0/intro.html#getting-connected
+
+import py2neo
+
+py2neo.authenticate("localhost:7474", "neo4j", "neotest")
+
+graph = py2neo.Graph("http://localhost:7474/db/data/")
+
+from py2neo import Node, Relationship
+
+
+alice           = Node("Person", name="Alice")
+bob             = Node("Person", name="Bob")
+alice_knows_bob = Relationship(alice, "KNOWS", bob)
+
+graph.create(alice_knows_bob)
+
+  (<Relationship graph='http://localhost:7474/db/data/' ref='relationship/253' start='node/171' end='node/172' type='KNOWS' properties={}>,)
+
+
+can immediately see it in the web ui
+
+
+alice.properties["age"] = 33
+bob.properties["age"]   = 44
+alice.push()
+bob.push()
+
+graph.cypher.execute("CREATE (c:Person {name:{N}}) RETURN c", {"N": "Carol"})
+
+
+for record in graph.cypher.execute("CREATE (d:Person {name:'Dave'}) RETURN d"):
+    print(record)
+
+
+
+
+A Record exposes its values through both named attributes and numeric
+indexes. Therefore, if a Cypher query returns a column called name,
+that column can be accessed through the record attribute called name:
+
+for record in graph.cypher.execute("MATCH (p:Person) RETURN p.name AS name"):
+    print(record.name)
+
+  Alice
+  Bob
+  Carol
+  Dave
+
+
+Many applications require some form of uniqueness to be maintained for the data they manage. Neo4j’s optional schema feature allows such uniqueness constraints to be applied to a graph based on a combination of label and property and py2neo exposes this capability through the create_uniqueness_constraint method of the Graph.schema attribute:
+
+>>> graph.schema.create_uniqueness_constraint("Person", "email")
+
+If an attempt is made to create two nodes with similar unique property values, an exception will be raised and no new node will be created. To ‘get or create’ a node with a particular label and property, the merge_one method can be used instead:
+
+>>> xavier = graph.merge_one("Person", "email", "charles@x.men")
+
+This method is idempotent and uses a Cypher MERGE clause to only create a node if one does not already exist. If no uniqueness constraint has been created for a particular label and property combination however, it is possible for a MERGE to return multiple nodes. For this case, py2neo provides the related merge method.
+
+
+#
+# github3-tests info netflix/vector
+
+  last_modified:   Sat, 11 Apr 2015 14:28:41 GMT
+
+  contributors     spiermar
+  contributors     meteorfox
+  contributors     fche
+  contributors     dylanjohnson
+
+
+  forks            RoyZeng/vector
+  ...
+  
+  stargazers       spiermar
+  stargazers       nxbdi
+  stargazers       danielrohers
+  ...
+  
+  subscribers      cfieber
+  subscribers      quidryan
+
+
+repo1 = Node("Repository",   name = "netflix/vector")
+org1  = Node("Organization", name = "netflix")
+user1 = Node("User",         name = "spiermar")
+
+graph.create(repo1)
+graph.create(org1)
+graph.create(user1)
+
+graph.create(Relationship(user1, "CONTRIBUTES", repo1))
+graph.create(Relationship(user1, "STARRED",     repo1))
+
+
+
+[20150403]
+
+github3-tests two-out dotcloud/zerorpc-python
+
+
+
+
+github3-tests two-out burnash
+
+
+github3-tests two-out netflix
+
+  a user.  maybe have to specify --org, if there are both user and org
+
+  this could get huge anyway
+  
+  
+
+[20150331]
+
+i figured out part of the "not on list any more: followers: ''" issue:
+
+GitHubTracker.discover(): voldemort                 /Users/jeff/src/github/user/voldemort
+  diffList - empty in prevValue: ['', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', 'brett', 'jney', 'nikolay', 'tiendung', 'brimbrom', 'mmakunas', 'geir', 'tfredrich', 'temojin', 'eliast', 'stonegao', 'elijah', 'sbendiola', 'kbsali', 'intltechventures', 'matagus', 'rnella01', 'omnisis', 'takuya-itoh', 'fern', 'mcaserta', 'kirktrue', 'afeinberg', 'codmajik', 'janwen', 'kumagi', 'aalmenar', 'jingle', 'nabeelmukhtar', 'bquilitz', 'leonhong', 'niteshsinha', 'pcora', 'githubapitest', 'maruks', 'skylerjohnson80', 'stanchan', 'carterpage', 'cmartins', 'bwaite-bfly', 'elizabethcnfortunato', 'awright18', 'dgj2ba', 'erdel', 'NeoCN', 'wufawei', 'shingon', 'ctasada', 'vicky12', 'rtymchik', 'hanw', 'HsiaoFin', 'shauryashaurya', 'vish-dawange', 'rubanm', 'strategist922', 'jeffpeiyt', 'yuj', 'Syhlver', 'lgsonic', 'fnu', 'DaoShen', 'Konig', 'alexsandovalv', 'maricn', 'bunnyblanco', 'dapurv5', 'qianyilei', 'eddyxu', 'jonathang', 'fordream', 'glix', 'prasadmuley', 'trusbe', 'chinnurtb', 'nxbdi', '0xae', 'hufeng825', 'hwangsyin', 'hanziwang', 'lauracarvajal', 'justinshea', 'cshaxu', 'hellfish2', 'naveen-raju', 'adolfosousa', 'icejoywoo', 'jero-rodriguez', 'abhi1one', 'wildinto', 'comeonbabye', 'JimChen']
+
+
+
+
+[20150321]
+
+- discover - simple experiment to diff the public members from last time, when there is a new batch
+  - i think that any update implies that all of them are new
+
+
+googe is one that frequently has an enormous "new" public member result
+
+  src/github/organization/google/tracker.meta.json
+
+    has an empty public_members list
+
+  ah.  so the trick is that i'm not updating/saving meta?
+
+
+refactored a lot, and added tracing.
+
+where are the etags stashed?
+
+  XXX currently ~/etags.json
+
+----
+
+handling the "binary" strings is apparently fairly simple: s = s.decode("ascii")
+
+
+
+
+
+
+
+[20150319]
+
+working on being able to dump the readme of  new project
+
+just pick one
+
+http://github.com/curran/cdn
+
+github3-tests info curran/cdn
+
+# this works, too, now:
+
+github3-tests info http://github.com/curran/cdn
+
+
+warning: a single info is costly - dozens or more points per check.
+can easily blow through an hour of points
+
+  
+
+
+
+
+
+
+----
+
+continuting to regularly get giant bursts of public_members, which seems wrong
+
+  maybe the members are all stored as one entity, with one etag, so whenever
+  one person is added, the whole thing is considered updated?
+
+    in which case, *we* need to track/diff
+
+
+----
+
+
+
+[20150310]
+
+i think etag may not work perfectly?
+
+"tracker discover" reported all projects for someone that i've been
+tracking for a couple of days, and about 100 public members.  unlikely
+that they are new.
+
+could be me not storing previous meta correctly, but i don't think that's it
+
+maybe it's me failing to handle an error, and storing a bad etag?
+
+----
+
+spark moved, from "bdas/spark" to "apache/spark" (and repo was replaced)
+
+would be great to have a couple of things:
+
+  - symlinks
+  - the org-using-github-hierarchy working
+    - 
+  - remove
+
+
+experiment:
+
+(re-)check out spark in to src/github/organization/apache
+
+cd src/cloud/spark
+
+# we don't have a full "rm" yet
+tracker rm bdas
+
+rm -rf bdas
+
+cd src/cloud
+
+ln -s ../github/organization/apache/spark
+
+
+
+
+
+
+[20150309]
+
+tracker discover worked today for the first time (had to wait for new projects ...)
+
+
+tracker discover
+
+GitHubTracker.discover(): mapbox                    /Users/jeff/src/github/organization/mapbox
+  2 new repos
+    repo:     2015-03-07 00:13:40+00:00  2015-03-09 09:22:41+00:00  'mapbox/mapbox-studio-mars-terrain.tm2'
+    repo:     2015-03-06 01:31:54+00:00  2015-03-09 09:22:09+00:00  'mapbox/mapbox-studio-mars-satellite.tm2'
+
+----
+
+
+
+
+[20150308]
+
+started looking in to oauth, but i don't think i have everything i need:
+
+  - homepage url
+  - authorization callback url
+  - 
+
+maybe it's ok - this page says to register a new application and set both urls to http://localhost:4567/
+
+
+  https://developer.github.com/guides/rendering-data-as-graphs/
+
+----
+
+support no-args discover - this is really tracking ...
+
+
+tracker discover
+
+  scan took about 90 points from hourly budget
+
+  several projects listed all of their repos?
+
+  should probably look in to pagination, too
+
+----
+
+tried getting etags to work again
+
+   found a stackoverflow indicating that etag needs to have double quotes
+
+   min start with 'W/"13e25..."'
+
+maybe it's just the iter versions?
+
+
+tried logging.  didn't do anything.  both github3 and urllib3
+
+
+PYTHONPATH=/Users/jeff/src/tracking/dev/github3.py/git/github3.py:$PYTHONPATH
+
+
+  XXX had to hack sys.path ???
+
+
+ with {'params': {'per_page': 100}, 'headers': {'If-None-Match': 'W/"3544dc247aaed937b3b37706fb344781"'}}
+
+curl -i https://api.github.com/orgs/locationtech/repos
+
+  ETag: "dbfde998f6167a5c3224bc6b80f28c09"
+
+    so maybe i'm not using the right etag?
+
+
+curl -i https://api.github.com/orgs/locationtech/repos -H 'If-None-Match: "dbfde998f6167a5c3224bc6b80f28c09"'
+
+  Status: 304 Not Modified
+  ETag: "dbfde998f6167a5c3224bc6b80f28c09"
+
+
+curl -i https://api.github.com/orgs/locationtech/repos -H "If-Modified-Since: Thu, 28 Feb 2015 15:31:30 GMT"
+
+  XXX doesn't work any more
+
+
+
+github3-tests values org:locationtech
+
+
+----
+
+still have some projects to manualy check out
+
+
+cd ~
+
+tracker import tracker-urls.laptop.txt
+
+  XXX crashes
+
+maybe simpler to filter down the file
+
+
+cat tracker-urls.laptop.txt | grep -v github.com
+
+cat tracker-urls.laptop.txt | grep -v github.com > need-to-retrack.txt
+
+??? pypy should be already checked out
+
+cd ~/src/python/pypy
+
+tracker update $(pwd)
+
+
+i think the symlink is wrong:
+
+
+  tracker update $(pwd)
+  logging to: /Users/jeff/tracker-logs/20150308.tracker.log
+    ExecVCSBackend._run(): 'hg incoming'
+      cwd: /Users/jeff/src/python/pypy/hg
+
+cd /Users/jeff/src/python/pypy/hg/pypy
+
+hg incoming
+
+  a good update
+
+XXX and then it did not seem broken ...
+
+----
+
+XXX every once in a while, git gets completely confused, says that my
+    local changes are conflicting
+
+    it's too hard to untangle.  easier just to start over
+
+/Users/jeff/src/tracking/mining/pymc/pymc
+
+
+----
+
+still a pain to check out non-uniform projects
+
+e.g., weka
+
+have to look on web page, find instructions
+
+  svn co https://svn.cms.waikato.ac.nz/svn/weka/trunk/weka
+
+cd src/mining
+mkdir weka
+mkdri weka/svn
+cd weka/svn
+svn co https://svn.cms.waikato.ac.nz/svn/weka/trunk/weka
+cd ../..
+tracker track weka
+
+
+----
+
+testing followers (and generic listing mechanism)
+
+
+github3-tests list followers keith-turner
+
+
+
+
+[20150307]
+
+filesystem organization for tracking github entities:
 
 src/github/{user,org}
 
@@ -45,7 +660,7 @@ TODO: generate simple bayes classifier, with project name/description, and maybe
 
 
 
-[20140306]
+[20150306]
 
 progress toward tracking and discovery
 
@@ -104,7 +719,7 @@ github3-tests slots user:keith-turner
 
 
 
-[20140305]
+[20150305]
 
 working on tracker move
 
@@ -157,7 +772,7 @@ now the code matches readthedocs
 
 
 
-[20140217]
+[20150217]
 
 XXX not checking out from sourceforge git properly
 
@@ -198,7 +813,7 @@ have to fix (re-check-out) a number of projects
 
 
 
-[20140216]
+[20150216]
 
 my changes to use logging have made it harder to see the changes
   - which projects
@@ -231,11 +846,30 @@ this is *not* the official rakarrack project
   it's a fork
 
 
-[20140208]
+[20150208]
 
 finish full import of projects on laptop
 
   fix goof with deeper and deeper relative paths
+
+
+----
+
+check out the next project that "tracker import" cannot handle
+
+cd ~
+
+tracker import tracker-urls.laptop.txt
+
+    note: fixing the sourceforge git issue took care of several of them
+    
+
+  we don't check out hg projects yet - /home/jeff/src/tracking/mining/mallet/mallet http://hg-iesl.cs.umass.edu/hg/mallet
+
+    have to update patterns in vcs_utils.py
+    
+
+
 
 ----
 
@@ -362,11 +996,7 @@ and so can the re module which uritemplate relies on. Constructing the
 object once should reduce the amount of time your code takes to run.
 
 
-
-
-
-
-[20140207]
+[20150207]
 
 added "urls" command, to export tracked projects from laptop,
 and "import" command, to check them out on new-mac
@@ -374,7 +1004,7 @@ and "import" command, to check them out on new-mac
 only mildly tested import - just a few projects
 
 
-[20140201]
+[20150201]
 
 tracker update >> ~/tracker-logs/$(date +%Y%m%d).tracker.log &
 
@@ -545,12 +1175,6 @@ mv impala impala-
 git clone https://github.com/cloudera/Impala.git
 
 # XXX have to fix the tracker link
-
-
-
-
-
-
 
 
 

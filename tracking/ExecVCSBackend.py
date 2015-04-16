@@ -24,18 +24,6 @@ class ExecVCSBackend(VCSBackend):
     STDOUT = subprocess.STDOUT
 
 
-    def log(self, message = None):
-
-        if message is None:
-            message = ""
-            pass
-
-        self._out_stream.write("%s\n" % message)
-        
-        return
-        
-
-
     def _run(self, 
              command,
              stdout = None,
@@ -50,7 +38,8 @@ class ExecVCSBackend(VCSBackend):
         """
         
         if self.verbose:
-            print(command)
+            print("  ExecVCSBackend._run(): %r" % command)
+            print("    cwd: %s" % os.getcwd())
             pass
 
         # i think i'm using shell = True so that the commands match exactly

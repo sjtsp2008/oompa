@@ -165,8 +165,19 @@ def dumpList(obj, slot, pad = 15):
 
 
 def getKindAndName(args):
+    """
 
+
+    """
+    
     for name in args:
+
+        # support stripping "http://github.com/" from front, in case i
+        # pasted in full url from some other tool
+
+        if name.startswith("http://github.com/"):
+            name = name[len("http://github.com/"):]
+            pass
 
         if "/" in name:
             yield "repo", name
@@ -182,4 +193,73 @@ def getKindAndName(args):
         yield kind, name
         pass
 
+    return
+
+
+
+def dumpTwoOutFromRepo(repo, githubHelper):
+    """
+    dumps the one-outs (forked, starred, watching), and then organizes
+    two-out (repos, starred, watching, ...)
+
+    TODO: move "the guts" in to helper
+    """
+    
+    print("dumpTwoOutRepo: %s/%s" % ( repo.owner, repo.name ))
+    # dumpSlotValues(repo)
+
+    # TODO: want this to be transparent - use-cache-if-recent-else-get-value-and-stash-it
+
+    use_etag    = False
+    
+    wrapper     = githubHelper.getEntityMetadataWrapper(repo)
+    stargazers  = wrapper.useCachedOrGetList("stargazers", use_etag)
+
+    print("%4d stargazers" % len(stargazers))
+    
+    # for stargazer in stargazers:
+    #    print("  gazer: %s" % ( stargazer, ))
+    #    pass
+
+    print("")
+
+    # TODO: subscribers
+
+    # TODO: followers, following
+    
+    #
+    # { repo -> [ user, ] }
+    #
+    starred_by_user = { }
+
+    field = "starred_repositories"
+    
+    for stargazer in stargazers:
+
+        print("  gazer: %r" % ( stargazer, ))
+        
+        starred_repos = githubHelper.list(field, stargazer)
+        starred_repos = list(starred_repos)
+
+        for repo in starred_repos:
+            print("    %s" % repo.name)
+            pass
+        
+        pass
+        
+    # contributors()?  usually private
+    
+    return
+
+
+def dumpTwoOut(obj, kind, helper):
+
+    # XXX maybe don't need this switch, but simpler to keep things separate, initially
+    
+    if kind == "repo":
+        dumpTwoOutFromRepo(obj, helper)
+    else:
+        print("  %s - %s" % ( kind, obj.name ))
+        pass
+    
     return

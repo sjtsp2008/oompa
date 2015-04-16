@@ -45,8 +45,6 @@ class MercurialVCSBackend(ExecVCSBackend):
 
         """
 
-        # print("_clean_up_output()")
-
         # this is getting very specialized/complicated - 
         # aggregating summaries by branch, or change set, if
         # no branch specified
@@ -60,8 +58,6 @@ class MercurialVCSBackend(ExecVCSBackend):
         chunk  = {}
 
         for line in cmd_output.splitlines():
-
-            # print("L: %r" % line)
 
             if not line:
                 if not chunk:
@@ -129,7 +125,6 @@ class MercurialVCSBackend(ExecVCSBackend):
 
             for chunk in chunks:
 
-                # print "  CHUNK: %r" % chunk
                 summary = chunk.get("summary")
                 
                 for line in summary:
@@ -156,11 +151,9 @@ class MercurialVCSBackend(ExecVCSBackend):
 
         print("%s.checkout(): %s, %r" % ( self.__class__.__name__, source_spec, args ))
         
+        # assuming in to current folder
         project_name         = self._determine_project_name(source_spec)
-        
-        # assuming in current folder
         base_folder          = os.getcwd()
-
         vcs_path             = self._create_vcs_folder(project_name, base_folder)
 
         self.push_folder(vcs_path)
@@ -194,9 +187,7 @@ class MercurialVCSBackend(ExecVCSBackend):
         """
         """
 
-        # XXX need to update the constructor
-        # self._out_stream = project._out_stream
-
+        
         #
         # note that updating in hg, with useful output, is actually
         # two steps (because a simple update does not report what
@@ -205,16 +196,21 @@ class MercurialVCSBackend(ExecVCSBackend):
         # actually get the changes
         #
 
-        vcs_folder = project.get_vcs_folder()
-        vcs_type   = self._type
+        vcs_folder    = project.get_vcs_folder()
 
-        orig_wd    = os.getcwd()
-
+        showedProject = False
+        
         if self.verbose:
-            self.print("cd %s" % vcs_folder)
+            project.log("MercurialVCSBackend.update(): %s" % ( project.path, ))
+            project.log("  cd %s" % vcs_folder)
+            showedProject = True
             pass
 
-        os.chdir(vcs_folder)
+        
+        self.push_folder(vcs_folder)
+
+        child_stdout  = io.BytesIO()
+        child_stderr  = self.STDOUT
 
         #
         # "hg pull --update" does not report what was actually
@@ -224,12 +220,6 @@ class MercurialVCSBackend(ExecVCSBackend):
         #
         # TODO: capture the output of incoming, and if 
         #
-        # stdout  = None
-        # XXX StringIO does not have a fileno ??? do i really need to 
-        #     write to a temp file and then read it?
-        # stdout  = io.StringIO()
-        child_stdout  = io.BytesIO()
-        child_stderr  = self.STDOUT
 
         command = '%s incoming' % self._type
         result  = self._run(command, 
@@ -241,6 +231,11 @@ class MercurialVCSBackend(ExecVCSBackend):
             #
             # there are differences.  now really pull them
             #
+
+            if not showedProject:
+                project.log("UPDATING %s" % ( project.path, ))
+                pass
+            project.log()
             project.log(self._getChildOutput(child_stdout))
             project.log()
 
@@ -254,15 +249,15 @@ class MercurialVCSBackend(ExecVCSBackend):
                                 stderr = child_stderr)
 
             if result != 0:
-                self.print("  XXX something wrong?  hg pull result: %s" % result)
-                self.print("      cd %s; %s" % ( vcs_folder, command ))
-
+                project.log("  XXX something wrong?  hg pull result: %s" % result)
+                project.log("      cd %s; %s" % ( vcs_folder, command ))
+                # XXX what about stderr?
                 project.log(self._getChildOutput(child_stdout))
                 project.log()
                 pass
             pass
 
-        os.chdir(orig_wd)
+        self.pop_folder()
         return
 
     def getSourceURL(self, project):

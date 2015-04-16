@@ -124,7 +124,6 @@ class SourceTracker:
             if os.path.islink(childPath):
 
                 realPath = os.path.realpath(childPath)
-                # print("     link -> %s" % realPath)
 
                 if realPath.startswith(projectPath):
                     # print("       WINNER")
@@ -220,10 +219,9 @@ class SourceTracker:
 
     
     def checkout(self, source_spec, *rest):
-        """
-        
-        check out the project specified by source_spec (usually a url (git, hg, svn, ...))
-        
+        """check out the project specified by source_spec (usually a url
+        (git, hg, svn, ...))
+
         """
 
         self.log("SourceTracker.checkout(): %s %s" % ( source_spec, rest ))
@@ -234,7 +232,8 @@ class SourceTracker:
             self.log("SourceTracker.checkout(): unknown vcs type: %s" % source_spec)
             return None
 
-        backend  = VCSBackendFactory.get_backend(project_type = vcs_type)
+        backend  = VCSBackendFactory.get_backend(project_type = vcs_type,
+                                                 logger       = self.logger)
         result   = backend.checkout(source_spec, *rest)
 
         self.log()
@@ -316,10 +315,12 @@ class SourceTracker:
         return
     
 
-    def update_project(self, project_path):
+    def updateProject(self, project_path):
         """
 
         """
+
+        # self.log("SourceTracker.updateProject(): %s" % project_path)
         
         project  = Project(project_path, self)
         result   = project.update()
@@ -330,29 +331,30 @@ class SourceTracker:
             self.log()
             pass
 
-        # self.out_stream.flush()
-
         return
 
     
-    def update_folder(self, folder):
+    def updateFolder(self, folder):
         """
         update a folder and any projects below it
+
+        assumes that folder is in the "real" source tree (vs tracking tree)
+
         """
 
         vcs_type = vcs_utils.determine_vcs_type(project_path = folder)
 
-        # self.log("SourceTracker.update_folder(): %s (vcs_type: %s)" % ( folder, vcs_type ))
+        # self.log("SourceTracker.updateFolder(): %s (vcs_type: %s)" % ( folder, vcs_type ))
 
         if vcs_type:
-            return self.update_project(folder)
+            return self.updateProject(folder)
 
         children = os.listdir(folder)
 
         for child in children:
             path = os.path.join(folder, child)
             if os.path.isdir(path):
-                result = self.update_folder(path)
+                result = self.updateFolder(path)
                 pass
             pass
 
@@ -364,7 +366,7 @@ class SourceTracker:
         update all projects under the root tracking folder
 
         """
-        return self.update_folder(self.tracking_folder)
+        return self.updateFolder(self.tracking_folder)
         
 
     def update(self, *projects):
@@ -372,8 +374,8 @@ class SourceTracker:
 
         update some or all projects that have been previously tracked
 
-        projects, if supplied, is a list of paths.
-        may or may not be under tracking tree
+        projects, if supplied, is a list of paths, which may or may not be under tracking tree
+
         """
         
         self.log()
@@ -384,7 +386,7 @@ class SourceTracker:
             self.update_all()
         else:
             for project in projects:
-                result = self.update_folder(project)
+                result = self.updateFolder(project)
                 pass
             pass
         
@@ -410,6 +412,11 @@ class SourceTracker:
             children = os.listdir(folder)
             
             for child in children:
+
+                # XXX maybe a bad idea to put src/tracking under src/
+                if child == "tracking":
+                    continue
+                
                 childFolder = os.path.join(folder, child)
                 if os.path.isdir(childFolder):
                     for project in self.getProjects(childFolder):

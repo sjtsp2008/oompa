@@ -1,70 +1,95 @@
-#! /usr/bin/env python
 #
-# github3-tests
 #
-
-import argparse
-import os
-import sys
-
-import github3
-import yaml
-
-# XXX wrong home for these
-from oompa.tracking.github               import github_utils
-from oompa.tracking.github.GitHub3Helper import GitHub3Helper
-
-
-dumpList = github_utils.dumpList
-
-
-
 #
-# main
+# note: i tried using bulbs, which would be easier to
+#       migrate to other tinkerpop graph engines, but had
+#       trouble authenticating
 #
 
-parser = argparse.ArgumentParser()
+import py2neo
 
-parser.add_argument("command", help = "command")
-parser.add_argument("extraArgs", nargs = "*")
-
-args          = parser.parse_args()
-
-# XXX use yaml
-config = {}
-
-
-# XXX get password from a predictable place
-gituser   = "sjtsp2008"
+from py2neo import Graph, Node, Relationship
 
 
 
 
-# XXX still working this out - alternate root when doing aggressive caching for large two-out experiments
+"""
 
-if args.command == "two-out":
-    config["github.meta.store"]   = "neo4j"
-    # config["github.meta.neo4j.fs.root"] = 
+
+visit: http://localhost:7474/
+
+  default user - neo4j
+
+
+part of neo walkthrough
+
+
+  CREATE (ee:Person { name: "Emil", from: "Sweden", klout: 99 })
+
+    () means "node"
+    {} surround attrs
+    Person is the label
+    
+
+  MATCH (ee:Person) WHERE ee.name = "Emil" RETURN ee;
+
+complex creation:
+
+MATCH (ee:Person) WHERE ee.name = "Emil"
+CREATE (js:Person { name: "Johan", from: "Sweden", learn: "surfing" }),
+(ir:Person { name: "Ian", from: "England", title: "author" }),
+(rvb:Person { name: "Rik", from: "Belgium", pet: "Orval" }),
+(ally:Person { name: "Allison", from: "California", hobby: "surfing" }),
+(ee)-[:KNOWS {since: 2001}]->(js),(ee)-[:KNOWS {rating: 5}]->(ir),
+(js)-[:KNOWS]->(ir),(js)-[:KNOWS]->(rvb),
+(ir)-[:KNOWS]->(js),(ir)-[:KNOWS]->(ally),
+(rvb)-[:KNOWS]->(ally)
+
+pattern matching:
+
+MATCH (ee:Person)-[:KNOWS]-(friends)
+WHERE ee.name = "Emil" RETURN ee, friends
+
+
+
+
+
+Pattern matching can be used to make recommendations. Johan is
+learning to surf, so he may want to find a new friend who already
+does:
+
+  MATCH (js:Person)-[:KNOWS]-()-[:KNOWS]-(surfer)
+  WHERE js.name = "Johan" AND surfer.hobby = "surfing"
+  RETURN DISTINCT surfer
+
+    ()        empty parenthesis to ignore these nodes
+    DISTINCT  because more than one path will match the pattern
+    surfer    will contain Allison, a friend of a friend who surfs
+
+
+"""
+
+
+class GitHubNeo:
+
+    def __init__(self, config):
+
+        # XXX get from config
+        neo_url    = "http://localhost:7474/db/data/"
+        neo_host   = "localhost:7474"
+        neo_user   = "neo4j"
+        neo_passwd = "neotest"
+        
+        py2neo.authenticate(neo_host, neo_user, neo_passwd)
+
+        self.graph = py2neo.Graph(neo_url)
+
+        return
+
+    
     pass
 
-
-helper    = GitHub3Helper(config, username = gituser)
-
-# github_utils.dumpSlots(github3, "github3 module")
-
-
-print("rate points before: %s" % helper.checkRatePointsLeft())
-
-
-
-if args.command == "repos":
-
-    for kind, name, obj in helper.getKindNameAndObject(args.extraArgs):
-        print("%s: %s - %s" % ( kind, name, obj.name ))
-        gitHelper.printRepos(user)
-        pass
-    pass
-
+"""
 elif args.command == "info":
     #
     # get info about a user, organization, or repo, or special keys
@@ -230,94 +255,4 @@ elif args.command == "info":
         pass
     pass
 
-
-elif args.command == "list":
-
-    methodName = args.extraArgs[0]
-
-    for entityName in args.extraArgs[1:]:
-
-        print("%s" % entityName)
-        obj      = helper.getGithubObject(entityName)
-
-        values   = helper.list(methodName, obj)
-
-        for value in values:
-            print("    %s" % value)
-            pass
-        pass
-
-    pass
-    
-elif args.command == "who-starred":
-
-    # interesting - need to supply an owner and a repo
-
-    for ownerReponame in args.extraArgs:
-
-        repository = getGithubObject("repo", ownerReponame, github)
-
-        print("  repo: %r" % repository)
-
-        # github_utils.dumpSlotValues(repository)
-
-        for stargazer in repository.stargazers:
-            print("    stargazer: %r" % stargazer)
-            pass
-        
-        pass
-    pass
-        
-elif args.command == "slots":
-
-    for kind, name, obj in helper.getKindNameAndObject(args.extraArgs):
-        github_utils.dumpSlots(obj, kind)
-        pass
-    pass
-
-elif args.command == "values":
-
-    for kind, name, obj in helper.getKindNameAndObject(args.extraArgs):
-        github_utils.dumpSlotValues(obj, kind)
-        pass
-    pass
-
-
-elif args.command == "feed-neo":
-
-    from oompa.tracking.github.GitHubNeo import GitHubNeo
-    
-    # XXX set up neo config params
-
-    githubNeo = GitHubNeo(config, helper)
-
-    githubNeo.update(args.extraArgs)
-    
-    
-elif args.command == "two-out":
-
-    # XXX get neo working, and then this is trivial
-    xxx
-    
-    # experiment with a "two-hop" from a repo, user, or org
-    #
-    #   e.g., if repo, get users working on a repo, and the other repos they have, or contributed to
-    #           - or starred, or forked (on either end)
-    #
-    # this is a baby step toward a graph viz (either d3+server, or neo4j)
-    #
-
-    for kind, name, obj in helper.getKindNameAndObject(args.extraArgs):
-        github_utils.dumpTwoOut(obj, kind, helper)
-        pass
-    pass
-    
-
-else:
-
-    print("XXX we don't do command: %s" % args.command)
-
-    pass
-            
-
-print("rate points after:  %s" % helper.checkRatePointsLeft())
+"""

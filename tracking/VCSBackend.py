@@ -33,14 +33,31 @@ class VCSBackend:
 
     verbose = False
 
-    def __init__(self, out_stream = None):
 
+    def __init__(self, logger = None):
+
+        # some backends require changing current directory, so we use this for push/pop
         self._folder_stack = []
 
-        self._out_stream   = out_stream
+        self.logger        = logger
 
         return
 
+
+    def log(self, message = None):
+
+        if message is None:
+            message = ""
+            pass
+
+        if self.logger is not None:
+            self.logger.info(message)
+            pass
+        
+        return
+        
+
+    
 
     def _determine_project_name(self, source_spec):
         """
