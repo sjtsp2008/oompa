@@ -282,42 +282,8 @@ elif args.command == "values":
         pass
     pass
 
-
-elif args.command == "feed-neo":
-
-    from oompa.tracking.github.GitHubNeo import GitHubNeo
-    
-    # XXX set up neo config params
-
-    githubNeo = GitHubNeo(config, helper)
-
-    githubNeo.update(args.extraArgs)
-    
-    
-elif args.command == "two-out":
-
-    # XXX get neo working, and then this is trivial
-    xxx
-    
-    # experiment with a "two-hop" from a repo, user, or org
-    #
-    #   e.g., if repo, get users working on a repo, and the other repos they have, or contributed to
-    #           - or starred, or forked (on either end)
-    #
-    # this is a baby step toward a graph viz (either d3+server, or neo4j)
-    #
-
-    for kind, name, obj in helper.getKindNameAndObject(args.extraArgs):
-        github_utils.dumpTwoOut(obj, kind, helper)
-        pass
-    pass
-    
-
 else:
-
     print("XXX we don't do command: %s" % args.command)
-
     pass
-            
 
 print("rate points after:  %s" % helper.checkRatePointsLeft())

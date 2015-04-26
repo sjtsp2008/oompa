@@ -1,0 +1,209 @@
+#! /usr/bin/env python
+#
+# github3-tests
+#
+
+import argparse
+import os
+import sys
+
+import github3
+import yaml
+
+# XXX wrong home for these
+from oompa.tracking.github               import github_utils
+from oompa.tracking.github.GitHub3Helper import GitHub3Helper
+from oompa.tracking.github.GitHubNeo     import GitHubNeo
+    
+
+dumpList = github_utils.dumpList
+
+
+
+#
+# main
+#
+
+parser = argparse.ArgumentParser()
+
+parser.add_argument("command", help = "command")
+parser.add_argument("extraArgs", nargs = "*")
+
+args              = parser.parse_args()
+
+# XXX use yaml
+config            = {}
+
+# XXX get password from a predictable place
+config["gituser"] = "sjtsp2008"
+
+config["neo.github.url"]    = "http://localhost:7474/db/data/"
+config["neo.github.user"]   = "neo4j"
+config["neo.github.passwd"] = "neotest"
+
+# experimenting
+config["neo.github.freshness"] = "4d"
+# config["neo.github.freshness"] = "1h"
+# config["neo.github.freshness"] = "5m"
+
+
+helper    = GitHub3Helper(config)
+githubNeo = GitHubNeo(config, helper)
+graph     = githubNeo.graph
+
+command   = args.command
+args      = args.extraArgs
+
+print("rate points before: %s" % helper.checkRatePointsLeft())
+
+if command == "feed" or command == "update":
+
+    # TODO: if no args, update "oldest stuff" until we run out of
+    #       points
+    
+    # one-out feed
+    # XXX set up neo config params
+
+    githubNeo.update(args)
+
+elif command == "feed-two-out":
+
+    # TODO: if i could get command syntax working, this is just "github-neo feed --hops 2"
+    githubNeo.update(args, numHops = 2)
+    
+elif command == "dump-neo":
+
+    # if one arg, dump all edges
+    # if multiple args, only subset of edges
+    
+    # need to either find the seed node in graph first
+
+    nodeName  = args[0]
+    relTypes  = args[1:]
+
+    if relTypes:
+        relTypes = dict.fromkeys(relTypes)
+        pass
+    
+    node      = githubNeo.getNode(nodeName)
+
+    print("NODE: %r" % ( node, ))
+    # print("  degree: %s" % node.degree)
+
+    # TODO: not sure how to handle plural types through match api - multiple iterations?
+    # relType = None
+    # if len(args) > 1:
+    #    # XXX handle multiple relTypes
+    #    relType = args[1]
+
+    for rel in node.match():
+
+        if relTypes and rel.type not in relTypes:
+            continue
+        
+        # TODO: just "the other side"
+
+        if node == rel.start_node:
+            other_node = rel.end_node
+        else:
+            other_node = rel.start_node
+            pass
+
+        print("    rel: %s - %s" % ( rel.type, other_node, ))
+        pass
+    pass
+
+
+elif command == "find":
+
+    # print("size: %s" % graph.size)
+
+    # what is this?
+    # print("LABELS: %s" % graph.node_labels)
+    
+    for thing in graph.find(args[0]):
+        print("  thing: %r" % ( thing, ))
+        pass
+    pass
+
+
+elif command == "list":
+
+    # TODO: handle subtyping, regex, ...
+    
+    # TODO: move this in to a getNodes() helper
+    # query = "MATCH (node) RETURN node"
+    # query = "MATCH (node:Repository) RETURN node.name as name"
+    query = "MATCH (node:Repository) RETURN node.name as name"
+
+    pattern = None
+    
+    if args:
+        pattern = args[0]
+        pass
+
+    # TODO: can probably get neo to sort
+
+    records = githubNeo.query(query)
+
+    names   = [ record.name for record in records ]
+
+    if pattern:
+        names = [ name for name in names if name.find(pattern) != -1 ]
+        pass
+    
+    names.sort()
+    
+    for name in names:
+        # TODO: print the type
+        print("  %s" % name)
+        pass
+
+    pass
+
+elif command == "full-scrub":
+    
+    # if you need to start over, to get rid of junk
+    graph.delete_all()
+
+
+elif command == "test-getOrAddNode":
+
+    if len(args) == 2:
+        nodeType, name = args
+    else:
+        nodeType = None
+        name     = args[0]
+        pass
+
+    node = githubNeo.getOrAddNode(name, nodeType)
+
+    print("  labels: %s" % node.labels)
+    print("  props:  %s" % node.properties)
+    
+elif command == "test-create":
+
+    from py2neo import Node
+
+    nodeType = args[0]
+    name     = args[1]
+    
+    node     = Node(nodeType, name = name)
+
+    # use merge_one to create if it does not already exist
+    # graph.merge_one(node)
+
+    graph.create(node)
+    
+    # graph.push(node)
+
+    
+    print("  added node: %s" % node)
+
+
+
+else:
+    print("XXX we don't do command: %s" % command)
+    pass
+
+print("rate points after:  %s" % helper.checkRatePointsLeft())

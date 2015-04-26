@@ -1,22 +1,73 @@
 Oompa TODO list
 ---------------
 
-- github3-tests dump-neo netflix/vector STARRED 
-  - get the full list of stargazers, via api
-  - note: gui defaults to limiting to top 25, so graph "stays simple"
+- i think have to separate getting relationships from a node from
+  adding a node
 
-- github3-tests feed-neo netflix/vector
-  - include other relationships (contributes, subscribed)
+- unit tests
+  - GitHubNeo.getOrAddNode
+  
+- learn about neo node labels
+  - the first part of Node(*labels, **properties)
+    - so we are already using them
+    - but getting existing labels was weird
+    
+- add an updated timestamp to nodes
 
-- github3-tests feed-neo <user>
+- baby-step with crawling
+  - attempt to add a node (with one-out)
+  - if it already exists skip it
+    - if it exists *at all*
+      - don't worry about freshness timestamps yet
+  - this step just focuses on layering neo as a cache
+
+- github-neo update - support only updating certain relationships
+
+- next baby-step with crawling - first step of two-out
+  - start from a node that has been updated recently
+    - already in neo
+  - since it exists, get the subset of relationships that we want to crawl
+    - and dedupe them
+  - then do a one-out on those
+
+- figure out how to stagger accumulo two-out across hours (for github points)
+  - maybe a queue?
+  - i was thinking that using timestamps in neo would be enough, but that's not 
+  - i think need an edgesUpdated timestamp on a node
+  - first step: check neo as a cache
+    - if edges exist, and maybe updated timestamp is fresh enough, then
+      use what's in the cache instead of hitting github
+
+- figure out cypher query to find projects two-out from accumulo, which have multiple edges
+  - crude recommender
+  - basically filtering graph by removing leaf nodes with only one linker
+
+  ----
+
+- neo opt: update all relations of a particular type in one call
+
+- tracker update - i think that git (and maybe hg) logs might be better than
+  listing the files that changed
+  - the files can be noisy, and very hard to understand the "why" vs the "what"
+  - or maybe both the log (maybe one-line/pretty) and the what
+
+- neo - add added-timestamp to nodes and edges
+
+- neo - able to filter two-out crawl through what we already knew, and what has been done before
+
+- probably won't be able to do a 2-out crawl from a popular repo in one hour.  have to schedule/stagger
+  
+- need a meter on how many queries i'm making to github, and traffic to neo
+
+- why aren't i getting good obj.name from organization objects?
+  - empty string
+  - during one-out
 
 - get neo4j graph running in graphene/heroku
 
-- tracker find does not search in src/tracking
-  - i always have to remove "/tracking" from what is found
+- neo tool for understanding whatever schema is available
 
-
-- neo - add timestamps to edges
+- neo - add timestamps to edges, so that we can query on "since"
 
 - neo - update really (only) updates (vs full force-feed) - only add if not already in graph
   - transaction?
@@ -24,6 +75,11 @@ Oompa TODO list
 
 - figure out a way to visually encode *new* info
   - maybe that does not matter in the short term, but important to watch evolution of graph
+
+- "tracker find" should search in src/, not src/tracking
+  - there are non-linked projects, and parent folders, ...
+  - i always have to remove "/tracking" from what is found
+  - otoh, find really needs to include parent folders, too
 
 
 - before i go any further with the two-out experiment
@@ -57,11 +113,39 @@ Oompa TODO list
   - i think i need to handle the situation where the iterator is not filled immediately, and i have to re-check
     (there are notes about that in github3 docs)
 
-- slightly better readme snippet - if first line just appears to be a one or two word title,
-  include second paragraph, too
-  - esp if it starts with a "#"
-
   ----
+
+
+- neo interaction is fully declarative
+  - map github3 python objects to node schema
+  - don't even use python objects - just raw rest api
+  - able to start from scratch
+    - discover a web service, map it
+  
+- neo - fully map out the possible relationships between Org/User/Repo/Forks
+  - for GitHubNeo.updateRelationshipsTo
+  - all of them have first-seen timestamps
+  - Repository
+    - User
+    - Org
+    - Repository
+      - fork
+        - owner
+        - activity
+	- nature of fork
+	- communication with original owner
+	  - via git (push, pulls)
+	  - other
+  - User
+    - Repository
+  - Organization
+
+- some way to track indirect relationships
+  - accumulo has a number of projects that dont/cant fork or reference
+    - e.g., https://github.com/calrissian/accumulo-recipes
+      - https://github.com/JHUAPL/AccumuloGraph
+      	
+
 
 
 
@@ -114,9 +198,25 @@ Oompa TODO list
 
   ----
 
+- neo tutorial: http://neo4j.com/blog/march-madness-2015/
+
 - tracker discover is not detecting new projects as forks of others properly
   - says parent and source are None
   - is there something about having to refresh?
+
+- work on batching writes to neo - http://neo4j.com/blog/neo4j-2-2-0-scalability-performance/
+
+- work through this one - http://neo4j.com/blog/modeling-a-multilevel-index-in-neoj4
+    - https://github.com/kvangundy/graph-graph-baby
+    - http://graphgist.neo4j.com/?_ga=1.31719998.1465884467.1428060527#!/gists/b1f0ca297ec2105fa060
+  - The basic problem we try to solve here is the ordering of events
+    in a timeline and asking for ranges of events ordered in time
+    without needing to load the whole timeline, or let an external
+    index like Lucene doing the sorting (which is very costly). So, a
+    simple approach to do this is a multilevel tree, where you attach
+    the domain nodes to the leafs of the index tree and query by
+    traversing through that structure.
+
 
 - summarize update logs
   - number of files changed, maybe a little bit about the nature of the changes

@@ -8,6 +8,8 @@
 # TODO:
 #    - use real config, for declaring where tracking folder is, ...
 #    - need CommandHandler support
+#    - full triggered support
+#      - when something updated, update some other project and run tests, ...
 #
 
 _usage_str = """usage: tracker <command> <folder> [...]

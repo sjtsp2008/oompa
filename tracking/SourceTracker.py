@@ -537,7 +537,7 @@ class SourceTracker:
         return
 
 
-    def findProjects(self, *patterns):
+    def findProjects(self, *patterns, depth = None):
         """
         simple grep over source tree folders/files
         """

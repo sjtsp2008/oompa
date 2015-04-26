@@ -1,5 +1,704 @@
 
 
+[20150426]
+
+another nice neo example:
+
+http://neo4j.com/developer/example-project/
+
+  Example Project Description
+
+  To demonstrate connection to and usage of Neo4j in different
+  programming languages we’ve created an example application. It is a
+  simple, one-page webapp, that uses Neo4j’s movie demo database
+  (movie, actor, director) as dataset. The same front-end web page
+  consumes 3 REST-endpoints provided by backend implemented in the
+  different programming languages and drivers.
+
+    - movie search
+    - single movie listing
+    - graph visualization of the domain
+
+
+
+  Domain Model
+
+    (:Movie {title,released,tagline})<-[:ACTED_IN {roles}]-(actor:Person)
+
+MATCH (movie:Movie {title:{title}})
+ OPTIONAL MATCH (movie)<-[r]-(person:Person)
+ RETURN movie.title as title,
+       collect({name:person.name,
+                job:head(split(lower(type(r)),'_')),
+                role:r.roles}) as cast LIMIT 1
+
+
+{query:"(?i).*matrix.*"}
+
+MATCH (movie:Movie)
+ WHERE movie.title =~ {query}
+ RETURN movie
+
+MATCH (m:Movie)<-[:ACTED_IN]-(a:Person)
+ RETURN m.title as movie, collect(a.name) as cast
+ LIMIT {limit}
+
+
+has instructions for installing on heroku
+
+----
+
+github-neo test-getOrAddNode Repository apache/accumulo
+
+github-neo test-getOrAddNode apache/accumulo
+
+github-neo test-getOrAddNode neo4j/neo4j
+
+  "repo" instead of "Repository"
+
+github-neo full-scrub
+
+github-neo test-getOrAddNode neo4j/neo4j
+
+# added createdDT property
+
+  getOrAddNode works now
+
+
+github-neo update apache/accumulo
+
+
+github-neo dump-neo apache/accumulo
+
+
+now, should crash in the scaffolding of should-use-cached
+
+
+github-neo update apache/accumulo
+
+
+
+
+
+----
+
+
+
+node.labels
+node.properties
+
+
+node.match()
+node.match_incoming()
+node.match_outgoing()
+
+
+
+
+
+
+[20150425]
+
+we lost power, have to restart neo, see what's still there
+
+/Users/jeff/packages/neo4j/neo4j-community-2.2.0/bin/neo4j start
+
+  maybe not surprising - takes a long time to load this time - a good
+  amount of data from github
+
+  taking a really, really, long time.  could it be stuck?
+  or thrashing with firefox?
+
+/Users/jeff/packages/neo4j/neo4j-community-2.2.0/bin/neo4j start
+Starting Neo4j Server...WARNING: not changing user
+process [18126]... waiting for server to be ready............................................................................................................................................................................................................................................................................... OK.
+http://localhost:7474/ is ready.
+
+
+downloaded neo 2.3.0 milestone 1.  have not installed or made it "the one" yet
+
+----
+
+- baby-step with crawling
+  - attempt to add a node (with one-out)
+  - if it already exists skip it
+    - if it exists *at all*
+      - don't worry about freshness timestamps yet
+  - this step just focuses on layering neo as a cache
+
+apply a caching layer over tracker
+
+
+woriking in GitHubNeo.update
+
+
+github-neo update apache/accumulo
+
+  the neo node from getNode("apache/accumulo") is None ???
+
+github-neo dump-neo apache/accumulo
+
+
+github-neo list
+
+  took a really long time, then started printing tons of results.
+
+  apache/accumulo is not in there ???
+
+
+#
+# so, really update
+#
+github-neo update apache/accumulo
+
+  went through everything
+
+
+github-neo dump-neo apache/accumulo
+
+  XXX still no
+
+do i need some sort of flush?
+
+
+github-neo list apache/accumulo
+
+
+# just Repository -     query = "MATCH (node:Repository) RETURN node"
+
+github-neo list
+
+  no apache/accumulo nor accumulo ??
+
+  lots of others ???
+
+
+github-neo xxx-create Repository apache/accumulo
+
+github-neo find apache/accumulo
+
+
+XXX hail mary
+
+github-neo full-scrub
+
+github-neo xxx-create Repository apache/accumulo
+
+github-neo list
+
+  nothing
+
+# hypothesis: the slash is a problem
+
+github-neo xxx-create Repository Test
+
+github-neo list
+
+  nothing
+
+
+# hypothesis - merge_one does not work like i thought it does
+#
+#   in xxx-create, use create instead of merge_one
+#
+github-neo xxx-create Repository apache/accumulo
+
+  interesting - different than merge_one
+
+    added node: (n13754:Repository {name:"apache/accumulo"})
+
+  versus this with merge_one:
+
+    added node: (:Repository {name:"apache/accumulo"})
+
+
+github-neo list
+
+  and it's there
+
+
+merge_one needs to work by labels.  need to learn about them
+
+
+
+github-neo update apache/accumulo
+
+
+
+
+
+github-neo feed-two-out apache/accumulo
+
+
+
+
+----
+
+TODO: work on batching writes to neo
+
+  http://neo4j.com/blog/neo4j-2-2-0-scalability-performance/
+
+----
+
+
+
+
+
+
+
+
+[20150424]
+
+two situations today where it would have been helpful to see if i was
+already "discovering" an org (i could not remember), and had to peek
+in github_meta_cache/ instead of using api
+
+----
+
+# figure out a way to integrate this
+function find-in-src {
+  # XXX does not handle case-insensitivity
+  PATTERN=$1
+  SRC_BASE=$HOME/src
+  # could combine these, but better to separate by level
+  ls -ld $SRC_BASE/*${PATTERN}*      2> /dev/null
+  ls -ld $SRC_BASE/*/*${PATTERN}*    2> /dev/null
+  ls -ld $SRC_BASE/*/*/*${PATTERN}*  2> /dev/null
+}
+
+
+
+
+
+[20150422]
+
+cypher nutshell
+
+  resources:
+
+    http://neo4j.com/docs/stable/cypher-refcard/
+    http://neo4j.com/docs/stable/cypher-query-lang.html
+    
+
+parens indicate nodes (think of a circle around the node)
+
+MATCH (node1)-[:REL_TYPE]->(node2)
+
+# all STARRED edges
+cypher --auth neo4j:neotest "MATCH (node1)-[rel:STARRED]->(node2) RETURN rel"
+
+  only edges to Netflix/vector.  nothing to accumulo ???
+
+
+# i don't understand why parans are necessary here
+
+cypher --auth neo4j:neotest -p N elibus "MATCH (user:User {name:{N}}) RETURN user"
+
+cypher --auth neo4j:neotest "MATCH (repo:Repository) RETURN repo"
+
+  still nothing about accumulo
+
+
+#
+# just the names
+#
+cypher --auth neo4j:neotest "MATCH (repo:Repository) RETURN repo.name AS name"
+
+
+
+# example of getting field of relationship
+
+
+MATCH (node1)-[rel:TYPE]->(node2) RETURN rel.rating
+
+
+
+
+MATCH (node:Label) RETURN node
+
+MATCH (node:Label) WHERE node.property = "value" RETURN node
+
+MATCH (node1:Label1)-[:REL_TYPE]->(node2:Label2) RETURN node1, node2
+
+
+
+
+from language overview
+
+
+# Create creates nodes with labels and properties.
+
+CREATE (you:Person {name:"You"}) RETURN you
+
+
+# create a LIKE link from You to a new node
+#
+# Create can create single nodes, or more complex structures in one go.
+
+MATCH  (you:Person {name:"You"})
+  CREATE (you)-[like:LIKE]->(neo:Database:NoSql:Graph {name:"Neo4j" })
+  RETURN you,like,neo
+
+#
+# Foreach allows you to execute operations for each element of a list.
+#
+
+MATCH (you:Person {name:"You"})
+  FOREACH (name in ["Johan","Rajesh","Anna","Julia","Andrew"] |
+    CREATE (you)-[:FRIEND]->(:Person {name:name}))
+
+
+
+# find your friends  
+
+MATCH (you {name:"You"})-[:FRIEND]->(yourFriends) RETURN you, yourFriends
+
+
+# Create Second Degree Friends and Expertise
+
+MATCH (neo:Database {name:"Neo4j"})
+MATCH (anna:Person {name:"Anna"})
+CREATE (anna)-[:FRIEND]->(:Person:Expert {name:"Amanda"})-[:WORKED_WITH]->(neo)
+
+MATCH (neo:Database {name:"Neo4j"})
+MATCH (johan:Person {name:"Johan"})
+CREATE (johan)-[:FRIEND]->(:Person:Expert {name:"Max"})-[:WORKED_WITH]->(neo)
+
+
+
+Find Someone Who Can Help You Learn Neo4j
+
+MATCH (you {name:"You"}), (expert)-[:WORKED_WITH]->(db:Database {name:"Neo4j"}), p = shortestPath( (you)-[:FRIEND*..5]-(expert) )
+  RETURN p,db
+
+
+
+from tutorials, in neo manual:
+
+For example, we might want to match instances where a Person LIVES_IN
+a Country. The following Cypher code combines two simple patterns into
+a (mildly) complex pattern which performs this match:
+
+  (:Person) -[:LIVES_IN]-> (:City) -[:PART_OF]-> (:Country)
+
+
+
+
+
+[20150421]
+
+continuing with full chaining experiments
+
+github3-tests feed-neo chriswhong/mtaMarylandBusTracking
+
+
+github3-tests feed-neo apache/accumulo
+
+
+
+
+# just to show that it's not so bad for accumulo, i decided to do hbase too.
+#
+# it's pretty bad for accumulo ...
+
+github3-tests feed-neo apache/hbase
+
+
+
+feeding the one-out things
+
+moved all neo stuff to github-neo script
+
+github-neo feed-two-out apache/accumulo
+
+
+
+
+
+
+
+
+[20150420]
+
+looking for a smaller example to track - Netflix/vector has > 1000 stargazers
+
+github3-tests feed-neo chriswhong/mtaMarylandBusTracking
+
+
+
+[20150419]
+
+baby step with neo - get all nodes 
+
+getting cypher query working through py2neo
+
+
+# make sure neo is running
+#   is this a no-op if it's lready running?
+
+/Users/jeff/packages/neo4j/neo4j-community-2.2.0/bin/neo4j start
+
+  Another server-process is running with [ST=ESTABLISHED], cannot start a new one. Exiting.
+
+
+
+# XXX
+
+
+  note that results are interpreted in context of query (e.g., 
+
+    for record in graph.cypher.execute("MATCH (p:Person) RETURN p.name AS name"):
+        print(record.name)
+
+
+
+github3-tests cypher "MATCH n"
+
+  py2neo.cypher.error.statement.InvalidSyntax: Query cannot conclude with MATCH (must be RETURN or an update clause) (line 1, column 1 (offset: 0))
+
+
+github3-tests cypher "MATCH n RETURN n"
+
+
+
+github3-tests cypher "MATCH (r: Repository) RETURN r"
+
+  XXX there are 6 of them - i don't think node names are required to be unique?
+
+
+# note: probably don't need the cypher command in github3-tests
+
+export NEO4J_URI="http://localhost:7474/db/data/"
+
+# formats: --csv --human --json --tsv
+#    (i think default is --human?)
+
+cypher "MATCH (r: Repository) RETURN r"
+
+  unauthorized
+
+
+cypher --auth neo4j:neotest "MATCH (r: Repository) RETURN r"
+
+   | r                                         
+---+--------------------------------------------
+ 1 | (n175:Repository {name:"netflix/vector"}) 
+ 2 | (n178:Repository {name:"Netflix/vector"}) 
+ 3 | (n179:Repository {name:"Netflix/vector"}) 
+ 4 | (n928:Repository {name:"Netflix/vector"}) 
+ 5 | (n929:Repository {name:"Netflix/vector"}) 
+ 6 | (n1430:Repository {name:"Netflix/vector"})
+
+
+
+cypher -p N Alice "MATCH (p:Person {name:{N}}) RETURN p"
+
+
+github3-tests dump-neo netflix/vector STARRED 
+
+
+# need to start over with db - get rid of movie stuff, fix uniqueness constraints
+
+----
+
+notes on using py2neo
+
+
+
+from py2neo import Node, Relationship
+
+alice           = Node("Person", name="Alice")
+bob             = Node("Person", name="Bob")
+
+alice_knows_bob = Relationship(alice, "KNOWS", bob)
+
+graph.create(alice_knows_bob)
+
+
+#
+# updates not auotmatically synced
+#
+
+alice.properties["age"] = 33
+bob.properties["age"]   = 44
+
+alice.push()
+bob.push()
+
+# Here, we add a new property to each of the two local nodes and push
+# the changes in turn. This results in two separate HTTP calls being
+# made to the server which can be seen more clearly with the debugging
+# function, watch:
+
+from py2neo import watch
+watch("httpstream")
+
+alice.push()
+  > POST http://localhost:7474/db/data/batch [146]
+  < 200 OK [119]
+
+bob.push()
+  > POST http://localhost:7474/db/data/batch [146]
+  < 200 OK [119]
+
+#
+# bundle updates
+#
+graph.push(alice, bob)
+
+
+# Pulling updates from server to client is similar: either call the
+# pull method on an individual entity or batch together several
+# updates by using Graph.pull.
+
+
+graph.cypher.execute("CREATE (c:Person {name:{N}}) RETURN c", {"N": "Carol"})
+
+
+for record in graph.cypher.execute("CREATE (d:Person {name:'Dave'}) RETURN d"):
+    print(record)
+
+
+# A Record exposes its values through both named attributes and
+# numeric indexes. Therefore, if a Cypher query returns a column
+# called name, that column can be accessed through the record
+# attribute called name:
+
+for record in graph.cypher.execute("MATCH (p:Person) RETURN p.name AS name"):
+    print(record.name)
+
+
+
+# Transactions
+
+# To use this endpoint, firstly call the begin method on the
+# Graph.cypher resource to create a transaction, then use the methods
+# listed below on the new CypherTransaction object:
+#
+#    append(statement, [parameters]) - add a statement to the queue of statements to be executed (this does not pass any statements to the server)
+#    process()                       - push all queued statements to the server for execution and return the results from those statements
+#    commit()                        - push all queued statements to the server for execution and commit the transaction (returns the results from all queued statements)
+#    rollback()                      - roll the transaction back
+
+# For example:
+
+tx        = graph.cypher.begin()
+statement = "MATCH (a {name:{A}}), (b {name:{B}}) CREATE (a)-[:KNOWS]->(b)"
+
+for person_a, person_b in [("Alice", "Bob"), ("Bob", "Dave"), ("Alice", "Carol")]:
+    tx.append(statement, {"A": person_a, "B": person_b})
+
+tx.commit()
+
+
+# Unique Nodes
+#
+# Many applications require some form of uniqueness to be maintained
+# for the data they manage. Neo4j’s optional schema feature allows
+# such uniqueness constraints to be applied to a graph based on a
+# combination of label and property and py2neo exposes this capability
+# through the create_uniqueness_constraint method of the Graph.schema
+# attribute:
+
+graph.schema.create_uniqueness_constraint("Person", "email")
+
+# If an attempt is made to create two nodes with similar unique
+# property values, an exception will be raised and no new node will be
+# created. To ‘get or create’ a node with a particular label and
+# property, the merge_one method can be used instead:
+
+xavier = graph.merge_one("Person", "email", "charles@x.men")
+
+# This method is idempotent and uses a Cypher MERGE clause to only
+# create a node if one does not already exist. If no uniqueness
+# constraint has been created for a particular label and property
+# combination however, it is possible for a MERGE to return multiple
+# nodes. For this case, py2neo provides the related merge method.
+
+
+
+# Unique Paths
+#
+# When it comes to building unique relationships, the
+# Graph.create_unique method is a handy wrapper for the Cypher CREATE
+# UNIQUE clause. This method can accept one or more Path objects,
+# including Relationship objects (which are simply a subclass of
+# Path).
+#
+# Let’s assume we want to pick up two nodes based on their email
+# address properties and ensure they are connected by a KNOWS
+# relationship:
+
+alice = graph.merge_one("Person", "email", "alice@example.com")
+bob   = graph.merge_one("Person", "email", "bob@email.net")
+
+graph.create_unique(Relationship(alice, "KNOWS", bob))
+
+# We could of course extend this to create a unique chain of
+# relationships:
+
+carol = graph.merge_one("Person", "email", "carol@foo.us")
+dave  = graph.merge_one("Person", "email", "dave@dave.co.uk")
+
+graph.create_unique(Path(alice, "KNOWS", bob, "KNOWS", carol, "KNOWS", dave))
+
+# Here, only relationships that do not already exist will be created
+# although the whole path will be returned.
+
+
+----
+
+when i added uniqueness constraint on Repository ("name"), got contraint violation
+*on the existing contents* of the graph
+
+graph.delete(*entities)
+
+graph.delete_all()
+
+
+i think that schema constraints are dynamic - just skipped _establishSchema, and
+did not get the exceptions.
+
+
+full start-over with graph.delete_all()
+
+
+github3-tests feed-neo netflix/vector
+
+  XXX still only STARRED
+
+----
+
+experiments with one-out chaining
+
+github3-tests feed-neo proger
+
+
+
+
+
+[20150417]
+
+interesting - 
+
+https://github.com/joey/incubator-nifi/tree/flume-processors
+
+  a branch on a fork has the only current interesting work
+
+
+maybe lurk on branch names of all forks?
+
+----
+
+i think the think i still wish for most often is support for symlinks
+(mostly at initial checkout time)
+
+for example, cvxpy is at least python, and mining
+
+  https://github.com/cvxgrp/cvxpy.git
+
+
+
 [20150414]
 
 page about using d3 to visualize

@@ -1,6 +1,9 @@
 #
 # GitHub3Helper.py
 #
+#
+# TODO: User, Organization, Repository instead of user, org, repo
+# TODO: totally remove "repo"
 
 import json
 import os
@@ -17,6 +20,41 @@ from oompa.tracking.github.EntityMetadataWrapper import EntityMetadataWrapper
 
 
 
+def extractBlurb(content):
+    """
+
+    TODO: move to some text-processing home
+    TODO: can indicate the number of lines
+    """
+    
+
+    if not content:
+        return content
+    
+    # print("extractBlurb(): content: %r" % content)
+
+    paragraphs     = content.split("\n\n")
+    numParagraphs  = len(paragraphs)
+    firstParagraph = paragraphs[0]
+
+    # print("  paragraphs: %r - %r" % ( numParagraphs, paragraphs ))
+
+    if numParagraphs == 1:
+        return firstParagraph
+    
+    # frequent case that occurs - first paragraph is one line title,
+    # and the summary paragraph is the second
+    
+    lines = firstParagraph.split("\n")
+
+    if len(lines) == 1 and len(lines[0].split()) <=4:
+        return "\n\n".join([ firstParagraph, paragraphs[1] ]) + "\n..."
+    
+    return firstParagraph + "\n..."
+
+
+
+
 
 class GitHub3Helper:
     """
@@ -30,7 +68,7 @@ class GitHub3Helper:
         self.config = config
 
         if username is None:
-            xxx
+            username = config["gituser"]
             pass
 
         # XXX
@@ -71,8 +109,6 @@ class GitHub3Helper:
     
     # dumpList       = github_utils.dumpList
 
-    # def getKindAndName = github_utils.getKindAndName
-    
 
     def me(self):
         return self.github.me()
@@ -101,21 +137,22 @@ class GitHub3Helper:
             name = name[len("https://github.com/"):]
             pass
         
-        if kind is not None:
-            kind = kind.lower()
-            pass
+        # if kind is not None:
+        #    kind = kind.lower()
+        #    pass
         
-        if kind == "user":
+        if kind == "User" or kind == "user":
             return self.github.user(name)
 
-        if kind == "org" or kind == "organization":
+        if kind == "Organization" or kind == "org" or kind == "organization":
             return self.github.organization(name)
 
-        if kind == "repo":
+        if kind == "Repository" or kind == "repo":
             owner, repoName = name.split("/")
             return github3.repository(owner, repoName)
 
         if kind is not None:
+            print("  kind not recognized: %r" % kind)
             xxx
             pass
         
@@ -242,7 +279,22 @@ class GitHub3Helper:
         
         return values
 
-    
+                
+    def getReadmeContent(self, repo):
+
+        try:
+            readme_content = repo.readme().decoded
+        except:
+            return None
+
+        if readme_content:
+            readme_content = readme_content.decode("utf-8")
+            pass
+
+        return readme_content
+
+
+                
     def printRepos(self, thing = None, repos = None, include_readme = True):
         """
         thing can be User or Organization
@@ -275,34 +327,24 @@ class GitHub3Helper:
             
             if include_readme:
 
-                try:
-                    readme_content = repo.readme().decoded
+                readme_content = self.getReadmeContent(repo)
 
-                    if readme_content:
-                        # XXX not sure about best way to handle this
-                        readme_content = readme_content.decode("utf-8")
-                        # print(readme_content.encode("utf-8"))
+                if readme_content is None:
+                    print("    no readme yet")
+                else:
+                    blurb = extractBlurb(readme_content)
+
+                    print(blurb.encode("utf-8"))
                     
-                        if readme_content:
-                            i = readme_content.find("\n\n")
-                            if i:
-                                readme_content = readme_content[:i] + "\n..."
-                                pass
-                            pass
-                        try:
-                            print(readme_content)
-                        except UnicodeEncodeError:
-                            print(readme_content.encode("utf-8"))
-                            pass
-                        pass
-                    else:
-                        print("    no readme yet")
-                        pass
-                    print("")
+                    # why not just always encode?  i think it's something about bytes vs string?
+                    # try:
+                    #    print(readme_content)
+                    # except UnicodeEncodeError:
+                    #    print(readme_content.encode("utf-8"))
+                    #    pass
                     pass
-                except github3.exceptions.ForbiddenError:
-                    print("XXX readme access forbidden ???")
-                    pass
+                pass
+
             # weekly_commit_count is dictionary of { "owner" : [ 0, 0, 1, 0, ... ], "all" : [ 2, 0, 5, ... ] }
             # i think that each is 52 weeks
             

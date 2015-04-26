@@ -69,6 +69,8 @@ import github3
 def dumpSlots(obj, label = None, private = False):
     """
     support in understanding what's available in a python object
+
+    mostly used to understand github things, but is generally useful
     """
     
     print("slots: %s" % label or obj)
@@ -123,7 +125,6 @@ def dumpSlotValues(obj, label = None, private = False):
         if slot.startswith("add_"):
             continue
         
-        
         # print("# slot: %s" % slot)
         
         value  = getattr(obj, slot)
@@ -162,6 +163,19 @@ def dumpList(obj, slot, pad = 15):
     return
     
 
+#
+# support some aliases
+#
+# note that if an alias is not in here, it maps to itself.  so we don't include
+# Repository, ...
+#
+officialKind_d = {
+
+    "repo" : "Repository",
+    "user" : "User",
+    "org"  : "Organization",
+    
+    }
 
 
 def getKindAndName(args):
@@ -169,6 +183,7 @@ def getKindAndName(args):
 
 
     """
+
     
     for name in args:
 
@@ -180,14 +195,16 @@ def getKindAndName(args):
             pass
 
         if "/" in name:
-            yield "repo", name
+            yield "Repository", name
             continue
         
         if ":" in name:
             kind, name = name.split(":")
+            kind       = officialKind_d.get(kind, kind)
         else:
             # TODO: try both - if user exists, return it, else try org (and maybe crash)
-            kind = "user"
+            kind = "User"
+            # kind = "Organization"
             pass
         
         yield kind, name
@@ -256,7 +273,7 @@ def dumpTwoOut(obj, kind, helper):
 
     # XXX maybe don't need this switch, but simpler to keep things separate, initially
     
-    if kind == "repo":
+    if kind == "Repository":
         dumpTwoOutFromRepo(obj, helper)
     else:
         print("  %s - %s" % ( kind, obj.name ))
