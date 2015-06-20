@@ -70,18 +70,18 @@ I'm not sure if it will run under default apple python (2).  I'm using
 Anaconda Python 3 distribution.
 
 
-# wrapper around Github REST webservices
-sudo pip install github3.py
-
-# click is a nice system for turning functions/methods in to a command/language
-sudo pip install click
-
-# is yaml included?
-
-sudo pip install yaml
-
-# you won't need this right away, but in a few days/weeks, ...
-sudo pip install py2neo
+> # wrapper around Github REST webservices
+> sudo pip install github3.py
+> 
+> # click is a nice system for turning functions/methods in to a command/language
+> sudo pip install click
+> 
+> # is yaml included?
+> 
+> sudo pip install yaml
+> 
+> # you won't need this right away, but in a few days/weeks, ...
+> sudo pip install py2neo
 
 
 
