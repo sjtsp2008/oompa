@@ -155,19 +155,16 @@ report the full github url, and attempt to summarize the first few
 lines of the repo's README.md
 
 
-
-\#
-\# my typical pattern is to run "tracker discover" on a semi-regular basis,
-\# investigate some of the new repos, maybe start tracking them with oompa
-\# (that's not yet documented), and also investigate the owner of any
-\# repos that i like.  and i regularly add some of them to my tracking
-\# list, ...
-\#
+My typical pattern is to run "tracker discover" on a semi-regular
+basis, investigate some of the new repos, maybe start tracking them
+with oompa (that's not yet documented), and also investigate the owner
+of any repos that i like.  and i regularly add some of them to my
+tracking list, ...
 
 
-\#
-\# To remind yourself what you are tracking:
-\#
+
+
+To remind yourself what you are tracking:
 
 > tracker tracking
 
