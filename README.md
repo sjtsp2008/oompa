@@ -119,8 +119,9 @@ You currently have to prime it with "tracker discover <github-user-or-org>"
 your github starred and following lists)
 
 
-$ tracker discover linkedin
-$ tracker discover curran
+> tracker discover linkedin
+
+> tracker discover curran
 
 
 You can optionally also specify a "user/..." or "organization/..."
@@ -132,43 +133,43 @@ Organization, the tracker will prefer the Organization.
 
 
 
-# wait a day ...
+\# wait a day ...
 
 
-$ tracker discover
+> $ tracker discover
 
-  you will see each entity you are tracking, and any updates
+You will see each entity you are tracking, and any updates
 
-  updates will include new_starred_repositories (and removals from
-  starred repositories)
+Updates will include new_starred_repositories (and removals from
+starred repositories)
 
-  under the covers, the discovery system is really just diffing
-  webservice results from one snapshot to another.  it applies little
-  or no semantics to the contents of the list.  (which sometimes gets
-  annoying - a new starred_repository is "d3/d3-scale", which you will
-  currently have to paste on to end of "http://github.com" to check
-  out the project.
+Under the covers, the discovery system is really just diffing
+webservice results from one snapshot to another.  it applies little or
+no semantics to the contents of the list.  (which sometimes gets
+annoying - a new starred_repository is "d3/d3-scale", which you will
+currently have to paste on to end of "http://github.com" to check out
+the project.
 
-  if there is a change to repositories for an entity, the system will
-  report the full github url, and attempt to summarize the first few
-  lines of the repo's README.md
-
-
-
-#
-# my typical pattern is to run "tracker discover" on a semi-regular basis,
-# investigate some of the new repos, maybe start tracking them with oompa
-# (that's not yet documented), and also investigate the owner of any
-# repos that i like.  and i regularly add some of them to my tracking
-# list, ...
-#
+If there is a change to repositories for an entity, the system will
+report the full github url, and attempt to summarize the first few
+lines of the repo's README.md
 
 
-#
-# To remind yourself what you are tracking:
-#
 
-tracker tracking
+\#
+\# my typical pattern is to run "tracker discover" on a semi-regular basis,
+\# investigate some of the new repos, maybe start tracking them with oompa
+\# (that's not yet documented), and also investigate the owner of any
+\# repos that i like.  and i regularly add some of them to my tracking
+\# list, ...
+\#
+
+
+\#
+\# To remind yourself what you are tracking:
+\#
+
+> tracker tracking
 
 
 
