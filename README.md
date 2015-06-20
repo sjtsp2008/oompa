@@ -71,6 +71,7 @@ Anaconda Python 3 distribution.
 
 
 > \# wrapper around Github REST webservices
+>
 > sudo pip install github3.py
 > 
 > # click is a nice system for turning functions/methods in to a command/language
