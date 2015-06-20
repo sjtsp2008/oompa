@@ -70,7 +70,7 @@ I'm not sure if it will run under default apple python (2).  I'm using
 Anaconda Python 3 distribution.
 
 
-> # wrapper around Github REST webservices
+> \# wrapper around Github REST webservices
 > sudo pip install github3.py
 > 
 > # click is a nice system for turning functions/methods in to a command/language
