@@ -361,7 +361,10 @@ class GitHub3Helper:
 
 
     def getEntityMetadata(self, githubObj):
+        """
 
+        """
+        
         print("getEntityMetadata(): %r" % githubObj)
 
         # github_utils.dumpSlots(githubObj, private = True)
@@ -392,7 +395,10 @@ class GitHub3Helper:
 
 
     def getEntityMetadatas(self, *names, mustExist = True):
+        """
 
+        """
+        
         return self._metadataStore.getEntityMetadatas(*names, mustExist = mustExist)
 
     

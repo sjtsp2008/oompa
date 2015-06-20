@@ -1,50 +1,97 @@
 Oompa TODO list
 ---------------
 
-- i think have to separate getting relationships from a node from
-  adding a node
+- release it
+  - remove DIARY from tree
+  - LICENSE - go with Apache
+  - preliminary README.md
+    - overview
+    - does it have to be python3?
+    - what must be installed with pip
+      - sudo pip install github3.py
+      - sudo pip install click
+    - point out the stuff that's not documented/covered yet
+    - point out limitations and near-term wish list
+      - local folder system, vs sqlite or something more powerful
+      - no sharing/collab
+    - usage of simplest tools
 
-- unit tests
-  - GitHubNeo.getOrAddNode
+- able to work from "my" following and starred
+
+- figure out how to properly get parent of a forked project
+  - e.g., http://github.com/burnash/nsviewer
+    - parent: None
+    - source: None
+    - but it was forked from https://github.com/neurosynth/nsviewer
+  - find the github3 notes about some special operation to pull in the forked/cloned info
+
+- web ui for tracker discover
+  - instead of pasting in (half-)urls that might look interesting
+
+- tracker update - include an optional annotation with projects
+  - reminder of "what is analytics/Chorus/chorus?"
+
+
+- github-neo - need to log to file
+
+- github-neo - implement a degree-filter
+  - the 5000+ stargazers are killing the crawl
+  - per edge-type?
+    - could make things confusing
+  - for *any* edge type?
+
+- try out some of the advanced queries to get two-outs
+  - copied in to diary
   
-- learn about neo node labels
-  - the first part of Node(*labels, **properties)
-    - so we are already using them
-    - but getting existing labels was weird
-    
-- add an updated timestamp to nodes
-
-- baby-step with crawling
-  - attempt to add a node (with one-out)
-  - if it already exists skip it
-    - if it exists *at all*
-      - don't worry about freshness timestamps yet
-  - this step just focuses on layering neo as a cache
-
-- github-neo update - support only updating certain relationships
-
-- next baby-step with crawling - first step of two-out
-  - start from a node that has been updated recently
-    - already in neo
-  - since it exists, get the subset of relationships that we want to crawl
-    - and dedupe them
-  - then do a one-out on those
-
-- figure out how to stagger accumulo two-out across hours (for github points)
-  - maybe a queue?
-  - i was thinking that using timestamps in neo would be enough, but that's not 
-  - i think need an edgesUpdated timestamp on a node
-  - first step: check neo as a cache
-    - if edges exist, and maybe updated timestamp is fresh enough, then
-      use what's in the cache instead of hitting github
-
 - figure out cypher query to find projects two-out from accumulo, which have multiple edges
-  - crude recommender
+  - a crude recommender
   - basically filtering graph by removing leaf nodes with only one linker
+
+- query that will find al 2-out-from-seed with at least N links, ranked by number of links
+  - "what else to people who like X like?"
+
+- GN - turn off the hard-wired starred-only constraint
+
+- GN - need uniqueness constraint on relationships
+
+- GN - track boundary size
+  - i think it's huge, even for a modest project
+
+- GN feed-two-out logging
+  - report "pedigree":
+    - accumulo <- starred <- user -> starred -> other_proj
+  - and try to work in "109 of 158", although that is highly contextual
+
+- github-neo feed-two-out
+  - indent by hierarchy/radius
+    - Repository apache/accumulo
+      - User ...
+        - Repository ...
+      - User ...
+
+- GN command to show (hierarchical) updatedDT of everything in two-out
+
+- github-new feed-two-out
+  - diff new list value against cached list value
+  - only have to crawl out on the new ones ???
+  - have to delete some
+
+- github-neo - dump degrees of nodes
+  - as a tree, from seed
+  - if already showed a node, mark and skip it
+
+- github-neo - stats on added nodes and relations
+
+- finish full perfect two-out feed
 
   ----
 
-- neo opt: update all relations of a particular type in one call
+- break out before we run out of github points, able to continue later
+
+- neo opt: batch-update all relations of a particular type in one call
+
+- unit tests
+  - GitHubNeo.getOrAddNode
 
 - tracker update - i think that git (and maybe hg) logs might be better than
   listing the files that changed
@@ -81,6 +128,8 @@ Oompa TODO list
   - i always have to remove "/tracking" from what is found
   - otoh, find really needs to include parent folders, too
 
+- "tracker update ." does not work in src/ tree - have to be in src/tracking/
+  - seems like it would be easy enough to support
 
 - before i go any further with the two-out experiment
   - need way to indicate that we have something cached, but we are *not* tracking it
@@ -115,6 +164,9 @@ Oompa TODO list
 
   ----
 
+- github-neo update - support only updating certain relationships
+
+- github-neo - need to figure out how to fully reset schema constraints
 
 - neo interaction is fully declarative
   - map github3 python objects to node schema
@@ -171,15 +223,6 @@ Oompa TODO list
 - use d3 (or neo4j?) to viz small piece of graph
   - just one "thing", and two-out
 
-- be able to work with kallithea (fully open source ~github clone (in python))
-  - https://kallithea-scm.org/
-  - start with kallithea itself (not much else yet)
-    - https://kallithea-scm.org/repos/kallithea
-  - git or hg
-    - i think hard to tell, from the url
-  - i think has a full webservice api, like github3
-  - there may be a bunch of mini/semi-private ones
-
 - github3-tests info <repo> - indicate age as derivative feature
   - baby step toward "moneyball"
   - initially, hack it
@@ -198,11 +241,28 @@ Oompa TODO list
 
   ----
 
+- discover - alternate backends vs. github
+  - what's the other one that has the same hierarchical organization?
+  - savannah
+
+- be able to work with kallithea (fully open source ~github clone (in python))
+  - https://kallithea-scm.org/
+  - start with kallithea itself (not much else yet)
+    - https://kallithea-scm.org/repos/kallithea
+  - git or hg
+    - i think hard to tell, from the url
+  - i think has a full webservice api, like github3
+  - there may be a bunch of mini/semi-private ones
+
+
 - neo tutorial: http://neo4j.com/blog/march-madness-2015/
 
 - tracker discover is not detecting new projects as forks of others properly
   - says parent and source are None
   - is there something about having to refresh?
+
+- github-neo - repo "parents" as separate nodes, to discover
+  - won't be quite fair, for things like apache
 
 - work on batching writes to neo - http://neo4j.com/blog/neo4j-2-2-0-scalability-performance/
 
@@ -298,6 +358,13 @@ Oompa TODO list
 - github3-tests - authentication with OAUTH
 
   ----
+
+- github-neo - threshold for not crawling out on high-volume nodes
+  - some "users" have starred 6000 repos
+  - have to get them first, but then don't add to graph
+
+- github-neo (ui): able to blacklist nodes, or even parents/org, that
+  i don't care about
 
 - prevent user from checking out a project in to src/tracking/...
   - sometimes i get over there by accident
@@ -1878,4 +1945,3 @@ maintain egcs
 #
 rule: all depends on gcc
 rule: lites depends on mach
-

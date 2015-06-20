@@ -101,7 +101,7 @@ elif args.command == "info":
         # common across User and Organization
         print("  url:          %s" % obj.html_url)
         
-        if kind == "user":
+        if kind == "User":
 
             user = obj
 
@@ -124,7 +124,7 @@ elif args.command == "info":
 
             pass
 
-        elif kind == "org":
+        elif kind == "Organization":
 
             print("  bio:      %s" % obj.bio)
             print("  company:  %s" % obj.company)
@@ -133,7 +133,7 @@ elif args.command == "info":
             dumpList(obj, "public_members")
             dumpList(obj, "repositories")
             
-        elif kind == "repo":
+        elif kind == "Repository":
 
             # was it forked from something?
             print("  full_name:       %s" % obj.full_name)

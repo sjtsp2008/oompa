@@ -8,11 +8,14 @@ package oompa.tracking.github
 
 
 class GitHubMetadataStore:
+    """base class for snapshotting metadata about github objects (users,
+    organizations, repositores), mostly in support of watching changes
+    over time
 
+    """
+    
     _kinds         = [ "User", "Organization", "Repository" ]
     _kinds_lowered = [ kind.lower() for kind in _kinds ]
-
-
     
     def __init__(self, config, githubHelper):
 
@@ -29,6 +32,22 @@ class GitHubMetadataStore:
         """
 
         raise NotImplementedError
+
+
+    def getEntityMetadatas(self, *names, mustExist = True):
+        """generate stream of EntityMetadata
+
+        if names specified, (possibly create and) generate metadatas
+        for those things.  if names is not specified, generate
+        metadatas for everything in the metadata store (i.e., has been
+        tracked previously).
+        
+        createFolders is used as a flag to be able to not return a
+        metadata if the entity has not been discovered before
+        """
+
+        raise NotImplementedErrot
+    
     
     # get
 

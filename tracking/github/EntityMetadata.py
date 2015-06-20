@@ -7,6 +7,9 @@ class EntityMetadata:
     """represents a *partial* view of github metadata - only what has
     been requested so far
 
+    TODO: i think you have to make some sort of extra webservice call to get the
+          accurate forked-from state of a repo
+
     """
     
     def __init__(self, kind, name, backingStore):

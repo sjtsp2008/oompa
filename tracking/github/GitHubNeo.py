@@ -174,7 +174,9 @@ class GitHubNeo:
         # print("ERROR: %s" % ( dir(py2neo.error), ))
         
         try:
-            schema.create_uniqueness_constraint("Repository", "name")
+            schema.create_uniqueness_constraint("User",         "name")
+            schema.create_uniqueness_constraint("Organization", "name")
+            schema.create_uniqueness_constraint("Repository",   "name")
         # except py2neo.error.ConstraintViolationException:
         except:
             # already established
@@ -238,6 +240,10 @@ class GitHubNeo:
             return None
 
         if len(records) > 1:
+            print("XXX getNode() plural records: %s %s (%r)" % ( nodeType, nodeType, typeSpec ))
+            for record in records:
+                print("  R: %r" % ( record, ))
+                pass
             xxx
             pass
         
@@ -309,31 +315,32 @@ class GitHubNeo:
 
         "Repository" : [
 
-            ( "stargazers",    "stargazer"   ),
+            ( "stargazers",    "starred",     "from", ),
 
-            ( "subscribers",   "subscriber"  ),
-            ( "contributors",  "contributor" ),
+            ( "subscribers",   "subscriber",  "from", ),
+            ( "contributors",  "contributor", "from", ),
 
-            ( "forks",         "fork" ),
+            ( "forks",         "forkOf",      "from", ),
             # ...
         ],
 
         "User" : [
-            "followers",
-            "following",
-            "organizations",
-            "starred_repositories",
-            "subscriptions",
-        ],
-        
+            ( "followers",            "follows",   "from", ),
+            ( "following",            "follows",    "to",  ),
+            ( "starred_repositories", "starred",    "to",  ),
+            ( "subscriptions",        "subscriber", "to",  ),
+            ( "organizations",        "memberOf",   "to",  ),
+
+          ],
     }
+
     
-    
-    
-    def updateRelationshipsTo(self, obj, slot, relationshipLabel, destNode):
+    def updateRelationships(self, obj, slot, relationshipLabel, direction, destNode):
         """
 
         obj is a github3 object (repository, user, organization)
+
+        direction is "from" or "to"
 
         TODO: support attribute decorators
 
@@ -344,7 +351,7 @@ class GitHubNeo:
         destNodeType = self.getNodeType(destNode)
         graph        = self.graph
 
-        print("updateRelationshipsTo: %s - %s - %s" % ( slot, relationshipLabel, destNode.properties["name"] ))
+        print("updateRelationships: %-25s - %-25s %4s - %s" % ( slot, relationshipLabel, direction, destNode.properties["name"] ))
 
         # XXX need otherNodeLabelGetter
         #   - .name, .login, ...
@@ -352,7 +359,6 @@ class GitHubNeo:
         # determine neighbor nodeType by slot name
         # TODO: use a dictionary - simpler
 
-        nodeNameAttr     = None
         neighborNodeType = None
         
         # XXX just figure this out by what we get back
@@ -368,10 +374,6 @@ class GitHubNeo:
             neighborNodeType = "Repository"
         elif slot == "forks":
             neighborNodeType = "Repository"
-
-            # just the name will be the same name that was forked.  need to get both parent and the name
-            nodeNameAttr = "full_name"
-            
         elif slot == "subscribers":
             # i think that things can subsribe to users or orgs, too
             # this is currently just Users subscribed to Repository
@@ -381,21 +383,14 @@ class GitHubNeo:
             xxx
             pass
 
-        if neighborNodeType is None:
-            print("XXX no neighborNodeType - slot: %r" % slot)
+        if neighborNodeType == "User":
+            nodeNameAttr = "login"
+        elif neighborNodeType == "Organization":
+            nodeNameAttr = "name"
+        elif neighborNodeType == "Repository":
+            nodeNameAttr = "full_name"
+        else:
             xxx
-            pass
-        
-        if nodeNameAttr is None:
-            if neighborNodeType == "User":
-                nodeNameAttr = "login"
-            elif neighborNodeType == "Organization":
-                nodeNameAttr = "name"
-            elif neighborNodeType == "Repository":
-                nodeNameAttr = "name"
-            else:
-                xxx
-                pass
             pass
 
         # print("# nodeNameAttr: %s - %s - %s" % ( slot, neighborNodeType, nodeNameAttr ))
@@ -417,21 +412,32 @@ class GitHubNeo:
             nodeName = getattr(value, nodeNameAttr)
 
             neighbors.append(( neighborNodeType, nodeName ))
-            
             pass
 
         # TODO: batch-update
 
+        neighbors = sorted(neighbors, key = lambda _tuple : _tuple[1])
+        
         for neighborNodeType, nodeName in neighbors:
-            
-            print("  %s: %r" % ( relationshipLabel, nodeName ))
+
+            # only if verbose tracing
+            # print("  %s: %r" % ( relationshipLabel, nodeName ))
 
             srcNode = Node(neighborNodeType, name = nodeName)
 
             # graph.merge_one(Relationship(srcNode, relationshipLabel, destNode))
-            # XXX sloppy
+            # XXX try/except is sloppy - i don't get merge vs create yet
+
+            if direction == "from":
+                relationship = Relationship(srcNode, relationshipLabel, destNode)
+            else:
+                relationship = Relationship(destNode, relationshipLabel, srcNode)
+                pass
+
+            # print("     rel: %s" % relationship)
+
             try:
-                graph.create(Relationship(srcNode, relationshipLabel, destNode))
+                graph.create(relationship)
             except:
                 # already exists
                 pass
@@ -443,18 +449,54 @@ class GitHubNeo:
         
         return
 
-    
-    def updateRepository(self, githubObj, node):
+
+    def _getRelationshipTuples(self, nodeType, relationships = None):
         """
-        githubObj is a GitHub3 Repository
+        TODO: memoize
+        """
+
+        # print("_getRelationshipTuples(): %s %s" % ( nodeType, relationships ))
+        
+        #
+        # XXX still working out the best way to normalize github
+        #     relationships to neo relationships
+        #
+
+        for relationshipTuple in self._relationships[nodeType]:
+
+            listName, relationshipLabel, direction = relationshipTuple
+
+            if relationships:
+
+                keep = False
+
+                for rel in relationships:
+                    if rel == relationshipLabel:
+                        keep = True
+                        break
+                    pass
+
+                if not keep:
+                    continue
+                pass
+
+            yield relationshipTuple
+            pass
+
+        return
+
+    
+    def updateGithubObj(self, githubObj, node, relationships = None):
+        """
+        githubObj is a GitHub3 Repository, User, or Organization
         node is a py2neo Node
         """
 
-        graph = self.graph
+        # starting to generalize
 
+        graph    = self.graph
         nodeType = self.getNodeType(node)
 
-        # starting to generalize
         # note that full_name is something that i attach
         if nodeType == "Repository":
             name = githubObj.full_name
@@ -462,23 +504,16 @@ class GitHubNeo:
             name = githubObj.name
             pass
 
-        # was it forked from something?
-        print("GitHubNeo.updateRepository(): %s" % name)
-        print("  node: %s" % node)
+        # TODO: want to report different things for different object - user needs login and name
+        print("GitHubNeo.updateGithubObj(): %s" % name.encode("utf8"))
+
+        relationshipTuples = list(self._getRelationshipTuples(nodeType, relationships))
 
         # TODO: *local* LRU cache user and repo - may also be on contributes, subscribes.
         #       make sure we only pay github points once
 
-        for listNameTuple in self._relationships[nodeType]:
-
-            if isinstance(listNameTuple, tuple):
-                listName, relationshipLabel = listNameTuple
-            else:
-                listName          = listNameTuple
-                relationshipLabel = listName
-                pass
-
-            for entitySpec in self.updateRelationshipsTo(githubObj, listName, relationshipLabel, node):
+        for listName, relationshipLabel, direction in relationshipTuples:
+            for entitySpec in self.updateRelationships(githubObj, listName, relationshipLabel, direction, node):
                 yield entitySpec
                 pass
             pass
@@ -567,13 +602,16 @@ class GitHubNeo:
         return
         
 
-    def updateUser(self, name, user):
+    def updateUser(self, githubObj, node):
         """
         user is a GitHub3 User
+
+        TODO: refactor - merge with updateRepository - just a generic 
         """
 
-        graph = self.graph
-        
+        graph    = self.graph
+        nodeType = self.getNodeType(node)
+                
         # was it forked from something?
         print("GitHubNeo.updateUser(): %s - %r" % ( user.login, user.name ))
 
@@ -593,7 +631,7 @@ class GitHubNeo:
                 relationshipLabel = listName
                 pass
             
-            for entitySpec in self.updateRelationshipsTo(user, listName, relationshipLabel, node):
+            for entitySpec in self.updateRelationships(user, listName, relationshipLabel, node):
                 yield entitySpec
                 pass
             pass
@@ -607,7 +645,7 @@ class GitHubNeo:
 
         # TODO: cache user nodes - may also be on contributes, subscribes
 
-        self.updateRelationshipsTo(githubObj, "stargazers", "STARRED", repoNode)
+        self.updateRelationships(githubObj, "stargazers", "STARRED", repoNode)
         
         return
 
@@ -669,32 +707,45 @@ class GitHubNeo:
         return False
         
     
-    def _getCachedNeighbors(self, node, neoRelationships = None):
+    def _getCachedNeighbors(self, node, relationships = None):
 
         nodeType = self.getNodeType(node)
 
-        # print("getCachedNeighbors(): %s" % node)
-        # print("  nodeType: %s" % nodeType)
-        
-        # TODO: need to return the same sets of neighbors that update returns
-        #
-        # repository
+        # print("  _getCachedNeighbors(): %-12s %s" % ( nodeType, node.properties["name"] ))
 
-        if neoRelationships is None:
+        if relationships is None:
             #
             # list of ( githubSlot, neoRelationLabel )
             #
             relationships    = self._relationships[nodeType]
-            neoRelationships = [ neoRelationship for ( _, neoRelationship ) in relationships ]
+                  
+            neoRelationships = []
+
+            for relationshipInfo in relationships:
+                if isinstance(relationshipInfo, tuple):
+                    neoRelationship = relationshipInfo[1]
+                else:
+                    neoRelationship = relationshipInfo
+                    pass
+                neoRelationships.append(neoRelationship)
+                pass
             pass
+        else:
+            #
+            # map relationships in to neo relationships
+            #
+            neoRelationships = relationships
+            pass
+
+        i = 1
         
         for neoRelationship in neoRelationships:
 
-            # print("neoRelationship: %s" % neoRelationship)
-        
-            for rel in node.match(neoRelationship):
+            # print("  neoRelationship: %s" % neoRelationship)
 
-                # print("R: %s" % rel)
+            neighbors = []
+            
+            for rel in node.match(neoRelationship):
 
                 if node == rel.start_node:
                     neighborNode = rel.end_node
@@ -702,19 +753,33 @@ class GitHubNeo:
                     neighborNode = rel.start_node
                     pass
                 
-                # print("    rel: %s - %s" % ( rel.type, neighborNode, ))
-
-                # XXX expensive.  we know this, from the neoRelationship
+                # XXX expensive.  we can already know this, from the neoRelationship
                 neighborNodeType = self.getNodeType(neighborNode)
 
-                yield neighborNodeType, neighborNode.properties["name"]
+                # yield neighborNodeType, neighborNode.properties["name"]
+                neighbors.append(( neighborNodeType, neighborNode.properties["name"], 1 ))
+
+                i += 1
                 pass
+
+            if neighbors:
+                print("    %5d  %s" % ( len(neighbors), neoRelationship ))
+                pass
+
+            # XXX optional.  user may want to sort by something else (added date - but that's not supported yet)
+
+            neighbors = sorted(neighbors, key = lambda _tuple : _tuple[1])
+            
+            for neighborTuple in neighbors:
+                yield neighborTuple
+                pass
+            
             pass
         
         return
 
     
-    def update(self, entitySpecs, numHops = None):
+    def update(self, entitySpecs, numHops = None, relationships = None):
         """update the edges/relationships around the specified node names
 
         creates the nodes if they don't already exist
@@ -752,50 +817,44 @@ class GitHubNeo:
             entitySpec, _hop = boundary[0]
             boundary         = boundary[1:]
 
-            print("GitHubNeo.update: %s %s" % ( _hop, entitySpec, ))
-            print("  github rate points:  %s" % helper.checkRatePointsLeft())
+            print("GitHubNeo.update: %s  %5d  %5d  %s" % ( _hop, len(boundary), helper.checkRatePointsLeft(), entitySpec, ))
+
+            nodeType = None
+            extra    = None
 
             if isinstance(entitySpec, tuple):
-                name, nodeType = entitySpec
+                nodeType = entitySpec[0]
+                name     = entitySpec[1]
+
+                if len(entitySpec) > 2:
+                    extra = entitySpec[2]
+                    pass
+                pass
             else:
                 name     = entitySpec
-                nodeType = None
                 pass
-            
+
             node      = self.getOrAddNode(name, nodeType)
             nodeType  = self.getNodeType(node)
             
             if freshness is not None and self._nodeFreshEnough(node):
-                print("  using cached relationships: %s - %s" % ( nodeType, name ))
-                neighbors = self._getCachedNeighbors(node)
+                # print("  using cached relationships: %s - %s" % ( nodeType, name ))
+                neighbors = self._getCachedNeighbors(node, relationships = relationships)
             else:
-                githubObj = helper.getGithubObject(entitySpec, nodeType)
-            
-                # this is common across User and Organization
-                print("  url:          %s" % githubObj.html_url)
-
-                if nodeType == "User":
-                    neighbors = self.updateUser(githubObj, node)
-                elif nodeType == "Organization":
-                    neighbors = self.updateOrganization(githubObj, node)
-                elif nodeType == "Repository":
-                    neighbors = self.updateRepository(githubObj, node)
-                else:
-                    print("XXX entity nodeType not recognized: %r %r" % ( kind, name ))
-                    xxx
+                githubObj = helper.getGithubObject(name, nodeType)
+                neighbors = self.updateGithubObj(githubObj, node, relationships = relationships)
                 pass
                 
             # need to drain the stream, even if we don't add them to boundary
             neighbors = list(neighbors)
             
             if _hop < numHops:
-                for _entitySpec in oneOut:
+                for _entitySpec in neighbors:
                     boundary.append(( _entitySpec, _hop + 1 ))
                     # print("  added to boundary: %s %s" % ( _hop + 1, _entitySpec ))
                     pass
                 pass
-            
-            print("")
+            # print("")
             pass
         
         return

@@ -54,8 +54,6 @@ graph     = githubNeo.graph
 command   = args.command
 args      = args.extraArgs
 
-print("rate points before: %s" % helper.checkRatePointsLeft())
-
 if command == "feed" or command == "update":
 
     # TODO: if no args, update "oldest stuff" until we run out of
@@ -64,14 +62,28 @@ if command == "feed" or command == "update":
     # one-out feed
     # XXX set up neo config params
 
-    githubNeo.update(args)
+    # XXX
+    relationships = [ "starred", ]
+    
+    githubNeo.update(args, relationships = relationships)
 
 elif command == "feed-two-out":
 
+    print("rate points before: %s" % helper.checkRatePointsLeft())
+
+    # XXX
+    relationships = [ "starred", ]
+
     # TODO: if i could get command syntax working, this is just "github-neo feed --hops 2"
-    githubNeo.update(args, numHops = 2)
+    numHops       = 2
+
+    githubNeo.update(args,
+                     numHops       = numHops,
+                     relationships = relationships)
+
+    print("rate points after:  %s" % helper.checkRatePointsLeft())
     
-elif command == "dump-neo":
+elif command == "dump-neo" or command == "dump":
 
     # if one arg, dump all edges
     # if multiple args, only subset of edges
@@ -116,8 +128,6 @@ elif command == "dump-neo":
 
 elif command == "find":
 
-    # print("size: %s" % graph.size)
-
     # what is this?
     # print("LABELS: %s" % graph.node_labels)
     
@@ -127,6 +137,11 @@ elif command == "find":
     pass
 
 
+elif command == "stats":
+    
+    print("size: %8d edges" % graph.size)
+
+    
 elif command == "list":
 
     # TODO: handle subtyping, regex, ...
@@ -206,4 +221,4 @@ else:
     print("XXX we don't do command: %s" % command)
     pass
 
-print("rate points after:  %s" % helper.checkRatePointsLeft())
+

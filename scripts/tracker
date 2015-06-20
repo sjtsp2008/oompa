@@ -27,109 +27,261 @@ _usage_str = """usage: tracker <command> <folder> [...]
 
 """
 
-import argparse
 import datetime
 import logging
 import os
 import sys
 
+import click
+
 # XXX wtf? PYTHONPATH is not being respected?  the github3 egg is earlier ???
 # sys.path.insert(0, '/Users/jeff/src/tracking/dev/github3.py/git/github3.py')
 
-from pylib.util     import opt_utils
-from pylib.util     import usage
-
-from oompa.tracking.SourceTracker import SourceTracker
+from oompa.tracking.SourceTracker        import SourceTracker
 
 from oompa.tracking.github.GitHubTracker import GitHubTracker
 from oompa.tracking.github               import github_stats
 from oompa.tracking.github               import github_utils
+
+
+
+def setup_logging(stdout = False):
+    """
+    not all commands should log.  
+    """
+
+    # set log_path to None to test/debug logging itself (will go to console)
+    # TODO: set up the tee - add another handler
+
+    log_path = None
+    
+    if not stdout:
+        log_base = os.path.join(os.environ.get("HOME"), "tracker-logs")
+        log_path = os.path.join(log_base, 
+                                "%s.tracker.log" % datetime.datetime.today().strftime("%Y%m%d"))
+    
+        print("logging to: %s" % log_path)
+    
+        # make sure folder exists
+        log_folder = os.path.dirname(log_path)
+        if not os.path.exists(log_folder):
+            os.makedirs(log_folder)
+            pass
+        pass
+    
+    logging.basicConfig(filename = log_path,
+                        level    = logging.INFO,
+                        format   = '%(asctime)s %(levelname)s %(message)s',
+                        datefmt  = '%Y%m%d-%H:%M:%S')
+    
+    return
     
 
+#
+# creates a command group, which you can call, and it
+# will "route to" the correct subcommand
+#
+@click.group()
+def cli():
+    return
+
 
 #
-# 
+# TODO: figure out how to specify "at least one" in @click.argument
 #
+@cli.command(help = "search for specified strings in tracked project folder names")
+@click.argument('patterns', nargs = -1)
 
-_options = [
+def find(patterns):
 
-    "replace",
+    result = tracker.findProjects(*patterns)
 
-    'check',       # just check what would be done
+    return result
 
-    "help",
 
-    ]
 
-# XXX still in transition
-parser = argparse.ArgumentParser()
+@cli.command(help = "update some or all tracked projects")
+@click.option("--stdout",  is_flag = True)
+@click.option("--verbose", is_flag = True)
+@click.argument('projects', nargs = -1)
 
-options, args   = opt_utils.parse_options(_options)
+def update(projects, stdout = False, verbose = False):
 
+    setup_logging(stdout = stdout)
+
+    result = tracker.update(*projects, verbose = verbose)
+    
+    return result
+
+# "co" is alias for checkout
+cli.add_command(update, "up")
+
+
+
+
+@cli.command(help = "move a project folder i src tree, and maintain all tracking links")
+@click.argument('project_folder', nargs = 1)
+@click.argument('dest_folder', nargs = 1)
+
+def move(project_folder, dest_folder):
+
+    setup_logging()
+    
+    result = tracker.moveFolders(project_folder, dest_folder)
+    
+    return result
+
+cli.add_command(update, "mv")
+
+
+
+
+
+@cli.command(help = "start tracking a repo (by url) - initial checkout")
+@click.argument('project_urls', nargs = -1)
+
+def checkout(project_urls):
+    
+    if not project_urls:
+        usage.usage()
+        pass
+
+    setup_logging()
+        
+    source_spec    = project_urls[0]
+    rest           = project_urls[1:]
+
+    project_folder = tracker.checkout(source_spec, *rest)
+
+    # XXX check that project_folder is not None
+    if project_folder is None:
+        xxx
+        pass
+    
+    print("   TRACKING: %r" % project_folder)
+
+    link_path      = tracker.track(project_folder)
+
+    print("   tracker link path: %s" % link_path)
+
+    return
+
+# "co" is alias for checkout
+cli.add_command(checkout, "co")
+
+
+
+
+
+@cli.command(help = "discover updates around github neighborhood of interest")
+@click.argument('args', nargs = -1)
+
+def discover(args):
+
+    # TODO: get from options
+    verbose       = False
+    # verbose       = True
+    
+    # XXX get from config
+    gituser       = "sjtsp2008"
+
+    
+    # try to trace all http traffic to github
+    if 0:
+        # XXX the urllib3 logging doesn't work?
+        import logging
+
+        stream_handler = logging.StreamHandler()
+        formatter      = logging.Formatter('%(asctime)s %(levelname)s %(message)s')
+
+        stream_handler.setFormatter(formatter)
+        
+        logger = logging.getLogger('requests.packages.urllib3')
+        logger.setLevel(logging.DEBUG)
+        logger.addHandler(stream_handler)
+        
+        logger = logging.getLogger('github3')
+        logger.addHandler(stream_handler)
+        
+        logger.setLevel(logging.DEBUG)
+        pass
+    
+    githubTracker = GitHubTracker(config, username = gituser)
+    githubHelper  = githubTracker.githubHelper
+
+    print("rate points before: %s" % githubHelper.checkRatePointsLeft())
+    result        = githubTracker.discover(*args, verbose = verbose)
+    print("rate points after:  %s" % githubHelper.checkRatePointsLeft())
+
+    return
+
+
+
+@cli.command(help = "list the contents of current metadata store")
+@click.argument('args', nargs = -1)
+
+def tracking(args):
+
+    
+    # XXX get from config
+    gituser       = "sjtsp2008"
+
+    githubTracker = GitHubTracker(config, username = gituser)
+
+    # TODO: if args specified, only list the entities that match one
+    #       of the strings/patterns (tracker tracking linked)
+    
+    for entityMetaName in githubTracker.listTracking():
+        print("%s" % entityMetaName)
+        pass
+
+    return
+
+
+
+
+#
+# __main__
+#
 
 
 # XXX load a config, from yaml
 config = {}
 
-if not args:
-    usage.usage()
-    pass
+# if not args:
+#     usage.usage()
+#     pass
 
 
 tracker = SourceTracker(config)
 
+cli()
+
+print("exit early"); sys.exit()
+
+
+# XXX non-click
+args    = sys.argv[1:]
 command = args[0]
 args    = args[1:]
-
-# XXX switch to command handler
-
 
 # TODO: only certain commands what a log
 
 dont_need_log = [
-    "find",
-    "discover",
-
     "nash-stats",
     "graph-viz",
     ]
 
+
+# XXX incorporate all of this in to click
 if command not in dont_need_log:
-    log_base = os.path.join(os.environ.get("HOME"), "tracker-logs")
-    log_path = os.path.join(log_base, 
-                            "%s.tracker.log" % datetime.datetime.today().strftime("%Y%m%d"))
-    
-    print("logging to: %s" % log_path)
-    
-    # make sure folder exists
-    log_folder = os.path.dirname(log_path)
-    if not os.path.exists(log_folder):
-        os.makedirs(log_folder)
-        pass
-
-    # set log_path to None to test/debug logging itself (will go to console)
-    # TODO: set up the tee - add another handler
-    # log_path = None
-
-    logging.basicConfig(filename = log_path,
-                        level    = logging.INFO,
-                        format   = '%(asctime)s %(levelname)s %(message)s',
-                        datefmt  = '%Y%m%d-%H:%M:%S')
+    setup_logging()
     pass
-
-
-if command == "find":
-    #
-    # "import" (re-check-out) projects dump from another "tracker urls"
-    #
-    result     = tracker.findProjects(*args)
-    sys.exit()
-    pass
-
 
 if command == 'track':
     #
-    # track a project that's been checked out
+    # start tracking a project that's been checked out some other way
+    # (i.e. link it in to the tracking system)
     #
     if not args:
         usage.usage()
@@ -158,32 +310,6 @@ elif command == 'untrack':
         pass
     pass
 
-elif command in [ 'co', 'checkout' ]:
-
-    if not args:
-        usage.usage()
-        pass
-
-    source_spec    = args[0]
-    rest           = args[1:]
-
-    project_folder = tracker.checkout(source_spec, *rest)
-
-    # XXX check that project_folder is not None
-    if project_folder is None:
-        xxx
-        pass
-    
-    print("   TRACKING: %r" % project_folder)
-
-    link_path      = tracker.track(project_folder)
-
-    print("   tracker link path: %s" % link_path)
-
-elif command == 'update' or command == "up":
-    
-    result = tracker.update(*args)
-
 elif command == "urls":
     #
     # dump all the source urls in a format that can be used to 
@@ -196,48 +322,6 @@ elif command == "import":
     # "import" (re-check-out) projects dump from another "tracker urls"
     result = tracker.importDumpedURLs(*args)
 
-elif command == "mv" or command == "move":
-
-    # move a project, in both source and tracked
-    result     = tracker.moveFolders(*args)
-
-elif command == "discover":
-
-    # if --log
-    if 0:
-        # XXX the urllib3 logging doesn't work?
-        import logging
-
-        stream_handler = logging.StreamHandler()
-        formatter      = logging.Formatter('%(asctime)s %(levelname)s %(message)s')
-
-        stream_handler.setFormatter(formatter)
-        
-        logger = logging.getLogger('requests.packages.urllib3')
-        logger.setLevel(logging.DEBUG)
-        logger.addHandler(stream_handler)
-        
-        logger = logging.getLogger('github3')
-        logger.addHandler(stream_handler)
-        
-        logger.setLevel(logging.DEBUG)
-        pass
-    
-
-    # XXX get from config
-    gituser       = "sjtsp2008"
-    
-    githubTracker = GitHubTracker(config, username = gituser)
-    githubHelper  = githubTracker.githubHelper
-
-    verbose       = False
-    # verbose       = True
-    
-    print("rate points before: %s" % githubHelper.checkRatePointsLeft())
-    result        = githubTracker.discover(*args, verbose = verbose)
-    print("rate points after:  %s" % githubHelper.checkRatePointsLeft())
-
-    
 elif command == "nash-stats":
 
     # https://docs.google.com/spreadsheets/d/1Mg01ZUdHSYZfJre9ZyD5VMq4zv_xyZHmFjPTbklo-5Q/edit#gid=0
@@ -307,16 +391,7 @@ elif command == "nash-stats":
     
     print("rate points after:  %s" % githubTracker.checkRatePointsLeft())
     
-
-elif command == "graph-viz":
-
-    # TODO: generate d3
-    # TODO: web server underneath, for exploration
-
-    xxx
-    
 else:
     raise Exception("no-such-command", command)
-
 
 

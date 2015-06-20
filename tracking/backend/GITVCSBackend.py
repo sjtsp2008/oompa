@@ -79,7 +79,7 @@ class GITVCSBackend(ExecVCSBackend):
         child_stdout  = io.BytesIO()
         child_stderr  = self.STDOUT
 
-        command = '%s pull' % self._type
+        command       = '%s pull' % self._type
 
         result  = self._run(command, 
                             stdout = child_stdout,

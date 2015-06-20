@@ -81,10 +81,21 @@ class GitHubTracker:
 
         return
                 
-        
+
+    def listTracking(self):
+
+        for entityMetadata in self.githubHelper.getEntityMetadatas(mustExist = False):
+            yield "%s/%s" % ( entityMetadata.kind, entityMetadata.name )
+            pass
+
+        return
+
+    
     def discover(self, *args, verbose = False):
-        """
-        
+        """either add new github entities (users/groups) to the set you
+        are tracking (if you specify args), or get an update on the
+        entities you are already tracking
+
         """
 
         helper        = self.githubHelper

@@ -183,6 +183,11 @@ class FileMetadataStore(GitHubMetadataStore):
     
     def getEntityMetadatas(self, *names, mustExist = True):
         """generate stream of EntityMetadata
+
+        if names specified, (possibly create and) generate metadatas
+        for those things.  if names is not specified, generate
+        metadatas for everything in the metadata store (i.e., has been
+        tracked previously).
         
         createFolders is used as a flag to be able to not return a
         metadata if the entity has not been discovered before
@@ -193,7 +198,7 @@ class FileMetadataStore(GitHubMetadataStore):
 
         if not names:
 
-            # iterate over all
+            # iterate over all 
 
             for kind in self._kinds_lowered:
 

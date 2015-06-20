@@ -262,8 +262,6 @@ class SourceTracker:
 
         absDestFolder = os.path.abspath(destFolder)
         
-        # print("  dest: %s" % absDestFolder)
-
         assert os.path.exists(destFolder)
 
         for sourceFolder in sourceFolders:
@@ -315,12 +313,14 @@ class SourceTracker:
         return
     
 
-    def updateProject(self, project_path):
+    def updateProject(self, project_path, verbose = False):
         """
 
         """
 
-        # self.log("SourceTracker.updateProject(): %s" % project_path)
+        if verbose:
+            self.log("SourceTracker.updateProject(): %s" % project_path)
+            pass
         
         project  = Project(project_path, self)
         result   = project.update()
@@ -334,7 +334,7 @@ class SourceTracker:
         return
 
     
-    def updateFolder(self, folder):
+    def updateFolder(self, folder, verbose = False):
         """
         update a folder and any projects below it
 
@@ -347,29 +347,30 @@ class SourceTracker:
         # self.log("SourceTracker.updateFolder(): %s (vcs_type: %s)" % ( folder, vcs_type ))
 
         if vcs_type:
-            return self.updateProject(folder)
+            return self.updateProject(folder, verbose = verbose)
 
         children = os.listdir(folder)
 
         for child in children:
             path = os.path.join(folder, child)
             if os.path.isdir(path):
-                result = self.updateFolder(path)
+                result = self.updateFolder(path, verbose = verbose)
                 pass
             pass
 
         return
         
 
-    def update_all(self):
+    def update_all(self, verbose = False):
         """
         update all projects under the root tracking folder
 
         """
-        return self.updateFolder(self.tracking_folder)
+
+        return self.updateFolder(self.tracking_folder, verbose = verbose)
         
 
-    def update(self, *projects):
+    def update(self, *projects, verbose = False):
         """
 
         update some or all projects that have been previously tracked
@@ -383,10 +384,10 @@ class SourceTracker:
         self.log()
 
         if not projects:
-            self.update_all()
+            self.update_all(verbose = verbose)
         else:
             for project in projects:
-                result = self.updateFolder(project)
+                result = self.updateFolder(project, verbose = verbose)
                 pass
             pass
         

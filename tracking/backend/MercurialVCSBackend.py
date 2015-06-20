@@ -45,6 +45,9 @@ class MercurialVCSBackend(ExecVCSBackend):
 
         """
 
+        # print("MercurialVCSBackend._clean_up_output(): %r" % cmd_output)
+
+        
         # this is getting very specialized/complicated - 
         # aggregating summaries by branch, or change set, if
         # no branch specified
@@ -126,12 +129,15 @@ class MercurialVCSBackend(ExecVCSBackend):
             for chunk in chunks:
 
                 summary = chunk.get("summary")
-                
-                for line in summary:
-                    lines.append("  summary: %s" % line)
+
+                # ??? when would summary not be None?
+                if summary is not None:
+                    for line in summary:
+                        lines.append("  summary: %s" % line)
+                        pass
                     pass
                 pass
-
+            
             lines.append("")
             pass
 
