@@ -2,6 +2,9 @@
 #
 # github3-tests
 #
+# TODO:
+#  - switch to click for arg parsing and command handling
+#
 
 import argparse
 import os
@@ -34,12 +37,6 @@ args          = parser.parse_args()
 config = {}
 
 
-# XXX get password from a predictable place
-gituser   = "sjtsp2008"
-
-
-
-
 # XXX still working this out - alternate root when doing aggressive caching for large two-out experiments
 
 if args.command == "two-out":
@@ -47,8 +44,7 @@ if args.command == "two-out":
     # config["github.meta.neo4j.fs.root"] = 
     pass
 
-
-helper    = GitHub3Helper(config, username = gituser)
+helper    = GitHub3Helper(config)
 
 # github_utils.dumpSlots(github3, "github3 module")
 

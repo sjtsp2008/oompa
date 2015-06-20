@@ -1,15 +1,16 @@
 Oompa TODO list
 ---------------
 
-- release it
-  - have to copy in pylib
-  - preliminary README.md
-    - overview
-    - point out the stuff that's not documented/covered yet
-    - point out limitations and near-term wish list
-      - local folder system, vs sqlite or something more powerful
-      - no sharing/collab
-    - usage of simplest tools
+- note in docs about rate points
+
+- document how to use github3-tests
+  - useful for understanding the api
+
+- compress all of the silly early README.md commits
+
+- start using github ticketing system
+
+- ticket about tagging/folksonomy
 
 - able to work from "my" following and starred, from github
   - probably need to define "me" in config
@@ -28,7 +29,6 @@ Oompa TODO list
 
 - tracker update - include an optional annotation with projects
   - reminder of "what is analytics/Chorus/chorus?"
-
 
 - github-neo - need to log to file
 

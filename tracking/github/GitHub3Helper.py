@@ -68,7 +68,16 @@ class GitHub3Helper:
         self.config = config
 
         if username is None:
-            username = config["gituser"]
+            username = config.get("gituser")
+
+            if username is None:
+                username = os.environ.get("GITUSER")
+
+                if username is None:
+                    sys.stderr.write("you need to set GITUSER (and make sure that $HOME/<gituser>.git.passphrase contains your github passphrase)")
+                    sys.exit(-1)
+                    pass
+                pass
             pass
 
         # XXX
@@ -400,10 +409,6 @@ class GitHub3Helper:
         """
         
         return self._metadataStore.getEntityMetadatas(*names, mustExist = mustExist)
-
-    
     
     pass
     
-
-

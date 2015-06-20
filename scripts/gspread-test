@@ -71,12 +71,7 @@ print("table:")
 for row in rows[1:]:
 
     # XXX turning in to a very specific project
-
-    
     print("  -- %s" % row)
-
-
     pass
-
 
 # worksheet.export()

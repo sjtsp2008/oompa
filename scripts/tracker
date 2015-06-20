@@ -189,10 +189,6 @@ def discover(args):
     verbose       = False
     # verbose       = True
     
-    # XXX get from config
-    gituser       = "sjtsp2008"
-
-    
     # try to trace all http traffic to github
     if 0:
         # XXX the urllib3 logging doesn't work?
@@ -213,7 +209,7 @@ def discover(args):
         logger.setLevel(logging.DEBUG)
         pass
     
-    githubTracker = GitHubTracker(config, username = gituser)
+    githubTracker = GitHubTracker(config)
     githubHelper  = githubTracker.githubHelper
 
     print("rate points before: %s" % githubHelper.checkRatePointsLeft())
@@ -229,11 +225,7 @@ def discover(args):
 
 def tracking(args):
 
-    
-    # XXX get from config
-    gituser       = "sjtsp2008"
-
-    githubTracker = GitHubTracker(config, username = gituser)
+    githubTracker = GitHubTracker(config)
 
     # TODO: if args specified, only list the entities that match one
     #       of the strings/patterns (tracker tracking linked)
@@ -369,11 +361,7 @@ elif command == "nash-stats":
     #
     #   Project	Forks	Stars	Watchers	GitHub Months Old	Stars Per Month
 
-    
-    # XXX
-    gituser       = "sjtsp2008"
-    
-    githubTracker = GitHubTracker(config, username = gituser)
+    githubTracker = GitHubTracker(config)
     helper        = githubTracker.githubHelper
     
     print("rate points before: %s" % githubTracker.checkRatePointsLeft())    

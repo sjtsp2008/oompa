@@ -23,16 +23,12 @@ class GitHubTracker:
     """
     
     
-    def __init__(self, config, username = None):
+    def __init__(self, config):
         """
         TODO: need a log
         """
 
-        if username is None:
-            xxx
-            pass
-
-        self.githubHelper   = GitHub3Helper(config, username)
+        self.githubHelper   = GitHub3Helper(config)
 
         # XXX mid-refactor.  this should be more invisible
         self._metadataStore = self.githubHelper._metadataStore

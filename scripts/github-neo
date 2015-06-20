@@ -34,9 +34,6 @@ args              = parser.parse_args()
 # XXX use yaml
 config            = {}
 
-# XXX get password from a predictable place
-config["gituser"] = "sjtsp2008"
-
 config["neo.github.url"]    = "http://localhost:7474/db/data/"
 config["neo.github.user"]   = "neo4j"
 config["neo.github.passwd"] = "neotest"

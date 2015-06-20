@@ -102,6 +102,21 @@ Initial Setup
 > PATH=$PATH:$OOMPA_HOME/scripts
 
 
+You will need a github account to be able to use the discover system.
+
+After installing github3.py, you will need to create a file in your
+home folder called <github-username>.git.passphrase, containing your
+passphrase.  It's best to make this file read-only by you.  The
+tracking.github.Github3Helper object will read your passphrase before
+login.
+
+Eventually, we will use a config system to set up the 
+
+export GITUSER=...
+
+
+
+
 
 
 Github User/Org Tracking and Discovery
@@ -148,12 +163,11 @@ webservice results from one snapshot to another.  it applies little or
 no semantics to the contents of the list.  (which sometimes gets
 annoying - a new starred_repository is "d3/d3-scale", which you will
 currently have to paste on to end of "http://github.com" to check out
-the project.
+the project in a browser.
 
 If there is a change to repositories for an entity, the system will
 report the full github url, and attempt to summarize the first few
 lines of the repo's README.md
-
 
 My typical pattern is to run "tracker discover" on a semi-regular
 basis, investigate some of the new repos, maybe start tracking them
@@ -162,6 +176,15 @@ of any repos that i like.  and i regularly add some of them to my
 tracking list, ...
 
 
+Note regarding "rate points": you will see something like "rate points
+before: 4999", and "rate points after: 4723".  A point is essentially
+a REST webservice call.  Getting metadata for an entity costs a point,
+and then possibly getting metadata about those, or fetching a
+README.md, etc. costs a point.  (semi-)anonymous access to the github
+webservices is allowed 5000 points per hour.  If you run out of
+points, you will need to wait a while until your points rebuild.  I
+think there's some non-anonymous way to use the webservice and get a
+higher budget.
 
 
 To remind yourself what you are tracking:
