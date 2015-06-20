@@ -91,14 +91,15 @@ Anaconda Python 3 distribution.
 Initial Setup
 -------------
 
-TODO: get setup.py working
-TODO:   test in a from-scratch virtualenv
-
-OOMPA_HOME=$HOME/sandbox/oompa
-
-export PYTHONPATH=$PYTHONPATH:$(dirname $OOMPA_HOME)
-
-PATH=$PATH:$OOMPA_HOME/scripts
+> TODO: get setup.py working
+>
+> TODO:   test in a from-scratch virtualenv
+>
+> OOMPA_HOME=$HOME/sandbox/oompa
+> 
+> export PYTHONPATH=$PYTHONPATH:$(dirname $OOMPA_HOME)
+> 
+> PATH=$PATH:$OOMPA_HOME/scripts
 
 
 
