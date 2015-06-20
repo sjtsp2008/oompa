@@ -74,14 +74,16 @@ Anaconda Python 3 distribution.
 >
 > sudo pip install github3.py
 > 
-> # click is a nice system for turning functions/methods in to a command/language
+> \# click is a nice system for turning functions/methods in to a command/language
+>
 > sudo pip install click
 > 
-> # is yaml included?
+> \# is yaml included?
 > 
 > sudo pip install yaml
 > 
-> # you won't need this right away, but in a few days/weeks, ...
+> \# you won't need this right away, but in a few days/weeks, ...
+>
 > sudo pip install py2neo
 
 
