@@ -112,7 +112,7 @@ metadata state of github entities (repos/starred/follows/following for
 users, public_members/repos/following/... for organizations), and will
 report updates whenever you run "tracker discover".
 
-You currently have to prime it with "tracker discover <github-user-or-org>"
+You currently have to prime it with "tracker discover some-entity-name"
 (e.g., "tracker discover linkedin")
 
 (One of the top TODO's is to be able to dynamically seed the discover from
