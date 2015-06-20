@@ -196,31 +196,39 @@ This was the original core of
 
 See <some checkout/update doc that does not exist yet>
 
-# in general, it works with most git and mercurial repos.  but sometimes it
-# has trouble guessing the kind of repo from the url.
-#
-# the github helper has special support for knowing that all repos end with ".git"
+In general, it works with most git and mercurial repos.  but sometimes
+it has trouble guessing the kind of repo from the url.
 
-tracker checkout http://github.com/d3/d3.git
-tracker co http://github.com/d3/d3
+The github helper has special support for knowing that all repos end
+with ".git".
+
+> tracker checkout http://github.com/d3/d3.git
+
+> tracker co http://github.com/d3/d3
 
 
   
 
-# or check something out and 
+Or check something out manually, and add it to the tracking system.
+(mostly useful for stuff you had already checked out, or repos/sites
+that oompa can't handle yet)
 
-tracker track
+> tracker track
 
-#
-# run this on a regular basis to do "pulls" (as defined by the version control system).
-#
-# will log updates to a file.  the reported updates are typically all
-# of the files that changed, versus something more useful like github
-# log, ...  that is gradually being cleaned up
-#
-# note that there is currently no "reaction system" supported
-#
 
-tracker update
+Run "tracker update" on a regular basis to do "pulls" (as defined by
+the version control system).
+
+All updates are logged to a file.  the reported updates are typically
+all of the files that changed, versus something more useful like
+github log, ...  that is gradually being cleaned up
+
+> tracker update
+
+
+
+Note that there is currently no "reaction system" supported (because i
+haven't wanted it in a very long time)
+
 
 
