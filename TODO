@@ -2,28 +2,26 @@ Oompa TODO list
 ---------------
 
 - release it
-  - remove DIARY from tree
-  - LICENSE - go with Apache
+  - have to copy in pylib
   - preliminary README.md
     - overview
-    - does it have to be python3?
-    - what must be installed with pip
-      - sudo pip install github3.py
-      - sudo pip install click
     - point out the stuff that's not documented/covered yet
     - point out limitations and near-term wish list
       - local folder system, vs sqlite or something more powerful
       - no sharing/collab
     - usage of simplest tools
 
-- able to work from "my" following and starred
+- able to work from "my" following and starred, from github
+  - probably need to define "me" in config
 
 - figure out how to properly get parent of a forked project
-  - e.g., http://github.com/burnash/nsviewer
-    - parent: None
-    - source: None
-    - but it was forked from https://github.com/neurosynth/nsviewer
-  - find the github3 notes about some special operation to pull in the forked/cloned info
+  - right now, all new repos say they have no parent
+    - e.g., http://github.com/burnash/nsviewer
+        - parent: None
+        - source: None
+      - but it was forked from https://github.com/neurosynth/nsviewer
+  - find the github3.py notes about some special operation to pull in the forked/cloned info
+    - you have to refresh something
 
 - web ui for tracker discover
   - instead of pasting in (half-)urls that might look interesting

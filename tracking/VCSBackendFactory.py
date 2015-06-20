@@ -3,6 +3,10 @@
 #
 
 """
+
+support for loading a VCSBackend that can speak the right "protocol"
+(usually exec'ed commands)
+
 TODO: 
     - use/extend the pyvcs framework
 """
@@ -10,7 +14,7 @@ TODO:
 import os
 import subprocess
 
-from pylib.util import file_utils
+from oompa.tracking                             import file_utils
 
 from oompa.tracking.VCSBackend                  import VCSBackend
 from oompa.tracking.ExecVCSBackend              import ExecVCSBackend
@@ -18,7 +22,6 @@ from oompa.tracking.ExecVCSBackend              import ExecVCSBackend
 from oompa.tracking.backend.MercurialVCSBackend import MercurialVCSBackend
 from oompa.tracking.backend.SVNVCSBackend       import SVNVCSBackend
 from oompa.tracking.backend.GITVCSBackend       import GITVCSBackend
-# from oompa.tracking.backend.CVSVCSBackend       import CVSVCSBackend
 
 
 # XXX use a plugin-discovering, class-loading, caching, registry
@@ -29,15 +32,11 @@ backend_classes = [
     SVNVCSBackend,
     MercurialVCSBackend,
     GITVCSBackend,
-    # CVSVCSBackend,
     ]
 
 for backend_class in backend_classes:
     backend_registry[backend_class._type] = backend_class
     pass
-
-    
-
 
 
 def get_backend(project_type = None,

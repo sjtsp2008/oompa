@@ -4,10 +4,16 @@
 #
 #   utility for linking a version-controlled tree (svn, cvs, hg, git, ...)
 #   into a tree of projects to be tracked
-# 
+#
+#   uses click to build up a mini-command-language
+#
+# note: this script is currently mid-transition from an old command-handler hack, toward
+#       using click.  all of the commands that i regularly use have been moved to click
+#       functions.  anything not-yet-click-ized may just wither away
+#
+#
 # TODO:
 #    - use real config, for declaring where tracking folder is, ...
-#    - need CommandHandler support
 #    - full triggered support
 #      - when something updated, update some other project and run tests, ...
 #
@@ -135,8 +141,6 @@ cli.add_command(update, "mv")
 
 
 
-
-
 @cli.command(help = "start tracking a repo (by url) - initial checkout")
 @click.argument('project_urls', nargs = -1)
 
@@ -170,7 +174,10 @@ def checkout(project_urls):
 cli.add_command(checkout, "co")
 
 
-
+# ####
+#
+# the discovery subsystem
+#
 
 
 @cli.command(help = "discover updates around github neighborhood of interest")
@@ -237,6 +244,11 @@ def tracking(args):
 
     return
 
+#
+# the discovery subsystem
+#
+# ####
+
 
 
 
@@ -244,14 +256,8 @@ def tracking(args):
 # __main__
 #
 
-
-# XXX load a config, from yaml
-config = {}
-
-# if not args:
-#     usage.usage()
-#     pass
-
+# XXX load a real config, from yaml
+config  = {}
 
 tracker = SourceTracker(config)
 

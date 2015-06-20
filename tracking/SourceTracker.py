@@ -12,7 +12,7 @@ import logging
 import os
 import sys          # for stdout
 
-from pylib.util             import file_utils
+from oompa.tracking         import file_utils
 
 from oompa.tracking.Project import Project
 from oompa.tracking         import vcs_utils

@@ -11,14 +11,17 @@ TODO:
 
 import os
 
-from pylib.util import file_utils
+from oompa.tracking import file_utils
 
 
 class Tracker:
-
+    """
+    overall coordinator
+    """
+    
     def __init__(self, config = None):
         """
-        require a config
+        TODO: *require* a config
         """
 
         self.config     = config
