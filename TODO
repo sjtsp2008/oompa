@@ -1,10 +1,29 @@
 Oompa TODO list
 ---------------
 
-- note in docs about rate points
+- ticket #3 - if user and org exist, ask if the boss wants user, org, or both
+
+- ticket #2 - able to undiscover
+
+- ticket #1 - html display of discover updates
 
 - document how to use github3-tests
   - useful for understanding the api
+
+- determine if tracking is any different than starred
+  - if not, don't need tracking
+  - but i feel like it is
+    - would have to star a lot more than you really like
+
+- tagging
+
+- able to track when users discover someone
+  - only share within communities
+  - following is public/private
+
+- try to get emails when site updated
+
+- figure out sphinx
 
 - compress all of the silly early README.md commits
 
