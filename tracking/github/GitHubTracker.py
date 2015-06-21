@@ -95,7 +95,7 @@ class GitHubTracker:
         """
 
         helper        = self.githubHelper
-        
+
         for entityMetadata in helper.getEntityMetadatas(*args, mustExist = False):
 
             # XXX
@@ -153,11 +153,19 @@ class GitHubTracker:
                 pass
 
             entityMetadata.flush()
-            
             pass
         
         return
 
+
+    def removeEntities(self, entities):
+        """entities is list of entity specs - user/...,
+        org[anization]/..., or un-qualified entity name
+
+        """
+
+        return self.githubHelper.removeEntities(entities)
+        
     pass
 
 

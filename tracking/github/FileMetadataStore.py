@@ -8,9 +8,13 @@ package oompa.tracking.github
 
 import json
 import os
+import shutil
 
 from oompa.tracking.github.GitHubMetadataStore  import GitHubMetadataStore
 from oompa.tracking.github.EntityMetadata       import EntityMetadata
+
+from oompa.tracking.github                      import github_utils
+
 
 
 class FileMetadataStore(GitHubMetadataStore):
@@ -39,8 +43,17 @@ class FileMetadataStore(GitHubMetadataStore):
         return os.path.join(self.root, kind.lower(), name)
 
     
-    def findEntityFolder(self, name):
+    def findEntityFolder(self, name, kind = None):
+        """
 
+        """
+
+        if kind is not None:
+            folder = self._getFolder(kind, name)
+            if os.path.exists(folder):
+                return folder
+            return None
+                              
         for kind in self._kinds:
             folder = self._getFolder(kind, name)
             if os.path.exists(folder):
@@ -49,6 +62,7 @@ class FileMetadataStore(GitHubMetadataStore):
 
         return None
         
+
     def createFolder(self, kind, name):
 
         folder = self._getFolder(kind, name)
@@ -198,7 +212,7 @@ class FileMetadataStore(GitHubMetadataStore):
 
         if not names:
 
-            # iterate over all 
+            # iterate over all registered entities
 
             for kind in self._kinds_lowered:
 
@@ -215,10 +229,10 @@ class FileMetadataStore(GitHubMetadataStore):
                 pass
                     
             return
-        
-        for name in names:
 
-            folder = self.findEntityFolder(name)
+        for kind, name in github_utils.getKindAndName(names):
+
+            folder = self.findEntityFolder(name, kind = kind)
 
             if folder is None and mustExist:
                 xxx
@@ -226,7 +240,7 @@ class FileMetadataStore(GitHubMetadataStore):
             
             # note: 
 
-            github_obj = self._githubHelper.getGithubObject(name)
+            github_obj = self._githubHelper.getGithubObject(name, kind = kind)
 
             # note that failures don't return None, they return a NullObject
             if github_obj:
@@ -235,7 +249,7 @@ class FileMetadataStore(GitHubMetadataStore):
                 # print("  created folder: %s" % folder)
                 pass
 
-            print("GO: %r" % github_obj)
+            # print("GO: %r" % github_obj)
             
             # TODO: should not lower - just use their type
             kind = github_obj.type.lower()
@@ -246,6 +260,35 @@ class FileMetadataStore(GitHubMetadataStore):
             yield entityMetadata
             pass
 
+        return
+
+    def removeEntities(self, *entitySpecs):
+        """
+        delete entities from local tracking db
+        """
+
+        for entitySpec in entitySpecs:
+
+            kindsNames = github_utils.getKindAndName([ entitySpec, ])
+            kindsNames = list(kindsNames)
+            kind, name = kindsNames[0]
+
+            if kind is None:
+                # try both kinds.  but there can only be one of the two
+                xxx
+                pass
+            
+            folder = self.findEntityFolder(name, kind = kind)
+
+            if folder is None:
+                print("XXX entity not tracked: %s (kind: %s)" % ( entitySpec, kind ))
+                continue
+
+            print("# removing folder: %s" % folder)
+
+            shutil.rmtree(folder)
+            pass
+            
         return
     
     pass

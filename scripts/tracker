@@ -189,7 +189,7 @@ def discover(args):
     verbose       = False
     # verbose       = True
     
-    # try to trace all http traffic to github
+    # try to trace all http traffic to github - i have not gotten this to work yet
     if 0:
         # XXX the urllib3 logging doesn't work?
         import logging
@@ -219,12 +219,25 @@ def discover(args):
     return
 
 
+@cli.command(help = "remove an entity from set of tracked entities")
+@click.argument('entities', nargs = -1)
+
+def undiscover(entities):
+
+    githubTracker = GitHubTracker(config)
+
+    return githubTracker.removeEntities(*entities)
+    
+
 
 @cli.command(help = "list the contents of current metadata store")
 @click.argument('args', nargs = -1)
 
 def tracking(args):
-
+    """
+    TODO: able to sort by alph (default) or date-added
+    """
+    
     githubTracker = GitHubTracker(config)
 
     # TODO: if args specified, only list the entities that match one

@@ -184,7 +184,6 @@ def getKindAndName(args):
 
     """
 
-    
     for name in args:
 
         # support stripping "http://github.com/" from front, in case i
@@ -203,8 +202,9 @@ def getKindAndName(args):
             kind       = officialKind_d.get(kind, kind)
         else:
             # TODO: try both - if user exists, return it, else try org (and maybe crash)
-            kind = "User"
+            # kind = "User"
             # kind = "Organization"
+            kind = None
             pass
         
         yield kind, name

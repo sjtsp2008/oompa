@@ -1,11 +1,25 @@
 Oompa TODO list
 ---------------
 
-- ticket #3 - if user and org exist, ask if the boss wants user, org, or both
-
+(B) unable to discover org:graphite
+  - because it does not exist - it's graphite-project
+  - need to be more graceful - NoSuchEntityError
+  
 - ticket #2 - able to undiscover
 
+- merge branch in to master
+
+- push
+
+- ticket #3 - if user and org exist, ask if the boss wants user, org, or both
+
 - ticket #1 - html display of discover updates
+
+- add note about ~/github_meta_cache
+  - created by the filesystem backend of the github tracking system
+  
+- add to docs - initial checkout will describe *all* projects
+  - maybe should add a --quiet mechanism
 
 - document how to use github3-tests
   - useful for understanding the api
@@ -15,6 +29,9 @@ Oompa TODO list
   - but i feel like it is
     - would have to star a lot more than you really like
 
+- in addition to listing tracked alphabetically, would like to list by added-date
+  - i doubt that i currently stash that bit of metadata
+
 - tagging
 
 - able to track when users discover someone
@@ -22,6 +39,14 @@ Oompa TODO list
   - following is public/private
 
 - try to get emails when site updated
+
+- start filling in sphinx docs
+  - overview
+  - design
+  - commands
+    - tracker discover
+    - github3-tests
+    
 
 - figure out sphinx
 
@@ -102,6 +127,8 @@ Oompa TODO list
 - finish full perfect two-out feed
 
   ----
+
+- import someone else's tracking list
 
 - break out before we run out of github points, able to continue later
 

@@ -7,6 +7,7 @@
 
 import json
 import os
+import sys       # XXX use logging system, instead of sys.stderr
 
 import github3
 
@@ -409,6 +410,11 @@ class GitHub3Helper:
         """
         
         return self._metadataStore.getEntityMetadatas(*names, mustExist = mustExist)
-    
+
+
+    def removeEntities(self, entitySpecs):
+
+        return self._metadataStore.removeEntities(entitySpecs)
+        
     pass
     

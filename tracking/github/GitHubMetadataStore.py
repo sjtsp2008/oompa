@@ -46,8 +46,15 @@ class GitHubMetadataStore:
         metadata if the entity has not been discovered before
         """
 
-        raise NotImplementedErrot
+        raise NotImplementedError
     
+
+    def removeEntities(self, *entitySpecs):
+        """
+        delete entities from local tracking db
+        """
+
+        raise NotImplementedError
     
     # get
 
