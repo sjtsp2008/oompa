@@ -174,6 +174,51 @@ def checkout(project_urls):
 cli.add_command(checkout, "co")
 
 
+
+@cli.command(help = "start tracking an existing checkout - add it to tracking system")
+@click.argument('folders', nargs = -1)
+
+def track(folders):
+    
+    if not folders:
+        usage.usage()
+        pass
+
+    setup_logging()
+
+    # replace = options.replace
+    replace = False
+
+    for project_folder in folders:
+
+        # print("TRACK: %r" % folders)
+
+        link_path = tracker.track(project_folder, replace = replace)
+        print("%s" % link_path)
+        pass
+
+    return
+    
+
+@cli.command(help = "stop tracking a project.  folder can be in the tracking tree, or in the source tree")
+@click.argument('folders', nargs = -1)
+
+
+def untrack(folders):
+    """
+    TODO: option to delete the source, too (vs just remove the symlink from tracking)
+    """
+
+    for project_folder in folders:
+        tracker.untrack(project_folder)
+        pass
+
+    return
+
+
+
+
+
 # ####
 #
 # the discovery subsystem
@@ -289,39 +334,8 @@ if command not in dont_need_log:
     setup_logging()
     pass
 
-if command == 'track':
-    #
-    # start tracking a project that's been checked out some other way
-    # (i.e. link it in to the tracking system)
-    #
-    if not args:
-        usage.usage()
-        pass
 
-    replace = options.replace
-
-    for project_folder in args:
-        link_path = tracker.track(project_folder, replace = replace)
-        print("%s" % link_path)
-        pass
-    pass
-
-elif command == 'untrack':
-
-    #
-    # TODO: option to delete the source, too
-    #
-
-    if not args:
-        usage.usage()
-        pass
-
-    for project_folder in args:
-        tracker.untrack(project_folder)
-        pass
-    pass
-
-elif command == "urls":
+if command == "urls":
     #
     # dump all the source urls in a format that can be used to 
     # set up tracking on another system

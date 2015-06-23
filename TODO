@@ -1,25 +1,17 @@
 Oompa TODO list
 ---------------
 
-(B) unable to discover org:graphite
-  - because it does not exist - it's graphite-project
-  - need to be more graceful - NoSuchEntityError
+(B) need to be more graceful about user trying to discover entities that really don't exist - NoSuchEntityError
   
-- ticket #2 - able to undiscover
-
-- merge branch in to master
-
-- push
-
-- ticket #3 - if user and org exist, ask if the boss wants user, org, or both
-
-- ticket #1 - html display of discover updates
-
 - add note about ~/github_meta_cache
   - created by the filesystem backend of the github tracking system
   
 - add to docs - initial checkout will describe *all* projects
   - maybe should add a --quiet mechanism
+
+- ticket #3 - if user and org exist, ask if the boss wants user, org, or both
+
+- ticket #1 - html display of discover updates
 
 - document how to use github3-tests
   - useful for understanding the api
@@ -58,15 +50,6 @@ Oompa TODO list
 
 - able to work from "my" following and starred, from github
   - probably need to define "me" in config
-
-- figure out how to properly get parent of a forked project
-  - right now, all new repos say they have no parent
-    - e.g., http://github.com/burnash/nsviewer
-        - parent: None
-        - source: None
-      - but it was forked from https://github.com/neurosynth/nsviewer
-  - find the github3.py notes about some special operation to pull in the forked/cloned info
-    - you have to refresh something
 
 - web ui for tracker discover
   - instead of pasting in (half-)urls that might look interesting
@@ -272,15 +255,6 @@ Oompa TODO list
   - initially, hack it
   - later, register as a virtual feature
 
-- build/install neo4j
-
-- is this true?  (in github3.py docs)
-    - we migh not be properly getting fork/parent info ...
-  "When listing repositories in any context, GitHub refuses to return
-   a number of attributes, e.g., source and parent. If you require
-   these, call the refresh method on the repository object to make a
-   second call to the API and retrieve those attributes."
-
 - support extra symlinks (e.g., cloud/geo/geomesa and geo/cloud/geomesa)
 
   ----
@@ -298,12 +272,7 @@ Oompa TODO list
   - i think has a full webservice api, like github3
   - there may be a bunch of mini/semi-private ones
 
-
 - neo tutorial: http://neo4j.com/blog/march-madness-2015/
-
-- tracker discover is not detecting new projects as forks of others properly
-  - says parent and source are None
-  - is there something about having to refresh?
 
 - github-neo - repo "parents" as separate nodes, to discover
   - won't be quite fair, for things like apache
