@@ -213,9 +213,9 @@ class GitHub3Helper:
                  use_etag = True):
         """
 
-        XXX since does not seem to work properly
-        TODO: since can be etag or timestamp
+        sort can be "time-newest-first" or None
 
+        TODO: support need_parent boolean param, so that we can call refresh and no one else has to worry
         """
 
         etag = None
@@ -319,7 +319,17 @@ class GitHub3Helper:
             # dumpSlots(repo, "REPO")
             
             # TODO: instead of updated_at, show N days ago
-        
+
+            # https://github3py.readthedocs.org/en/master/repos.html
+            #
+            #    When listing repositories in any context, GitHub
+            #    refuses to return a number of attributes, e.g.,
+            #    source and parent. If you require these, call the
+            #    refresh method on the repository object to make a
+            #    second call to the API and retrieve those attributes.
+
+            repo.refresh()
+            
             # print("  repo:     %s %r" % ( repo.last_modified, repo ))
 
             # XXX
@@ -328,12 +338,14 @@ class GitHub3Helper:
             print("  repo:     %s  %s  %s" % ( repo.created_at, repo.updated_at, repo_url ))
             print("")
 
-            # if repo.parent is not None:
-            # print("    forked:")
-            print("      parent: %s" % repo.parent)
-            print("      source: %s" % repo.source)
-            print("")
-            # pass
+            if repo.parent is not None:
+                print("      forked: %s" % repo.parent)
+
+                if repo.source != repo.parent:
+                    print("      source: %s" % repo.source)
+                    pass
+                print("")
+                pass
             
             if include_readme:
 
