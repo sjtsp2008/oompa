@@ -36,9 +36,11 @@ class GitHubTracker:
         return
 
     
-
     def showEntity(self, entityMetadata):
-
+        """
+        entityMetadata is an oompa.tracking.github.EntityMetadata
+        """
+        
         if self._showed_entity:
             return
 

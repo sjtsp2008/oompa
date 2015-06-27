@@ -127,6 +127,16 @@ class EntityMetadata:
                 marker = "(already on list)"
                 continue
                 # pass
+
+            # XXX want a general field-specific hook for transforming value
+            # XXX don't assume http://github.com
+            #
+            # the most common thing i do from discover output is crawl around github.
+            # having to paste a suffix in is a pain
+            #
+            if field == "starred_repositories":
+                value = "http://github.com/%s" % value
+                pass
                 
             print("  new: %-20s  %-50s %s" % ( field, value, marker ))
             pass

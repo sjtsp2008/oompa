@@ -3,10 +3,9 @@ Oompa TODO list
 
 (B) need to be more graceful about user trying to discover entities that really don't exist - NoSuchEntityError
   
-- add note about ~/github_meta_cache
-  - created by the filesystem backend of the github tracking system
-  
-- add to docs - initial checkout will describe *all* projects
+- doc: add note about ~/github_meta_cache - created by the filesystem backend of the github tracking system
+
+- add to docs - initial checkout will describe *all* projects of an entity
   - maybe should add a --quiet mechanism
 
 - ticket #3 - if user and org exist, ask if the boss wants user, org, or both
@@ -18,15 +17,24 @@ Oompa TODO list
 
 - determine if tracking is any different than starred
   - if not, don't need tracking
-  - but i feel like it is
+  - but i feel like it *is* different
     - would have to star a lot more than you really like
-
+  - maybe tracking is always a superset?
+  
 - in addition to listing tracked alphabetically, would like to list by added-date
   - i doubt that i currently stash that bit of metadata
 
-- tagging
+- another README cleanup - regex-out the build status
 
-- able to track when users discover someone
+- support some sort of "probation", or watch list
+  - a lot of times, when i discover a new repo, it's too soon to figure out what it really is
+
+- personal tagging
+
+- community tagging
+  - can we just use delicious?  they are all urls
+
+- able to track when other oompa users add someone to discover 
   - only share within communities
   - following is public/private
 
@@ -39,10 +47,10 @@ Oompa TODO list
     - tracker discover
     - github3-tests
     
-
 - figure out sphinx
 
 - compress all of the silly early README.md commits
+  - may be too late
 
 - start using github ticketing system
 
@@ -56,7 +64,8 @@ Oompa TODO list
 
 - tracker update - include an optional annotation with projects
   - reminder of "what is analytics/Chorus/chorus?"
-
+  - can use tagging system
+  
 - github-neo - need to log to file
 
 - github-neo - implement a degree-filter
