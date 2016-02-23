@@ -1,6 +1,166 @@
 Oompa TODO list
 ---------------
 
+- html discover report - incorporate the entity tags
+
+- html discover report - links to followers/following
+
+- discover - html report - show readme for all new projects
+  - still hard to decide if it's worth a click
+  
+- discover - html report - maybe show a description of the parent entity, for projects?
+  - could possibly nix an entity
+    - e.g., "i don't really care about ecmascript right now" ...
+
+- discover - html report -
+  - able to mark any project as:
+    - track-it
+    - like-it (but don't track)
+    - dont-care
+  - from json, to json
+  - script to process the output json, to check things out, update topic models, ...
+    - will need to decide where to put it, or at least symlinks
+  - decide how much (XXX what?)
+  - show projects that i'm already tracking
+
+- discover/handle
+  - track how you found out about things
+  - record when you accepted things
+  - when i don't follow something, explain why not
+    - there are a ton of reasons that i don't track really nice projects
+    - don't have time to learn react right now
+    - ...
+
+- discover feedback-in-interface - need another category for "monitor"
+  - to handle the repos that are still empty when we discover
+
+- start using topbox (or gensim)
+  - https://github.com/clips/topbox
+
+- user tag system
+  - able to percolate tags based on starred/works-with/contributes-to/forks/...
+
+- (abstract) initial support for suggesting where a new project should be checked out
+  - topic modeling, probably
+
+- (abstract) analyze current src tree, suggest reorgs or symlinks
+  - simple at first
+  - also needs topic modeling
+
+- checkout - don't add a repo to project-tags.tsv a second time
+  - check if it's already there
+  
+- discover - don't show starred projects that i'm already tracking
+  - or, maybe an option to indicate that you are already tracking
+  - main issue is wasteful tabs
+  
+- discover - don't show projects that i've already rejected
+  - requires assumption about rejection
+    - presented and not tracked
+  - could be more explicit, through a web ifc
+
+- in normal tracker discover, indicate if i'm already tracking a project
+  - and don't open tab
+  
+- in normal tracker discover, only open a tab once - keep track of tabs already opened
+  - some days, several tracked people star the same new project
+
+- in normal tracker discover, indicate if i've checked out and decided-not-interested in project
+  - esp if it is forked or fully moved/renamed to different owner
+
+- tool to help manage tags backfill
+  - from either full project list, or projects in tracker logs, identify the ones that
+    have either no entry at all, or the default "???" entry
+  - report the url (maybe even open a tab?)
+  
+- new command - tracker reload-due-to-bloody-stupid-git
+  - frequent pattern is to have to try to figure out how to merge in a false conflict,
+    when i have not changed anything
+  - so far, simplest has been do untrack, and then re-co
+
+- integrate with https://github.com/cantino/huginn
+  -
+
+- tracker add-tag
+  - vs having to edit
+  - test starting from scratch - no .oompa exists
+
+- discover should log discoveries
+  - in case i can't get to them right away
+  - for better integration in to RADAR/journal/whatever
+  - for timelines/memory
+
+- continue with tracker get-tags atomspace
+  - i think i need to improve SourceTracker.getProjects
+      - more flexible in working from "real" source folder, with globs, "**/*.whatever", ...
+
+- (baby step) tracker co adds a dummy entry to project-tags.tsv
+
+- (again) need to put empty new discovered repos on a keep-an-eye-on-them list
+  - maybe quarantine somewhere, with easy move later
+
+- build good tool for my frequent need to use "ls -ld */<something> */*/<something>" to see if i already
+  have a project tracked, or the parent entity folder, or already have a category in my tree
+  - could even use this as a recommender for where to put a new project at first checkout
+
+- discover - recognize and mask the occasional all-followers-are-"" problem
+  - i think it's a hiccup in github webservie
+
+- discover - the starred repositories of a new entity are usually very interesting, but too many to check at once.
+  - put them on a check-N-per-day queue/heap
+  - recommender/ranker
+  - suggest tags
+  
+(B) discover - getting rate limit from just a single user, no where near actualy points limit
+  - TODO: able to focus on a specific entity
+  - cmpolis
+  - added cmpolis yesterday, and now i get api rate exceeeded (but still have 4980 points)
+  - i think maybe something changed - search is limited to 30 per hour
+    - "rate" is deprecated, "core" is set to 5000
+    - https://developer.github.com/v3/rate_limit/
+  - took that one out, temporarily
+    - if that worked, then add back in, and trace points at each step)
+  - and again: user:rhiever
+  - maybe it really is a "rate" thing - what if i insert stalls?
+
+- discover - biggest hassle right now is having to copy/paste discovered links in to browser, to decide if they are going to be interesting
+  - create a simple web page
+  - eventual goal must be to support checking out with a click (or drag)
+
+- tracker - help in finding projects that have moved
+  - pretty regularly get re-homed to different entity
+
+- tracker - help to work around stupid git conflicts when i have not changed anything
+
+- discover - indicate when i already have something checked-out (or starred)
+  - and who else?
+  
+- discover - indicate when i already have a parent project checked-out (or starred)
+  - sort of an affirmation, and maybe adjusts weights for someone
+  
+- discover - when reporting first few lines of readme, first scrub out a set of testing/coverage regexes
+  - b'## puppet-cron\n\n[![Build Status](https://travis-ci.org/Yelp/puppet-cron.svg?branch=master)](https://travis-ci.org/Yelp/puppet-cron)\n...'
+  - b'[![Coverity Scan Build Status](https://scan.coverity.com/projects/2187/badge.svg)](https://scan.coverity.com/projects/2187)\nnfs-ganesha\n===========\n...'
+  - b'# Databuoy\n\n![Harbor Buoy](https://farm4.staticflickr.com/3532/3832384357_bb2e224f77_z.jpg)\n...'
+  - (and *then* check again if we should pull in the next line)
+  - gui extension
+    - learn to ignore these, swyn-style
+    - learn to recommend ignoring
+  
+- discover - support simple tagging of users that discover is tracking
+  - [ "machine-learning", "deep-learning", "python" ]
+  - [ "ui", "viz", "javascript" ]
+  - just as another clue about what was just starred
+  
+- discover - able to put a just-discovered empty (or trivial) repo in the keep-checking-for-a-while probationary status
+  - we find a lot of repos that are not yet populated
+  - probably needs ui support first
+    - just checkbox the project
+
+- tracker update - make it clear which projects are failing to update, so that we can fix the problems
+  - e.g., git got itself confused again
+  - e.g., they renamed or re-homed the project
+  
 (B) need to be more graceful about user trying to discover entities that really don't exist - NoSuchEntityError
   
 - doc: add note about ~/github_meta_cache - created by the filesystem backend of the github tracking system
@@ -15,16 +175,20 @@ Oompa TODO list
 - document how to use github3-tests
   - useful for understanding the api
 
-- determine if tracking is any different than starred
-  - if not, don't need tracking
+- determine if oompa's concept of discover-tracking is any different than starred
+  - if not, then we could just use the starred data on github
   - but i feel like it *is* different
     - would have to star a lot more than you really like
   - maybe tracking is always a superset?
-  
-- in addition to listing tracked alphabetically, would like to list by added-date
+
+- discover - figure out why i crash on initial discover of some entities' repos
+  - hypothesis: for the three entities that i can't track, too many requests too quickly.  it's not about number of points left
+
+- "tracker tracking" - in addition to listing tracked alphabetically, would like to list by added-date
   - i doubt that i currently stash that bit of metadata
 
-- another README cleanup - regex-out the build status
+- another README.md cleanup - regex-out the build status
+  - more noise when trying to understand what a new project is
 
 - support some sort of "probation", or watch list
   - a lot of times, when i discover a new repo, it's too soon to figure out what it really is
@@ -65,7 +229,17 @@ Oompa TODO list
 - tracker update - include an optional annotation with projects
   - reminder of "what is analytics/Chorus/chorus?"
   - can use tagging system
-  
+
+
+- neo perf
+  - i found a lot of other people getting poor "transactional insert" performance
+    - esp with unique requirements
+  - solution appears to be bulk-loading csv
+  - http://neo4j.com/docs/stable/cypherdoc-importing-csv-files-with-cypher.html
+  - https://github.com/jexp/neo4j-shell-tools
+  - https://github.com/jexp/batch-import
+
+
 - github-neo - need to log to file
 
 - github-neo - implement a degree-filter
@@ -120,7 +294,26 @@ Oompa TODO list
 
   ----
 
-- import someone else's tracking list
+- special discover follow-on when a repo is empty
+  - put it on a re-check queue
+  - if apache, look for the apache project
+  - if something else, google
+
+- tracker co accepts option about where to put the repo
+  - and where to make symlinks (later)
+
+- when project is checked out, try to get blurb for project-tags
+  - esp. from github, and the tools i have written
+  
+- when project is checked out, try to *suggest* tags
+  - similar to trying to suggest folders in tree
+  - topic model on blurbs?
+
+- start tracking *how* the changes are occurring
+  - pull requests?
+  - vs something else
+
+- import someone else's discover/tracking list
 
 - break out before we run out of github points, able to continue later
 

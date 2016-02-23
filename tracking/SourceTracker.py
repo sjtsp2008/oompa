@@ -10,6 +10,8 @@ packge oompa.tracking
 import datetime
 import logging
 import os
+import re
+import shutil
 import sys          # for stdout
 
 from oompa.tracking         import file_utils
@@ -18,7 +20,8 @@ from oompa.tracking.Project import Project
 from oompa.tracking         import vcs_utils
 from oompa.tracking         import VCSBackendFactory
 
-from oompa.tracking.Project import NotAProjectException
+from oompa.tracking.Project      import NotAProjectException
+from oompa.tracking.TagManager   import TagManager
 
 
 class SourceTracker:
@@ -34,7 +37,7 @@ class SourceTracker:
     
     def __init__(self, config = None, out_stream = None):
         """
-        require a config
+        TODO: just require a config - doesn't work without
         """
 
         self.config     = config
@@ -48,6 +51,9 @@ class SourceTracker:
             pass
         
         self.tracking_folder = tracking_folder
+
+        self._tag_mgr        = TagManager(config,
+                                          tags_filename = "project-tags.tsv")
         
         return
 
@@ -180,17 +186,18 @@ class SourceTracker:
         self.log("  ln -s %s %s" % ( path_in_tracker, vcs_root ))
 
         os.symlink(vcs_root, path_in_tracker)
-        
+
         return path_in_tracker
 
 
-    def untrack(self, project_path):
+    def untrack(self, project_path, keep_src = False):
         """
-        stop tracking a project
+        stop tracking a project, by removing tracking links
 
-        does not delete the source project, just the tracking links
+        if keep_src is False, deletes the source.  if True, keeps it.
 
-        TODO: option to delete the src, too
+        assumes that the project_path is in the source tree
+
         TODO: use code from self.moveFolder to untrack *all* symlinks to project
 
         """
@@ -214,9 +221,32 @@ class SourceTracker:
             self.log("  not tracking project")
             pass
 
+        if not keep_src:
+            self.log("  removing source: %s" % project_path)
+            shutil.rmtree(project_path)
+            pass
+        
         return
 
 
+    def _getTagsFromProjectFolder(self, tags, project_folder):
+
+        tags        = []
+        
+        parts       = project_folder.split(os.sep)
+        # strip off project name istelf
+        parts       = parts[:-1]
+        
+        while parts[-1] != "src":
+            tags.append(parts[-1])
+            parts = parts[:-1]
+            pass
+
+        # general-to-specifc seems more satisfying
+        tags.reverse()
+        
+        return tags
+    
     
     def checkout(self, source_spec, *rest):
         """check out the project specified by source_spec (usually a url
@@ -232,13 +262,24 @@ class SourceTracker:
             self.log("SourceTracker.checkout(): unknown vcs type: %s" % source_spec)
             return None
 
-        backend  = VCSBackendFactory.get_backend(project_type = vcs_type,
-                                                 logger       = self.logger)
-        result   = backend.checkout(source_spec, *rest)
+        backend        = VCSBackendFactory.get_backend(project_type = vcs_type,
+                                                       logger       = self.logger)
+        project_folder = backend.checkout(source_spec, *rest)
+
+        #
+        # TODO:
+        #   - attempt to determine tags, if it's github or another site that supports blurbs
+
+        tags        = []
+        tags       += self._getTagsFromProjectFolder(tags, project_folder)
+
+        description = None
+
+        self.setTagInfo(source_spec, tags, description)
 
         self.log()
-        
-        return result
+
+        return project_folder
 
 
     def moveFolders(self, *args):
@@ -277,7 +318,8 @@ class SourceTracker:
 
             if len(trackingLinks) > 1:
                 # which of them is "the original" (that should be deleted and moved), versus the one that needs to be replaced?
-                xxx
+                raise Exception("multiple tracking links - expected one", trackingLinks)
+                # xxx
                 pass
             
             # identify *all* links the project in tracking tree)
@@ -383,12 +425,13 @@ class SourceTracker:
         self.log("# %s - start tacker update" % datetime.datetime.today().strftime("%Y%m%d-%H:%M"))
         self.log()
 
-        if not projects:
-            self.update_all(verbose = verbose)
-        else:
+        if projects:
             for project in projects:
                 result = self.updateFolder(project, verbose = verbose)
                 pass
+            pass
+        else:
+            self.update_all(verbose = verbose)
             pass
         
         self.log()
@@ -398,12 +441,77 @@ class SourceTracker:
         return
 
 
+    def _get_vcs_child(self, folder):
+        """
 
-    def getProjects(self, folder):
+        XXX this is not our problem
+        """
+
+        # TODO: need to also support hg, svn, ...
+
+        tail      = os.path.basename(folder)
+        vcs_child = os.path.join(folder, "git", tail)
+                
+        if os.path.exists(vcs_child):
+            return vcs_child
+                
+        return None
+    
+        
+    def getProjects(self, folder, patterns = None):
         """
         generate stream of all Projects at and below folder
+
+        note: uses tracking/ as root of search - won't find projects that
+              are not being tracked
+
+        TODO: generalize - if someone is passing in patterns, then base folder
+              does not matter
         """
 
+        if patterns:
+
+            # base_folder = folder
+            
+            # print("getProjects(): %r, %r" % ( folder, patterns ))
+
+            # pwd = os.getcwd()
+            # print("  pwd: %s" % pwd)
+            # 
+            # i = pwd.find("/src/")
+            # 
+            # if i != -1:
+            #    path_from_base = pwd[i+5:]
+            # else:
+            #    xxx
+            #    pass
+
+            # need tracking folders
+            # TODO: support globbing
+            # folders = [ os.path.join(base_folder, path_from_base, _folder) for _folder in patterns ]
+            folders = patterns
+            
+            for folder in folders:
+
+                # XXX cheating.  clean this up.  this grossness is an
+                #     artifact of the extra folder to indicate source
+                #     checkout, vs working with a specific tar.gz
+
+                vcs_child = self._get_vcs_child(folder)
+
+                if vcs_child is not None:
+                    folder = vcs_child
+                    pass
+
+                try:
+                    yield Project(folder, self)
+                except NotAProjectException:
+                    print("  XXX not a project: %s" % folder)
+                    pass
+                pass
+            return
+        
+        # note: we can't just check if it's a folder - has to be parseable as a real project
         try:
             yield Project(folder, self)
         except NotAProjectException:
@@ -429,7 +537,6 @@ class SourceTracker:
 
         return
         
-
     
     def dumpSourceURLsInFolder(self, folder):
 
@@ -441,7 +548,7 @@ class SourceTracker:
 
         return
 
-    
+
     def dumpSourceURLs(self, *projects):
         """
         
@@ -464,8 +571,8 @@ class SourceTracker:
 
 
     def importDumpedURLs(self, *paths):
-        """
-
+        """start tracking the full set of source urls dumped from another
+        instance of oompa
         """
 
         # XXX
@@ -541,26 +648,83 @@ class SourceTracker:
     def findProjects(self, *patterns, depth = None):
         """
         simple grep over source tree folders/files
+
+        TODO: currently does depth-first.  probably want breadth-first
+              
         """
-        
-        # TODO: create a regex over all args
-        
+
+        re_pattern = "|".join([ ".*?%s" % pattern for pattern in patterns ])
+        regex      = re.compile(re_pattern, re.IGNORECASE)
+
         for project in self.getProjects(self.tracking_folder):
-
-            matched = False
-
-            for pattern in patterns:
-                if project.path.find(pattern) != -1:
-                    matched = True
-                    break
-                pass
-
-            if matched:
-                print("%s" % project.path)
+            if regex.match(project.path) is not None:
+                # yield project.path
+                yield project
                 pass
             pass
         
         return
-                     
+
+    
+    def getTagInfo(self, project):
+        return self._tag_mgr.getTagInfo(project)
+
+    def getTagInfos(self, *patterns):
+        return self._tag_mgr.getTagInfos(*patterns)
+
+    
+    def setTagInfo(self, key, tags, description = None):
+        """
+        key is the source_spec (e.g., https://github.com/....git")
+        """
+
+        # print("# SourceTracker.setTagInfo(): %r, %r, %r" % ( key, tags, description ))
+
+        if description is None:
+
+            description = "???"
+
+            # XXX cheating - generalize this to a set of agents who can help
+
+            if key.find("github.com") != -1:
+
+                from oompa.tracking.github.GitHubTracker import GitHubTracker
+
+                # needs to be "the project url", not the .git url
+                if key.endswith(".git"):
+                    key = key[:-4]
+                    pass
+
+                # TODO: memoize
+                githubTracker = GitHubTracker(self.config)
+                blurb         = githubTracker.githubHelper.getBlurb(url = key)
+
+                # XXX someone else should do all of this
+                blurb = blurb.replace("\n", " ")
+                if blurb.endswith(" ..."):
+                    blurb = blurb[:-4]
+                    pass
+
+                if blurb and blurb[0] == "#":
+                    blurb = blurb[1:].strip()
+                    pass
+
+                while blurb[-1] == "=":
+                    blurb = blurb[:-1]
+                    pass
+
+                blurb = blurb.strip()
+                
+                description = blurb
+                pass
+            pass
+
+        # tag-lookup will be relative to the actual git url
+        # XXX need to generalize
+        if key.startswith("https://github.com/") and not key.endswith(".git"):
+            key = key + ".git"
+        
+        return self._tag_mgr.setTagInfo(key, tags, description)
+    
     pass
     

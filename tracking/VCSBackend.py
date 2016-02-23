@@ -157,5 +157,32 @@ class VCSBackend:
 
         raise NotImplementedError
 
+
+    def _reportUpdatingProject(self, project):
+        """
+        project is a tracking.Project
+        """
+        
+        project.log("UPDATING %s" % ( project.path, ))
+
+        # TODO: should do this above individual backends, but have to know if
+        #       actually updated
+        
+        tagInfo = project.getTagInfo()
+        
+        if tagInfo:
+            tags, description = tagInfo
+            if tags == [ "???" ] or description == "???":
+                project.log("  incomplete tag info - %s" % project.getSourceURL())
+                pass
+            project.log("  tags: %s" % ",".join(tags))
+            project.log("  desc: %s" % description)
+        else:
+            # just temporary, to help prioritize tag-backfill
+            project.log("  no tag info yet - %s" % project.getSourceURL())
+            pass
+
+        return
+            
     pass
 

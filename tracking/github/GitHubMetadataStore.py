@@ -18,7 +18,10 @@ class GitHubMetadataStore:
     _kinds_lowered = [ kind.lower() for kind in _kinds ]
     
     def __init__(self, config, githubHelper):
-
+        """
+        config is a what?
+        """
+        
         self._config       = config
 
         self._githubHelper = githubHelper

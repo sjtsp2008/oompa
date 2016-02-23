@@ -8,15 +8,16 @@
 import json
 import os
 import sys       # XXX use logging system, instead of sys.stderr
+import time
+
+# for readme-cleaning
+import re       
 
 import github3
 
-from oompa.tracking.github           import github_utils
-from oompa.tracking.github.EtagCache import EtagCache
-
-
+from oompa.tracking.github                       import github_utils
 from oompa.tracking.github                       import GitHubMetadataStore
-
+from oompa.tracking.github.EtagCache             import EtagCache
 from oompa.tracking.github.EntityMetadataWrapper import EntityMetadataWrapper
 
 
@@ -27,13 +28,14 @@ def extractBlurb(content):
     TODO: move to some text-processing home
     TODO: can indicate the number of lines
     """
-    
 
     if not content:
         return content
-    
-    # print("extractBlurb(): content: %r" % content)
 
+    # XXX if it's still bytes, then it was not utf8, and we won't be able to split it
+    if isinstance(content, bytes):
+        return content
+    
     paragraphs     = content.split("\n\n")
     numParagraphs  = len(paragraphs)
     firstParagraph = paragraphs[0]
@@ -55,6 +57,69 @@ def extractBlurb(content):
 
 
 
+# TODO: be lazy about the regex
+# TODO: have to update to support just one-square-one-paren
+badgePattern = '(\[\!\[.*?\].*?\]\(.*?\))'
+badgeRegex   = re.compile(badgePattern)
+
+
+
+def removeStinkinBadges(line):
+    """a lot of github readmes have a row of "badges" on the first line
+    (e.g., to indicate that it's green/red in
+    jenkins/travis/bamboo/whatever, to indicate code coverage, ...)
+
+    '# spritezero-cli\n\n[![build status](https://secure.travis-ci.org/mapbox/spritezero-cli.svg)](http://travis-ci.org/mapbox/spritezero-cli) [![Coverage Status](https://coveralls.io/repos/mapbox/spritezero-cli/badge.svg?branch=master&service=github)](https://coveralls.io/github/mapbox/spritezero-cli?branch=master)\n...'
+
+    '# untiler\n\n[![Build Status](https://magnum.travis-ci.com/mapbox/untiler.svg?token=Dkq56qQtBntqTfE3yeVy&branch=master)](https://magnum.travis-ci.com/mapbox/untiler) [![Coverage Status](https://coveralls.io/repos/mapbox/untiler/badge.svg?branch=master&service=github&t=nhModO)](https://coveralls.io/github/mapbox/untiler?branch=master)\n...'
+
+    for the purposes of discovery in a shell, that is not helpful
+
+    they are generally easy to spot and remove
+
+      [![label](url)](url)
+
+    """
+
+    return badgeRegex.sub("", line)
+
+
+    
+def test_removeStinkinBadges():
+
+    # note: these lines are originally bytes, from the webservice.  i am just
+    #       focusing on the strings, since we decode the bytes
+
+    line         = '[![build status](https://secure.travis-ci.org/mapbox/spritezero-cli.svg)](http://travis-ci.org/mapbox/spritezero-cli)'
+    scrubbedLine = removeStinkinBadges(line)
+
+    assert scrubbedLine == ""
+
+    # conntent before and after.  no newlines yet
+    line         = 'spritezero-cli [![build status](https://secure.travis-ci.org/mapbox/spritezero-cli.svg)](http://travis-ci.org/mapbox/spritezero-cli) something after'
+    scrubbedLine = removeStinkinBadges(line)
+
+    assert scrubbedLine == 'spritezero-cli  something after'
+
+
+    line = '# spritezero-cli\n\n[![build status](https://secure.travis-ci.org/mapbox/spritezero-cli.svg)](http://travis-ci.org/mapbox/spritezero-cli) [![Coverage Status](https://coveralls.io/repos/mapbox/spritezero-cli/badge.svg?branch=master&service=github)](https://coveralls.io/github/mapbox/spritezero-cli?branch=master)\n...'
+
+    scrubbedLine = removeStinkinBadges(line)
+    
+    assert scrubbedLine == '# spritezero-cli\n\n \n...'
+
+    # nearly the same, just different urls for build and coverage status
+    line = '# untiler\n\n[![Build Status](https://magnum.travis-ci.com/mapbox/untiler.svg?token=Dkq56qQtBntqTfE3yeVy&branch=master)](https://magnum.travis-ci.com/mapbox/untiler) [![Coverage Status](https://coveralls.io/repos/mapbox/untiler/badge.svg?branch=master&service=github&t=nhModO)](https://coveralls.io/github/mapbox/untiler?branch=master)\n...'
+
+    scrubbedLine = removeStinkinBadges(line)
+
+    assert scrubbedLine == '# untiler\n\n \n...'
+
+    return
+
+
+# test_removeStinkinBadges()
+    
 
 
 class GitHub3Helper:
@@ -65,6 +130,9 @@ class GitHub3Helper:
     """
 
     def __init__(self, config, username = None, password = None):
+        """
+        XXX what is config?  currently just a dict
+        """
 
         self.config = config
 
@@ -94,7 +162,7 @@ class GitHub3Helper:
 
         # TODO: lazy.  some clients may not need meta at all
         self._metadataStore = GitHubMetadataStore.getGitHubMetadataStore(config, self)
-        
+
         return
 
     
@@ -117,22 +185,25 @@ class GitHub3Helper:
         github_utils.dumpSlotValues(obj)
         return
     
-    # dumpList       = github_utils.dumpList
-
 
     def me(self):
         return self.github.me()
     
 
     def checkRatePointsLeft(self):
-        """
-        return how many "points" (api queries) you have left in the current time window.
+        """return how many "points" (api queries) you have left in the
+        current time window.
         
-        normal non-authenticated querying typically has 5000 points refreshed
-        every hour
+        normal non-authenticated querying typically has 5000 points
+        refreshed every hour
 
         """
         return self.me().ratelimit_remaining
+
+
+    def printRatePointsLeft(self, message):
+        print("%s: %s" % ( message, self.checkRatePointsLeft() ))
+        return
 
     
     def getGithubObject(self, name, kind = None):
@@ -146,6 +217,8 @@ class GitHub3Helper:
         if name.startswith("https://github.com/"):
             name = name[len("https://github.com/"):]
             pass
+
+        # XXX i think we need to replace http://github.com with https://github.com
         
         # if kind is not None:
         #    kind = kind.lower()
@@ -197,7 +270,6 @@ class GitHub3Helper:
         return None
 
 
-
     def getKindNameAndObject(self, args):
 
         for kind, name in github_utils.getKindAndName(args):
@@ -212,6 +284,8 @@ class GitHub3Helper:
                  sort     = None,
                  use_etag = True):
         """
+
+        thing is XXX what?
 
         sort can be "time-newest-first" or None
 
@@ -241,7 +315,9 @@ class GitHub3Helper:
             _repos = [ repo for repo in repos ]
             pass
 
-        self.etags.set(thing, "repositories", repos.etag)
+        if use_etag:
+            self.etags.set(thing, "repositories", repos.etag)
+            pass
         
         return _repos
 
@@ -290,30 +366,83 @@ class GitHub3Helper:
         return values
 
                 
-    def getReadmeContent(self, repo):
+    def getReadmeContent(self, repo = None, url = None):
+        """
+        attempts to return string
+        """
 
+        if repo is None:
+            repo = self.getGithubObject(url, kind = "repo")
+            pass
+        
         try:
             readme_content = repo.readme().decoded
         except:
-            return None
+            return ""
 
+        # print("getReadmeContent(): %r - %r" % ( readme_content, type(readme_content) ))
+        
+        # if readme_content is not None:
         if readme_content:
-            readme_content = readme_content.decode("utf-8")
+            # XXX 20150824 - started getting utf8 UnicodeDecodeError, on Netflix-SkunkWorks
+            try:
+                # readme_content = readme_content.decode("utf-8")
+                readme_content = readme_content.decode()
+                # print("# ... decoded")
+                readme_content = removeStinkinBadges(readme_content)
+                # print("# ... removed badges")
+            except UnicodeDecodeError:
+                # print("# ... UnicodeDecodeError")
+                pass
             pass
 
+        # print("  final: %r - %r" % ( readme_content, type(readme_content) ))
+        
         return readme_content
 
+    
+    def getBlurb(self, repo = None, url = None):
+        """
+        note that this may return bytes or a string
+        """
+        
+        readme_content = self.getReadmeContent(repo = repo, url = url)
+
+        if readme_content is None:
+            return "no readme yet"
+
+        blurb = extractBlurb(readme_content)
+
+        return blurb
 
                 
-    def printRepos(self, thing = None, repos = None, include_readme = True):
-        """
-        thing can be User or Organization
+    def printRepos(self,
+                   thing = None,
+                   repos          = None,
+                   include_readme = True,
+                   out_stream     = None,
+                   format_link    = None):
+        """thing can be User or Organization
+
+        if include_readme is true, will try to report a decent blurb
+        from the top of the readme as a clue about the project
+
         """
 
+        if out_stream is None:
+            out_stream = sys.stdout
+        
         if repos is None:
             repos = self.getRepos(thing, sort = "time")
             pass
-        
+
+        # experiment with avoiding rate limit crashes
+        stall = None
+        # stall = 1.0
+
+        if stall:
+            print("# stalling %s sec between each repo, to try to avoid rate limit problems" % stall)
+
         for repo in repos:
 
             # dumpSlots(repo, "REPO")
@@ -328,55 +457,61 @@ class GitHub3Helper:
             #    refresh method on the repository object to make a
             #    second call to the API and retrieve those attributes.
 
+            # XXX always use format_link - EntityMetadata has getGithubURL - refactory
+
+            if format_link:
+                repo_url = format_link(repo.full_name)
+            else:
+                # XXX
+                repo_url = "https://github.com/%s" % repo.full_name
+                pass
+            
+            out_stream.write("  repo:     %s  %s  %s\n" % ( repo.created_at, repo.updated_at, repo_url ))
+            out_stream.write("\n")
+
+            # need to do this to pull in proper "pedigree" (forked from, ...)
             repo.refresh()
             
-            # print("  repo:     %s %r" % ( repo.last_modified, repo ))
-
-            # XXX
-            repo_url = "http://github.com/%s" % repo.full_name
-            
-            print("  repo:     %s  %s  %s" % ( repo.created_at, repo.updated_at, repo_url ))
-            print("")
-
             if repo.parent is not None:
-                print("      forked: %s" % repo.parent)
+                out_stream.write("      forked: %s\n" % repo.parent)
 
                 if repo.source != repo.parent:
                     print("      source: %s" % repo.source)
                     pass
-                print("")
+                out_stream.write("\n")
                 pass
             
             if include_readme:
 
-                readme_content = self.getReadmeContent(repo)
+                blurb = self.getBlurb(repo)
+                
+                # if isinstance(blurb, bytes):
 
-                if readme_content is None:
-                    print("    no readme yet")
-                else:
-                    blurb = extractBlurb(readme_content)
-
-                    print(blurb.encode("utf-8"))
+                if not blurb:
+                    blurb = ""
                     
-                    # why not just always encode?  i think it's something about bytes vs string?
-                    # try:
-                    #    print(readme_content)
-                    # except UnicodeEncodeError:
-                    #    print(readme_content.encode("utf-8"))
-                    #    pass
-                    pass
+                out_stream.write(blurb)
+                # else:
+                #    out_stream.write(blurb.encode("utf-8"))
+                #    pass
+
+                out_stream.write("\n")
+                out_stream.write("\n")
                 pass
 
             # weekly_commit_count is dictionary of { "owner" : [ 0, 0, 1, 0, ... ], "all" : [ 2, 0, 5, ... ] }
             # i think that each is 52 weeks
             
-            # print("    commit_count: %s" % repo.weekly_commit_count())
+            # out_stream.write("    commit_count: %s\n" % repo.weekly_commit_count())
         
             # only at a certain verbosity
             # for contributor in repo.contributors():
-            #    print("    contributor: %s" % contributor)
+            #    out_stream.write("    contributor: %s\n" % contributor)
             #    pass
-        
+
+            if stall:
+                time.sleep(stall)
+                pass
             pass
 
         return
@@ -384,7 +519,8 @@ class GitHub3Helper:
 
     def getEntityMetadata(self, githubObj):
         """
-
+        
+        XXX returns what?
         """
         
         print("getEntityMetadata(): %r" % githubObj)

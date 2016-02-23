@@ -212,7 +212,6 @@ class MercurialVCSBackend(ExecVCSBackend):
             showedProject = True
             pass
 
-        
         self.push_folder(vcs_folder)
 
         child_stdout  = io.BytesIO()
@@ -239,7 +238,7 @@ class MercurialVCSBackend(ExecVCSBackend):
             #
 
             if not showedProject:
-                project.log("UPDATING %s" % ( project.path, ))
+                self._reportUpdatingProject(project)
                 pass
             project.log()
             project.log(self._getChildOutput(child_stdout))

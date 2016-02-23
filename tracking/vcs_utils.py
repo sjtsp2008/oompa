@@ -150,8 +150,6 @@ def find_vcs_folder(project_path = None,
         project_path = project.path
         pass
 
-    # print "find_vcs_folder: %s" % project_path
-    
     for vcs_type_info in _vcs_clues:
         
         if isinstance(vcs_type_info, tuple):

@@ -13,7 +13,7 @@ class GITVCSBackend(ExecVCSBackend):
     _type = 'git'
 
     def checkout(self, source_spec, *args):
-        """
+        """returns the path where the project was checked out
 
         appears to assume that source_spec has already been identifies as git
 
@@ -94,7 +94,7 @@ class GITVCSBackend(ExecVCSBackend):
 
         if child_out:
             if not showedProject:
-                project.log("UPDATING %s" % ( project.path, ))
+                self._reportUpdatingProject(project)
                 pass
             project.log()
             project.log(child_out)

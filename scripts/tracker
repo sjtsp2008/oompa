@@ -1,4 +1,4 @@
-#! /usr/bin/env python3
+#! /usr/bin/env python
 #
 # tracker
 #
@@ -29,7 +29,17 @@ _usage_str = """usage: tracker <command> <folder> [...]
   update [project] [...]
   up
 
-  untrack <src-folder> [...]     (*not* the src/tracking/... folder)
+  untrack [--keep-src] <src-folder> [...]     remove project from tracking.  default is to delete source
+
+  mv <src> <dest-folder>
+
+  discover                  monitor entity actvity or start monitoring new entities
+
+  undiscover
+
+  tracking
+
+  find <pattern>            find a project or pattern in source.  only checks top N levels
 
 """
 
@@ -92,19 +102,6 @@ def cli():
     return
 
 
-#
-# TODO: figure out how to specify "at least one" in @click.argument
-#
-@cli.command(help = "search for specified strings in tracked project folder names")
-@click.argument('patterns', nargs = -1)
-
-def find(patterns):
-
-    result = tracker.findProjects(*patterns)
-
-    return result
-
-
 
 @cli.command(help = "update some or all tracked projects")
 @click.option("--stdout",  is_flag = True)
@@ -119,25 +116,26 @@ def update(projects, stdout = False, verbose = False):
     
     return result
 
-# "co" is alias for checkout
+# add "up" as alias for update
 cli.add_command(update, "up")
 
 
 
 
-@cli.command(help = "move a project folder i src tree, and maintain all tracking links")
+@cli.command(help = "move a project folder in src tree, and maintain all tracking links")
 @click.argument('project_folder', nargs = 1)
-@click.argument('dest_folder', nargs = 1)
+@click.argument('dest_folder',    nargs = 1)
 
 def move(project_folder, dest_folder):
 
     setup_logging()
-    
+
     result = tracker.moveFolders(project_folder, dest_folder)
     
     return result
 
-cli.add_command(update, "mv")
+# add alias
+cli.add_command(move, "mv")
 
 
 
@@ -154,7 +152,6 @@ def checkout(project_urls):
         
     source_spec    = project_urls[0]
     rest           = project_urls[1:]
-
     project_folder = tracker.checkout(source_spec, *rest)
 
     # XXX check that project_folder is not None
@@ -175,7 +172,10 @@ cli.add_command(checkout, "co")
 
 
 
-@cli.command(help = "start tracking an existing checkout - add it to tracking system")
+
+
+
+@cli.command(help = "start tracking an already-checked-out project - add it to tracking system")
 @click.argument('folders', nargs = -1)
 
 def track(folders):
@@ -201,16 +201,128 @@ def track(folders):
     
 
 @cli.command(help = "stop tracking a project.  folder can be in the tracking tree, or in the source tree")
+@click.option("--keep-src",  is_flag = True)
 @click.argument('folders', nargs = -1)
 
+def untrack(folders, keep_src = False):
+    """
+    """
 
-def untrack(folders):
-    """
-    TODO: option to delete the source, too (vs just remove the symlink from tracking)
-    """
+    # XXX i think i can do this in click specs, somehow
+    if not folders:
+        print("you must specify at least one project to untrack")
+        return
 
     for project_folder in folders:
-        tracker.untrack(project_folder)
+        tracker.untrack(project_folder, keep_src = keep_src)
+        pass
+
+    return
+
+
+@cli.command(help = "dump all the source urls in a format that can be used to set up tracking on another system")
+@click.argument('patterns', nargs = -1)
+
+def urls(patterns):
+
+    return tracker.dumpSourceURLs(*patterns)
+
+
+
+#
+# TODO: figure out how to specify "at least one" in @click.argument
+#  - support breaking out after first match
+#  - support override depth
+#
+@cli.command(help = "search for specified strings in tracked project folder names")
+@click.argument('patterns', nargs = -1)
+
+def find(patterns):
+
+    for project in tracker.findProjects(*patterns):
+
+        # report the actual src folder, not the tracking folder
+        # XXX i'm not sure who should do this
+        print("%s" % project.get_src_path())
+        pass
+
+    return 
+
+
+
+
+# ####
+#
+# tag/annotation system
+
+@cli.command(help = "update tags and/or annotation for a project")
+@click.argument('patterns', nargs = -1)
+
+def tag(patterns):
+
+    xxx
+    return tracker.dumpSourceURLs(*patterns)
+
+
+@cli.command(help = "dump current tags and annotation for projects")
+@click.argument('patterns', nargs = -1)
+
+def get_tags(patterns):
+
+    for project, tagInfo in tracker.getTagInfos(patterns):
+
+        if tagInfo is None:
+            tags, description = [], ""
+        else:
+            tags, description = tagInfo
+            pass
+        
+        print("%s" % project.path)
+        print("  source: %s" % project.getSourceURL())
+        print("  tags:   %s" % ",".join(tags))
+        print("  desc:   %s" % description)
+        print("")
+        pass
+
+    return
+
+# "co" is alias for checkout
+cli.add_command(get_tags, "get-tags")
+
+
+def search_tags():
+
+    zzz
+    return
+
+
+
+@cli.command(help = "attempt to get project tags from repo source (esp github), and add to tags db")
+@click.argument('project_urls', nargs = -1)
+
+def get_description(project_urls):
+    """
+    this is really just get-description, so far
+    """
+    
+    if not project_urls:
+        usage.usage()
+        pass
+
+    from oompa.tracking.TagManager   import TagManager
+
+    # TODO: probably just add a sugar method on the tracker
+    github_tracker = GitHubTracker(config)
+    github_helper  = github_tracker.githubHelper
+    
+    tag_mgr        = TagManager(config)
+    
+    for source_spec in project_urls:
+
+        readme = github_helper.getBlurb(url = source_spec)
+        
+        print("  readme: %s - %r" % ( source_spec, readme ))
+
         pass
 
     return
@@ -219,23 +331,31 @@ def untrack(folders):
 
 
 
+#
+#
+# ###
+
+
 # ####
 #
-# the discovery subsystem
+# the entity discovery/tracking subsystem
+#
+#    used to watch for new repos by user/org, and starred repos by people who
+#    are interesting, and trends in followed/following
 #
 
-
 @cli.command(help = "discover updates around github neighborhood of interest")
-@click.argument('args', nargs = -1)
+@click.option("--verbose",            is_flag = False)
+@click.option("--format", nargs =  1, default = "html")
+@click.argument('args',   nargs = -1)
 
-def discover(args):
 
-    # TODO: get from options
-    verbose       = False
-    # verbose       = True
-    
+def discover(args, verbose = False, format = None):
+
     # try to trace all http traffic to github - i have not gotten this to work yet
-    if 0:
+    traceHTTP = False
+    
+    if traceHTTP:
         # XXX the urllib3 logging doesn't work?
         import logging
 
@@ -253,13 +373,14 @@ def discover(args):
         
         logger.setLevel(logging.DEBUG)
         pass
-    
-    githubTracker = GitHubTracker(config)
-    githubHelper  = githubTracker.githubHelper
 
-    print("rate points before: %s" % githubHelper.checkRatePointsLeft())
-    result        = githubTracker.discover(*args, verbose = verbose)
-    print("rate points after:  %s" % githubHelper.checkRatePointsLeft())
+    githubTracker = GitHubTracker(config)
+
+    githubTracker.printRatePointsLeft("rate points before")
+    result        = githubTracker.discover(*args,
+                                           format  = format,
+                                           verbose = verbose)
+    githubTracker.printRatePointsLeft("rate points after")
 
     return
 
@@ -268,27 +389,27 @@ def discover(args):
 @click.argument('entities', nargs = -1)
 
 def undiscover(entities):
-
+    
     githubTracker = GitHubTracker(config)
 
     return githubTracker.removeEntities(*entities)
     
 
 
-@cli.command(help = "list the contents of current metadata store")
+@cli.command(help = "list the entities currently being tracked")
 @click.argument('args', nargs = -1)
 
 def tracking(args):
     """
+    XXX bad command name - implies that this is related to co/track, versus discover/track
+
+    TODO: able to filter by pattern
     TODO: able to sort by alph (default) or date-added
     """
     
     githubTracker = GitHubTracker(config)
 
-    # TODO: if args specified, only list the entities that match one
-    #       of the strings/patterns (tracker tracking linked)
-    
-    for entityMetaName in githubTracker.listTracking():
+    for entityMetaName in githubTracker.listTracking(args):
         print("%s" % entityMetaName)
         pass
 
@@ -313,15 +434,16 @@ tracker = SourceTracker(config)
 
 cli()
 
-print("exit early"); sys.exit()
+# DEAD CODE BELOW
 
+"""
 
 # XXX non-click
 args    = sys.argv[1:]
 command = args[0]
 args    = args[1:]
 
-# TODO: only certain commands what a log
+# TODO: only certain commands want a log
 
 dont_need_log = [
     "nash-stats",
@@ -334,15 +456,7 @@ if command not in dont_need_log:
     setup_logging()
     pass
 
-
-if command == "urls":
-    #
-    # dump all the source urls in a format that can be used to 
-    # set up tracking on another system
-    #
-    result = tracker.dumpSourceURLs(*args)
-
-elif command == "import":
+if command == "import":
 
     # "import" (re-check-out) projects dump from another "tracker urls"
     result = tracker.importDumpedURLs(*args)
@@ -416,3 +530,4 @@ else:
     raise Exception("no-such-command", command)
 
 
+"""
