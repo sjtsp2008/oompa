@@ -415,6 +415,11 @@ class GitHub3Helper:
 
         return blurb
 
+    
+    def getGithubURL(self, full_name):
+
+        return "https://github.com/%s" % full_name
+    
                 
     def printRepos(self,
                    thing = None,
@@ -443,6 +448,9 @@ class GitHub3Helper:
         if stall:
             print("# stalling %s sec between each repo, to try to avoid rate limit problems" % stall)
 
+        if format_link is None:
+            format_link = self.getGithubURL
+            
         for repo in repos:
 
             # dumpSlots(repo, "REPO")
@@ -459,12 +467,7 @@ class GitHub3Helper:
 
             # XXX always use format_link - EntityMetadata has getGithubURL - refactory
 
-            if format_link:
-                repo_url = format_link(repo.full_name)
-            else:
-                # XXX
-                repo_url = "https://github.com/%s" % repo.full_name
-                pass
+            repo_url = format_link(repo.full_name)
             
             out_stream.write("  repo:     %s  %s  %s\n" % ( repo.created_at, repo.updated_at, repo_url ))
             out_stream.write("\n")
@@ -473,10 +476,11 @@ class GitHub3Helper:
             repo.refresh()
             
             if repo.parent is not None:
-                out_stream.write("      forked: %s\n" % repo.parent)
+
+                out_stream.write("      forked: %s\n" % format_link(repo.parent))
 
                 if repo.source != repo.parent:
-                    print("      source: %s" % repo.source)
+                    out_stream.write("      source: %s\n" % format_link(repo.source))
                     pass
                 out_stream.write("\n")
                 pass

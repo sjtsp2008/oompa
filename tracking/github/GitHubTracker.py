@@ -236,6 +236,9 @@ class GitHubTracker:
 
     def discoverHtmlFormat(self, *args, verbose = False):
 
+        # TODO: config
+        reportMemberChanges_b = False
+        
         self._tag_mgr  = TagManager(self.config,
                                     tags_filename = "entity-tags.tsv")
 
@@ -332,7 +335,10 @@ class GitHubTracker:
                 self.reportListUpdates("following",            github_obj, entityMetadata, "login")
                 self.reportListUpdates("starred_repositories", github_obj, entityMetadata, "full_name")
             elif github_obj.type == "Organization":
-                self.reportListUpdates("public_members", github_obj, entityMetadata, "login")
+
+                if reportMemberChanges_b:
+                    self.reportListUpdates("public_members", github_obj, entityMetadata, "login")
+                    pass
                 pass
 
             if update_metadata:

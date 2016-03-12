@@ -23,7 +23,6 @@ class FileMetadataStore(GitHubMetadataStore):
 
     """
 
-
     def __init__(self, config, githubHelper):
 
         GitHubMetadataStore.__init__(self, config, githubHelper)

@@ -1,13 +1,18 @@
 Oompa TODO list
 ---------------
 
-- html discover report - incorporate the entity tags
+(B) discovering a new org clobbers the day's report
+  - need to database the updates (or put them on a stream) and just render
+    across some time period
 
-- html discover report - links to followers/following
+- html discover report - i care less about comings and goings of public members than i expected
+  - option to suppress, until i can guess at tags
+
+- html discover report - actual links to followers/following
 
 - discover - html report - show readme for all new projects
-  - still hard to decide if it's worth a click
-  
+  - because it's still hard to decide if it's worth a click
+
 - discover - html report - maybe show a description of the parent entity, for projects?
   - could possibly nix an entity
     - e.g., "i don't really care about ecmascript right now" ...
@@ -23,7 +28,7 @@ Oompa TODO list
   - decide how much (XXX what?)
   - show projects that i'm already tracking
 
-- discover/handle
+- discover - support post-discovery
   - track how you found out about things
   - record when you accepted things
   - when i don't follow something, explain why not
@@ -31,11 +36,17 @@ Oompa TODO list
     - don't have time to learn react right now
     - ...
 
+- start working toward topic modeling in support of discovery
+  - using topbox (or gensim)
+  - https://github.com/clips/topbox
+
+
+- track - handle "re-homing" of projects
+  - e.g., moving from jupyter-incubating/ to jupyter
+  - can do this "offline" - look for redirects?
+
 - discover feedback-in-interface - need another category for "monitor"
   - to handle the repos that are still empty when we discover
-
-- start using topbox (or gensim)
-  - https://github.com/clips/topbox
 
 - user tag system
   - able to percolate tags based on starred/works-with/contributes-to/forks/...
@@ -94,7 +105,8 @@ Oompa TODO list
   - i think i need to improve SourceTracker.getProjects
       - more flexible in working from "real" source folder, with globs, "**/*.whatever", ...
 
-- (baby step) tracker co adds a dummy entry to project-tags.tsv
+- discover - bring back option to report changes in public members, once i have full support for user-tagging
+  - could learn a little bit about the nature of a project
 
 - (again) need to put empty new discovered repos on a keep-an-eye-on-them list
   - maybe quarantine somewhere, with easy move later
