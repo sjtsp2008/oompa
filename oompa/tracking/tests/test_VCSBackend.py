@@ -14,7 +14,7 @@ class VCSBackendTests(unittest.TestCase):
 
         test_cases = [
 
-            ( "http://git.code.sf.net/p/guitarix/git",             "git" ),
+            ( "http://git.code.sf.net/p/guitarix/git",             "guitarix" ),
             ( "http://git.code.sf.net/p/guitarix/git guitarix",    "guitarix" ),   # i think this is specifying an alternate name
 
             ( "https://github.com/drewbuschhorn/gmail_imap.git",   "gmail_imap" ),
@@ -48,7 +48,7 @@ class VCSBackendTests(unittest.TestCase):
         for test_case in test_cases:
 
             if test_case is None:
-                print "breaking early"
+                print("breaking early")
                 break
 
             source_spec  = test_case[0]
@@ -65,13 +65,10 @@ class VCSBackendTests(unittest.TestCase):
                 print("  project_name: %s" % project_name)
                 pass
                 
-
             assert project_name == expected
             # self.assert(
-
             
             pass
-
 
         return
 

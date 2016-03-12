@@ -26,7 +26,7 @@ date:        Fri Jan 20 10:12:08 2012 +0100
 summary:     Skip this import if it fails because of _weakref
 """,
               """branch: 52389:21f1095789ea
-summary: Skip this import if it fails because of _weakref
+  summary: Skip this import if it fails because of _weakref
 """,
               ),
             
@@ -61,12 +61,12 @@ date:        Sun Feb 12 12:16:44 2012 +0100
 summary:     Dont need to instantiate a class to access static methods
 """,
               """branch: 52389:21f1095789ea
-summary: Skip this import if it fails because of _weakref
+  summary: Skip this import if it fails because of _weakref
 
 branch: stm-gc
-summary: Fix for merge
-summary: Remove this hack.
-summary: Dont need to instantiate a class to access static methods
+  summary: Fix for merge
+  summary: Remove this hack.
+  summary: Dont need to instantiate a class to access static methods
 """
               ),
 
@@ -90,7 +90,7 @@ summary: Dont need to instantiate a class to access static methods
         for test_case in test_cases:
 
             if test_case is None:
-                print "breaking early"; break
+                print("breaking early")
                 break
 
             orig_output                = test_case[0]
@@ -99,9 +99,12 @@ summary: Dont need to instantiate a class to access static methods
             cleaned_up_output = backend._clean_up_output(orig_output)
 
             if cleaned_up_output != expected_cleaned_up_output:
-                print "CUO"
-                print cleaned_up_output
-                print "/CUO"
+                print("ECUO")
+                print("%r" % expected_cleaned_up_output)
+                print("/ECUO")
+                print("CUO")
+                print("%r" % cleaned_up_output)
+                print("/CUO")
 
             # XXX need to use assertEqualOrDumpMismatch - too hard to
             #     find the specific case that's a problem
@@ -115,3 +118,4 @@ summary: Dont need to instantiate a class to access static methods
         return
 
     pass
+
