@@ -39,7 +39,6 @@ class MercurialVCSBackend(ExecVCSBackend):
         
         return branch
 
-
     def _clean_up_output(self, cmd_output):
         """
 
@@ -47,13 +46,8 @@ class MercurialVCSBackend(ExecVCSBackend):
 
         # print("MercurialVCSBackend._clean_up_output(): %r" % cmd_output)
 
-        
-        # this is getting very specialized/complicated - 
-        # aggregating summaries by branch, or change set, if
-        # no branch specified
-
-        # list of hash tables
-        # chunks    = []
+        # this is getting very specialized/complicated - aggregating
+        # summaries by branch, or change set, if no branch specified
 
         by_branch = {}
 
@@ -71,7 +65,6 @@ class MercurialVCSBackend(ExecVCSBackend):
                 by_branch.setdefault(branch, []).append(chunk)                
 
                 chunk = {}
-
                 continue
 
             # TODO: i think most of these should be optional -
@@ -99,7 +92,7 @@ class MercurialVCSBackend(ExecVCSBackend):
             if tag == "date":
                 continue
 
-            rest   = " ".join(tokens[1:])
+            rest = " ".join(tokens[1:])
 
             chunk.setdefault(tag, []).append(rest)
             pass
@@ -107,7 +100,7 @@ class MercurialVCSBackend(ExecVCSBackend):
         if chunk:
 
             branch = self._get_branch(chunk)
-            
+
             by_branch.setdefault(branch, []).append(chunk)                
             pass
 
@@ -122,7 +115,7 @@ class MercurialVCSBackend(ExecVCSBackend):
 
             # print "branch: %s" % branch
 
-            lines.append("branch:   %s" % branch)
+            lines.append("branch: %s" % branch)
 
             chunks = by_branch[branch]
 

@@ -26,8 +26,8 @@ class ExecVCSBackend(VCSBackend):
 
     def _run(self, 
              command,
-             stdout = None,
-             stderr = None):
+             stdout=None,
+             stderr=None):
         """
         run the specified command
 

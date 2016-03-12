@@ -43,7 +43,7 @@ class vcs_utilsTests(unittest.TestCase):
         for test_case in test_cases:
 
             if test_case is None:
-                print "breaking early"
+                print("breaking early")
                 break
 
             source_spec = test_case[0]
