@@ -5,8 +5,6 @@
 import os
 import unittest
 
-from pylib.testing                              import test_utils
-
 from oompa.tracking.backend.MercurialVCSBackend import MercurialVCSBackend
 
 
