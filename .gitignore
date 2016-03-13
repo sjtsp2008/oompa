@@ -1,5 +1,10 @@
 *~
 *.pyc
 __pycache__
-
 docs/build/*
+nosetests.xml
+coverage.xml
+.coverage
+build
+dist
+oompa.egg-info
