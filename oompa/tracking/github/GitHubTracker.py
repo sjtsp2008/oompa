@@ -40,6 +40,11 @@ class GitHubTracker:
 
         # XXX mid-refactor.  this should be more invisible
         self._metadataStore = self.githubHelper._metadataStore
+
+        # XXX be more focused
+        self.use_etag = True
+        # self.use_etag = False
+        # self.use_etag = None
         
         return
 
@@ -105,23 +110,30 @@ class GitHubTracker:
     
 
     def reportListUpdates(self, field, github_obj, entityMetadata, valueAttr):
-
-        # XXX be more focused
-        # use_etag = True
-        # use_etag = False
-        # if not use_etag:
-        #    print("# not using etag in GitHubTracker.reportListUpdates()")
-        #    pass
-        # newValue = self.githubHelper.list(field, github_obj, use_etag = use_etag)
-
-        # newValue will be a list of Repository objects
-        newValue = self.githubHelper.list(field, github_obj)
+        """fetch the list named field for the specified github_obj, and
+        compare with previous results (reporting new, and no-longer)
+        
+        github_obj is a User or Organization
+        """
+        
+        # depending on field, newValue will be a list of Repository or User objects
+        #   TODO: how do we check return code
+        newValue = self.githubHelper.list(field,
+                                          github_obj,
+                                          use_etag = self.use_etag)
 
         # print("reportListUpdates: %s - %s" % ( entityMetadata.name, field, ))
         # print("   new: %r" % newValue)
+
+        if newValue == "no-change":
+            # print ("   no change since last check: %s - %s" % ( entityMetadata.name, field, ))
+            return
         
-        if not newValue:
-            return False
+        # if not newValue:
+        #    print ("   no new value: %s - %s" % ( entityMetadata.name, field, ))
+        #    return
+
+        print ("      changed since last check: %s - %s" % ( entityMetadata.name, field, ))
         
         prevValue = entityMetadata.setdefault(field, [])
 
@@ -131,6 +143,11 @@ class GitHubTracker:
         else:
             format_link = self.getGithubURL
 
+        # EntityMetadata had a hack to only apply formatter if field
+        # was "starred_repositories".  that is our responsibility to decide
+        # if field == "starred_repositories":
+        # 
+            
         # note: i think that newalue is a list of Repository and prevValue is a list of strings
 
         if valueAttr is not None:
@@ -139,19 +156,21 @@ class GitHubTracker:
             newValue = [ getattr(value, valueAttr) for value in newValue ]
 
             if "" in newValue:
-                print("  removing empty strings from newvalue - %s" % ( field, ))
-                newvalue = [ value for value in newValue if value != '' ]
-                pass
-
-            # print("NV: %r" % newValue)
+                print("  XXX EntityMetadata.reportListUpdates - empty strings in newValue - %s - %s" % ( field, newValue ))
+                print("        not updating local cache")
+                # XXX i think that a list of all empties is a sign
+                #     that the rpc failed (but didn't fail well)
+                #     we should bail out and try again
+                # newValue = [ value for value in newValue if value != '' ]
+                return
             pass
 
         # ( addedValues, removedValues )
         #    both are sets
 
         if "" in prevValue:
-            print("  diffLists - empty in prevValue (i.e., they were stored in db): %r\n" % prevValue)
-            prevValue = [ value for value in prevValue if value != '' ]
+            print("  reportListUpdates - empty in prevValue %s (i.e., they were stored in db): %r\n" % ( field, prevValue ))
+            # prevValue = [ value for value in prevValue if value != '' ]
             pass
         
         diffs = entityMetadata.getListDiffs(newValue,
@@ -334,6 +353,7 @@ class GitHubTracker:
                 self.reportListUpdates("followers",            github_obj, entityMetadata, "login")
                 self.reportListUpdates("following",            github_obj, entityMetadata, "login")
                 self.reportListUpdates("starred_repositories", github_obj, entityMetadata, "full_name")
+                self.reportListUpdates("subscriptions",        github_obj, entityMetadata, "full_name")
             elif github_obj.type == "Organization":
 
                 if reportMemberChanges_b:

@@ -5,20 +5,26 @@
 #       migrate to other tinkerpop graph engines, but had
 #       trouble authenticating
 #
-# uses py2neo
 #
-# TODO: i think bulb seems to have better object modeling (but doesn't work for me)
-                
 
+"""
+package oompa.tracking.github
 
-import datetime
+experiments with working on github graphs in neo
+
+uses py2neo
+
+TODO: i think bulb seems to have better object modeling (but doesn't work for me)
+
+"""
+
+from datetime import timedelta
+from datetime import datetime
+
 import py2neo
 
 from oompa.tracking.github import github_utils
 
-
-timedelta    = datetime.timedelta
-datetime     = datetime.datetime
 
 Node         = py2neo.Node
 Relationship = py2neo.Relationship
@@ -41,7 +47,6 @@ part of neo walkthrough
     () means "node"
     {} surround attrs
     Person is the label
-    
 
   MATCH (ee:Person) WHERE ee.name = "Emil" RETURN ee;
 
@@ -79,6 +84,36 @@ does:
 """
 
 
+def parseFreshness(freshness):
+    """
+    TODO: not fully general/bulletproof yet
+    """
+
+    pieces = freshness.split()
+
+    days    = 0
+    hours   = 0
+    minutes = 0
+
+    for piece in pieces:
+        unit  = piece[-1]
+        value = int(piece[:-1])
+
+        if unit == "d":
+            days = value
+        elif unit == "h":
+            hours = value
+        elif unit == "m":
+            minutes = value
+        else:
+            raise Exception("unknown time unit", unit, freshness)
+        pass
+
+    freshness_delta = timedelta(days = days, hours = hours, minutes = minutes)
+
+    return freshness_delta
+
+
 class GitHubNeo:
     """
     interface for lazy github graph in neo4j
@@ -93,7 +128,6 @@ class GitHubNeo:
     # ISO format
     _dtFormat = "%Y-%m-%dT%H:%M:%S"
 
-    
     def __init__(self, config, githubHelper):
 
         # XXX get from config
@@ -109,9 +143,9 @@ class GitHubNeo:
         self.freshness = config.get("neo.github.freshness")
 
         if self.freshness:
-            self.freshness = self._parseFreshness(self.freshness)
+            self.freshness = parseFreshness(self.freshness)
             pass
-        
+
         py2neo.authenticate(neo_host, neo_user, neo_passwd)
 
         self.graph        = py2neo.Graph(neo_url)
@@ -122,57 +156,19 @@ class GitHubNeo:
         return
 
 
-    def _parseFreshness(self, freshness):
-
-        # TODO: not fully general/bulletproof yet
-
-        pieces = freshness.split()
-
-        days    = 0
-        hours   = 0
-        minutes = 0
-
-        for piece in pieces:
-            unit  = piece[-1]
-            value = int(piece[:-1])
-
-            if unit == "d":
-                days = value
-            elif unit == "h":
-                hours = value
-            elif unit == "m":
-                minutes = value
-            else:
-                xxx
-                pass
-            pass
-
-        freshness_delta = timedelta(days = days, hours = hours, minutes = minutes)
-
-        return freshness_delta
-        
 
     def _establishNeoSchema(self):
         """
         set up constraints on relationships and nodes in neo graph
 
         note: i believe that schema constraints are volatile, per-session
-        
+
             if i don't apply these contraints, on a graph that had them
             in previous sessions, i can violate the previous contraints
-
         """
-        
-        #
-        # XXX otoh, i got this crash when i tried to update a scrubbed graph:
-        #
-        # py2neo.error.ConstraintViolationException: Label 'Repository' and property 'name' already have a unique constraint defined on them.
-        #
-        
+
         schema = self.graph.schema
 
-        # print("ERROR: %s" % ( dir(py2neo.error), ))
-        
         try:
             schema.create_uniqueness_constraint("User",         "name")
             schema.create_uniqueness_constraint("Organization", "name")
@@ -184,11 +180,10 @@ class GitHubNeo:
 
         # TODO: User
         # TODO: Organization
-
         # TODO: relationships
-        
+
         return
-    
+
 
     def query(self, query):
         """
@@ -202,14 +197,15 @@ class GitHubNeo:
             yield record
 
         return
-        
+
 
     def getNodeType(self, node):
-
+        """
+        return the type of the given node
+        """
+        
         # XXX still figuring out LabelSet - don't know how to get values as list
         return node.labels.copy().pop()
-        
-
 
     
     def getNode(self, nodeName, nodeType = None):
@@ -330,8 +326,7 @@ class GitHubNeo:
             ( "starred_repositories", "starred",    "to",  ),
             ( "subscriptions",        "subscriber", "to",  ),
             ( "organizations",        "memberOf",   "to",  ),
-
-          ],
+        ],
     }
 
     
@@ -351,7 +346,8 @@ class GitHubNeo:
         destNodeType = self.getNodeType(destNode)
         graph        = self.graph
 
-        print("updateRelationships: %-25s - %-25s %4s - %s" % ( slot, relationshipLabel, direction, destNode.properties["name"] ))
+        print("updateRelationships: %-25s - %-25s %4s - %s" % (
+            slot, relationshipLabel, direction, destNode.properties["name"] ))
 
         # XXX need otherNodeLabelGetter
         #   - .name, .login, ...
@@ -434,8 +430,6 @@ class GitHubNeo:
                 relationship = Relationship(destNode, relationshipLabel, srcNode)
                 pass
 
-            # print("     rel: %s" % relationship)
-
             try:
                 graph.create(relationship)
             except:
@@ -504,7 +498,9 @@ class GitHubNeo:
             name = githubObj.name
             pass
 
-        # TODO: want to report different things for different object - user needs login and name
+        # TODO: want to report different things for different object -
+        #       user needs login and name
+
         print("GitHubNeo.updateGithubObj(): %s" % name.encode("utf8"))
 
         relationshipTuples = list(self._getRelationshipTuples(nodeType, relationships))
@@ -513,27 +509,27 @@ class GitHubNeo:
         #       make sure we only pay github points once
 
         for listName, relationshipLabel, direction in relationshipTuples:
-            for entitySpec in self.updateRelationships(githubObj, listName, relationshipLabel, direction, node):
+            for entitySpec in self.updateRelationships(githubObj,
+                                                       listName,
+                                                       relationshipLabel,
+                                                       direction,
+                                                       node):
                 yield entitySpec
                 pass
             pass
 
         node.properties["updatedDT"] = datetime.utcnow().replace(microsecond = 0)
         node.push()
-        
-        return
 
-        # XXX dead code - determine what else should go in graph
-        # TODO: capture all of this metadata on the node, ...
-    
-        print("  parent:          %s" % obj.parent)
-        print("  source:          %s" % obj.source)
-        print("  description:     %s" % obj.description.encode("utf8"))
-        print("  homepage:        %s" % obj.homepage)
-        print("  language:        %s" % obj.language)
-        print("  last_modified:   %s" % obj.last_modified)
-        print("  updated_at:      %s" % obj.updated_at)
-        
+        # what else should go in graph?
+        #  .parent
+        #  .source
+        #  .description
+        #  .homepage
+        #  .language
+        #  .last_modified
+        #  .updated_at
+
         # branches()
         
         # code_frequency()
@@ -548,7 +544,7 @@ class GitHubNeo:
         
         # contributor_statistics()
         
-        github_utils.dumpList(obj, "contributors")
+        # github_utils.dumpList(obj, "contributors")
         
         # default_branch
         
@@ -556,7 +552,7 @@ class GitHubNeo:
         
         # events()
         
-        github_utils.dumpList(obj, "forks")
+        # github_utils.dumpList(obj, "forks")
         
         # hooks() ???
         
@@ -566,10 +562,10 @@ class GitHubNeo:
         
         # labels() ???   i think these are tags used in issues/planning
         
-        github_utils.dumpList(obj, "languages")
-        
+        # github_utils.dumpList(obj, "languages")
+
         # milestones()
-        
+
         # notifications()
         
         # open_issues_count ???
@@ -586,7 +582,7 @@ class GitHubNeo:
         
         # statuses() ?
         
-        github_utils.dumpList(obj, "subscribers")
+        # github_utils.dumpList(obj, "subscribers")
         
         # tags()
         
@@ -596,11 +592,13 @@ class GitHubNeo:
         
         # teams()
         
-        # { "Last-Modified": "", "all": [0, 0, 1, 1, ..., (52 weeks?) ], "owner": [ 0, 0, 0, 0, ... ] }
-        print("  weekly_commit_count:   %s" % obj.weekly_commit_count())
+        # { "Last-Modified": "",
+        #   "all": [0, 0, 1, 1, ..., (52 weeks?) ],
+        #   "owner": [ 0, 0, 0, 0, ... ] }
+        # print("  weekly_commit_count:   %s" % obj.weekly_commit_count())
 
         return
-        
+
 
     def updateUser(self, githubObj, node):
         """
@@ -638,36 +636,6 @@ class GitHubNeo:
         
         return
 
-        # XXX dead code
-        # XXX need a general map of method/list-name to relationship label
-
-        relationship = "STARRED"
-
-        # TODO: cache user nodes - may also be on contributes, subscribes
-
-        self.updateRelationships(githubObj, "stargazers", "STARRED", repoNode)
-        
-        return
-
-        print("  bio:      %s" % obj.bio)
-        print("  company:  %s" % obj.company)
-        print("  location: %s" % obj.location)
-        print("  blog:     %s" % user.blog)
-        print("  plan:     %r" % user.plan)
-        
-        dumpList(obj, "followers")
-        dumpList(obj, "following")
-        dumpList(obj, "organizations")
-        dumpList(obj, "starred_repositories")
-        dumpList(obj, "subscriptions")
-        
-        # XXX why is this access different?
-        for repository in github3.repositories_by(user.login):
-            print("  repo:           %s" % repository)
-            pass
-
-        return
-
 
     def updateOrganization(self, name, org):
         """
@@ -675,7 +643,7 @@ class GitHubNeo:
         """
 
         graph = self.graph
-        
+
         # was it forked from something?
         print("GitHubNeo.updateOrg(): %s" % user)
 
@@ -705,8 +673,8 @@ class GitHubNeo:
             pass
 
         return False
-        
-    
+
+
     def _getCachedNeighbors(self, node, relationships = None):
 
         nodeType = self.getNodeType(node)
@@ -766,7 +734,8 @@ class GitHubNeo:
                 print("    %5d  %s" % ( len(neighbors), neoRelationship ))
                 pass
 
-            # XXX optional.  user may want to sort by something else (added date - but that's not supported yet)
+            # XXX optional.  user may want to sort by something else
+            #     (added date - but that's not supported yet)
 
             neighbors = sorted(neighbors, key = lambda _tuple : _tuple[1])
             
@@ -817,7 +786,8 @@ class GitHubNeo:
             entitySpec, _hop = boundary[0]
             boundary         = boundary[1:]
 
-            print("GitHubNeo.update: %s  %5d  %5d  %s" % ( _hop, len(boundary), helper.checkRatePointsLeft(), entitySpec, ))
+            print("GitHubNeo.update: %s  %5d  %5d  %s" %
+                  ( _hop, len(boundary), helper.checkRatePointsLeft(), entitySpec, ))
 
             nodeType = None
             extra    = None

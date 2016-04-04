@@ -5,6 +5,10 @@
 # TODO: User, Organization, Repository instead of user, org, repo
 # TODO: totally remove "repo"
 
+"""
+package oompa.tracking.github
+"""
+
 import json
 import os
 import sys       # XXX use logging system, instead of sys.stderr
@@ -151,13 +155,26 @@ class GitHub3Helper:
 
         # XXX
         config_base  = os.environ["HOME"]
-        
-        gitpass      = open(os.path.join(config_base, "%s.git.passphrase" % username)).read().strip()
 
-        self.github  = github3.login(username, gitpass)
+        gitpass      = None
+        token        = None
+        
+        token_path   = os.path.join(config_base, "%s.git.token" % username)
+
+        if os.path.exists(token_path):
+            token = open(token_path).read().strip()
+
+        else:
+            # TODO: crash if passphrase does not exist
+            gitpass = open(os.path.join(config_base, "%s.git.passphrase" % username)).read().strip()
+
+        self.github  = github3.login(username, password = gitpass, token = token)
+
+        # dump session headers, to check if auth token is really being used
+        # print("GH: %s" % self.github.session.headers)
 
         # XXX needs to go in a work folder
-        etags_path   = os.path.join(config_base, "etags.json")
+        etags_path   = os.path.join(config_base, "oompa", "github_meta_cache", "etags.json")
         self.etags   = EtagCache(etags_path)
 
         # TODO: lazy.  some clients may not need meta at all
@@ -232,7 +249,8 @@ class GitHub3Helper:
 
         if kind == "Repository" or kind == "repo":
             owner, repoName = name.split("/")
-            return github3.repository(owner, repoName)
+            # return github3.repository(owner, repoName)
+            return self.github.repository(owner, repoName)
 
         if kind is not None:
             print("  kind not recognized: %r" % kind)
@@ -306,7 +324,8 @@ class GitHub3Helper:
         if thing.type == "Organization":
             repos = thing.repositories(etag = etag)
         else:
-            repos = github3.repositories_by(thing.login, etag = etag)
+            # repos = github3.repositories_by(thing.login, etag = etag)
+            repos = self.github.repositories_by(thing.login, etag = etag)
             pass
         
         if sort == "time-newest-first":
@@ -342,6 +361,7 @@ class GitHub3Helper:
             etag = self.etags.get(githubObj, methodName)
             pass
 
+        # TODO: logging
         # print("GitHub3Helper.list(): %s - %s" % ( methodName, githubObj ))
         # print("  etag: %s" % etag)
 
@@ -359,9 +379,15 @@ class GitHub3Helper:
         #
         # we apparently need to drain the iterator, to get the correct etag
 
+        # print("    GitHub3Helper.list(): %s - iter etag, last_response, last_status: %s, %s, %s" % ( methodName, iterator.etag, iterator.last_response, iterator.last_status))
+        
         if use_etag:
             self.etags.set(githubObj, methodName, iterator.etag)
             pass
+        
+        if iterator.last_status == 304:
+            # print("      list not modified: %s" % methodName)
+            values = "no-change"
         
         return values
 
@@ -444,6 +470,7 @@ class GitHub3Helper:
         # experiment with avoiding rate limit crashes
         stall = None
         # stall = 1.0
+        # stall = 0.1
 
         if stall:
             print("# stalling %s sec between each repo, to try to avoid rate limit problems" % stall)
@@ -513,7 +540,7 @@ class GitHub3Helper:
             #    out_stream.write("    contributor: %s\n" % contributor)
             #    pass
 
-            if stall:
+            if stall is not None:
                 time.sleep(stall)
                 pass
             pass

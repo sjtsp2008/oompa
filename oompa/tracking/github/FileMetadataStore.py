@@ -21,6 +21,10 @@ class FileMetadataStore(GitHubMetadataStore):
     """
     filesystem-based GitHubMetadataStore
 
+      github_meta_cache/user/<username>/tracker.meta.json
+
+    (i think i was expecting more files per entity.  could simplify)
+
     """
 
     def __init__(self, config, githubHelper):
@@ -31,15 +35,20 @@ class FileMetadataStore(GitHubMetadataStore):
         self.root = config.get("github.meta.fs.root")
 
         if self.root is None:
-            self.root = os.path.join(os.environ["HOME"], "github_meta_cache")
+            self.root = os.path.join(os.environ["HOME"], "oompa", "github_meta_cache")
             pass
         
         return
     
 
-    def _getFolder(self, kind, name):
+    def _getFolder(self, kind, name = None):
 
-        return os.path.join(self.root, kind.lower(), name)
+        folder = os.path.join(self.root, kind.lower())
+
+        if name is not None:
+            folder = os.path.join(folder, name)
+
+        return folder
 
     
     def findEntityFolder(self, name, kind = None):
@@ -47,6 +56,8 @@ class FileMetadataStore(GitHubMetadataStore):
 
         """
 
+        xxx
+        
         if kind is not None:
             folder = self._getFolder(kind, name)
             if os.path.exists(folder):
@@ -60,10 +71,13 @@ class FileMetadataStore(GitHubMetadataStore):
             pass
 
         return None
+
+    def createFolder(self, kind, name = None):
+
+        # smoke out old-style
+        if name:
+            xxx
         
-
-    def createFolder(self, kind, name):
-
         folder = self._getFolder(kind, name)
 
         if os.path.exists(folder):
@@ -72,15 +86,16 @@ class FileMetadataStore(GitHubMetadataStore):
         os.mkdir(folder)
 
         return folder
-        
+
     
     def _getMetadataPath(self, entityMetadata):
 
-        folder = self._getFolder(entityMetadata.kind, entityMetadata.name)
+        folder = self._getFolder(entityMetadata.kind)
+        path   = os.path.join(folder, "%s.tracker.meta.json" % entityMetadata.name)
         
-        return os.path.join(folder, "tracker.meta.json")
+        return path
 
-
+    
     
     def _loadEntityMetadata(self, entityMetadata):
 
@@ -89,17 +104,17 @@ class FileMetadataStore(GitHubMetadataStore):
         # print("_loadEntityMetadata: %s - %s - %s" % ( entityMetadata.kind, entityMetadata.name, metadataPath ))
         
         if os.path.exists(metadataPath):
-            # print("  loading: %s" % metadataPath)
-            return json.load(open(metadataPath))
-
-        return {}
+            # print("FileMetadataStore._loadEntityMetadata - loading meta: %s" % metadataPath)
+            entityMetadata._meta = json.load(open(metadataPath))
+                                 
+        return
 
     
     def saveEntityMetadata(self, entityMetadata):
 
         metadataPath = self._getMetadataPath(entityMetadata)
 
-        # print("FileMetadataStore.saveEntityMetadata: %s" % metadataPath)
+        print("FileMetadataStore.saveEntityMetadata: %s - %s" % ( entityMetadata.name, metadataPath ))
 
         folder       = os.path.dirname(metadataPath)
         
@@ -110,9 +125,13 @@ class FileMetadataStore(GitHubMetadataStore):
 
         # XXX cheating
         meta = entityMetadata._meta
+
+        # print("META:")
+        # print(json.dumps(meta, indent = 2))
         
         file = open(metadataPath, "w")
-        json.dump(meta, file)
+        # json.dump(meta, file)
+        json.dump(meta, file, indent = 2)
         file.close()
 
         return
@@ -124,15 +143,16 @@ class FileMetadataStore(GitHubMetadataStore):
 
         return
 
-    
+
     def getNamesAndFolders(self, *names, mustExist = True):
         """
 
         currently may yield None as folder.
         XXX does not currently implement createFolders
 
-        
         """
+
+        xxx
         
         if not names:
 
@@ -174,25 +194,6 @@ class FileMetadataStore(GitHubMetadataStore):
 
         return
 
-
-    def getEntityMetadata(self, kind, name):
-        """
-        instantiate an EntityMetadata for the specified kind and name
-        """
-        
-        kind_root = os.path.join(self.root, kind)
-        childPath = os.path.join(kind_root, name)
-
-        entityMetadata               = EntityMetadata(kind, name, self)
-        entityMetadata._githubHelper = self._githubHelper
-
-        if os.path.isdir(childPath):
-            entityMetadata._meta = self._loadEntityMetadata(entityMetadata)
-            pass
-        
-        return entityMetadata
-
-    
     
     def getEntityMetadatas(self, *names, mustExist = True):
         """generate stream of EntityMetadata
@@ -211,15 +212,17 @@ class FileMetadataStore(GitHubMetadataStore):
 
         if not names:
 
+            # TODO: should be using an enumeration helper
+            
             # iterate over all registered entities
 
             for kind in self._kinds_lowered:
 
                 kind_root = os.path.join(self.root, kind)
-                
-                for filename in os.listdir(kind_root):
 
-                    entityMetadata = self.getEntityMetadata(kind, filename)
+                for filename in os.listdir(kind_root):
+                    name           = filename.split(".")[0]
+                    entityMetadata = self.getEntityMetadata(kind, name)
 
                     if entityMetadata is not None:
                         yield entityMetadata
@@ -231,29 +234,24 @@ class FileMetadataStore(GitHubMetadataStore):
 
         for kind, name in github_utils.getKindAndName(names):
 
-            folder = self.findEntityFolder(name, kind = kind)
-
-            if folder is None and mustExist:
-                xxx
-                pass
-            
-            # note: 
-
             github_obj = self._githubHelper.getGithubObject(name, kind = kind)
 
             # note that failures don't return None, they return a NullObject
             if github_obj:
-                # print("    github_obj: %s - %r" % ( github_obj.type, github_obj ))
-                folder = self.createFolder(github_obj.type, name)
-                # print("  created folder: %s" % folder)
+                folder = self.createFolder(github_obj.type)
                 pass
 
-            # print("GO: %r" % github_obj)
-            
             # TODO: should not lower - just use their type
-            kind = github_obj.type.lower()
+            kind           = github_obj.type.lower()
             
             entityMetadata = EntityMetadata(kind, name, self)
+            metadataPath   = self._getMetadataPath(entityMetadata)
+
+            if mustExist and not os.path.exists(metadataPath):
+                xxx
+                pass
+
+            self._loadEntityMetadata(entityMetadata)
             
             # yield name, folder
             yield entityMetadata
@@ -261,11 +259,16 @@ class FileMetadataStore(GitHubMetadataStore):
 
         return
 
+
+    
     def removeEntities(self, *entitySpecs):
         """
         delete entities from local tracking db
         """
 
+        # 20160328 - add poison until reorg to new scheme is complete
+        xxx
+        
         for entitySpec in entitySpecs:
 
             kindsNames = github_utils.getKindAndName([ entitySpec, ])
@@ -289,6 +292,42 @@ class FileMetadataStore(GitHubMetadataStore):
             pass
             
         return
+
+
+    def updateStorageScheme(self):
+
+        print("  root: %s" % self.root)
+
+        for kind in self._kinds_lowered:
+
+            kind_root = os.path.join(self.root, kind)
+
+            print("    kind_root: %s" % kind_root)
+            
+            for child in os.listdir(kind_root):
+
+                if child.endswith(".json"):
+                    continue
+
+                metadataPath = os.path.join(kind_root, child, "tracker.meta.json")
+                newPath      = os.path.join(kind_root, "%s.tracker.meta.json" % child)
+
+                print("      meta: %s" % metadataPath)
+                print("      new:  %s" % newPath)
+
+                if not os.path.exists(metadataPath):
+                    print("  must have already moved file")
+                    continue
+                
+                os.rename(metadataPath, newPath)
+                shutil.rmtree(os.path.dirname(metadataPath))
+                
+                # print("breaking after one - 1"); break
+
+            # print("breaking after one - 2"); break
+            
+        return
+
     
     pass
 

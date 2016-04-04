@@ -36,6 +36,7 @@ setup (
 
     scripts = [
         "scripts/tracker",
+        "scripts/github3-tests",
         ],
     
     test_suite       = 'nose.collector',

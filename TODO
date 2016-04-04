@@ -1,20 +1,35 @@
 Oompa TODO list
 ---------------
 
-(B) discovering a new org clobbers the day's report
-  - need to database the updates (or put them on a stream) and just render
-    across some time period
+- discover - subscriptions should be links to repos
+
+- discover - actual links to followers/following
+
+- discover - start writing out an update log, that could be used to render the discover report
+  - datetime { kind:..., id:..., updates: [] }
+
+- tracker update - record updates to a log (same bus as discover), and render
+  updates in html
+    - links to source repos
+    - collapsible
+    - include actual git logs
+
+- submit pull request to github3.py (for repo fix)
+  - or, is that completely in my code?
+  - will need to re-do the change on a branch
+
+- discover - if github returns list of all empty strings, it's messed up, and we need to
+  pretend it never happened, and probably bail out, because all of the other
+  results for the run will be bad, too
 
 - html discover report - i care less about comings and goings of public members than i expected
-  - option to suppress, until i can guess at tags
-
-- html discover report - actual links to followers/following
+  - option to suppress, until i can infer tags (using tag or belief propagation with topic models)
 
 - discover - html report - show readme for all new projects
   - because it's still hard to decide if it's worth a click
 
 - discover - html report - maybe show a description of the parent entity, for projects?
-  - could possibly nix an entity
+  - could possibly help to nix an entity
     - e.g., "i don't really care about ecmascript right now" ...
 
 - discover - html report -
@@ -40,12 +55,12 @@ Oompa TODO list
   - using topbox (or gensim)
   - https://github.com/clips/topbox
 
-
 - track - handle "re-homing" of projects
   - e.g., moving from jupyter-incubating/ to jupyter
-  - can do this "offline" - look for redirects?
+  - can we do this "offline" - look for redirects?
 
 - discover feedback-in-interface - need another category for "monitor"
+    - a sort of quarantine until more knowledge
   - to handle the repos that are still empty when we discover
 
 - user tag system
@@ -58,8 +73,7 @@ Oompa TODO list
   - simple at first
   - also needs topic modeling
 
-- checkout - don't add a repo to project-tags.tsv a second time
-  - check if it's already there
+- checkout - don't add a repo to project-tags.tsv a second time, if it's already in tags
   
 - discover - don't show starred projects that i'm already tracking
   - or, maybe an option to indicate that you are already tracking
@@ -70,13 +84,11 @@ Oompa TODO list
     - presented and not tracked
   - could be more explicit, through a web ifc
 
-- in normal tracker discover, indicate if i'm already tracking a project
-  - and don't open tab
-  
-- in normal tracker discover, only open a tab once - keep track of tabs already opened
-  - some days, several tracked people star the same new project
+- discover - indicate if i'm already tracking a project
 
-- in normal tracker discover, indicate if i've checked out and decided-not-interested in project
+- discover - indicate if a project is starred by multiple people i'm tracking
+
+- discover - indicate if i've checked out and decided-not-interested in project
   - esp if it is forked or fully moved/renamed to different owner
 
 - tool to help manage tags backfill
@@ -90,7 +102,10 @@ Oompa TODO list
   - so far, simplest has been do untrack, and then re-co
 
 - integrate with https://github.com/cantino/huginn
-  -
+  - ruby-based charlotte/oompa - agents that react to events
+    - "hackable Yahoo! Pipes plus IFTTT on your own server"
+  - or maybe luigi?  (python)
+
 
 - tracker add-tag
   - vs having to edit

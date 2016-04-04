@@ -61,18 +61,25 @@ from oompa.tracking.github               import github_utils
 
 
 
-def setup_logging(stdout = False):
+def setup_logging(stdout = False, level = None):
     """
     not all commands should log.  
     """
 
+    if level is None:
+        level = logging.INFO
+    
     # set log_path to None to test/debug logging itself (will go to console)
     # TODO: set up the tee - add another handler
 
     log_path = None
     
     if not stdout:
-        log_base = os.path.join(os.environ.get("HOME"), "tracker-logs")
+
+        # XXX get from some config
+        oompa_base = os.path.join(os.environ.get("HOME"), "oompa")
+        
+        log_base = os.path.join(oompa_base, "tracker-logs")
         log_path = os.path.join(log_base, 
                                 "%s.tracker.log" % datetime.datetime.today().strftime("%Y%m%d"))
     
@@ -86,10 +93,9 @@ def setup_logging(stdout = False):
         pass
     
     logging.basicConfig(filename = log_path,
-                        level    = logging.INFO,
+                        level    = level,
                         format   = '%(asctime)s %(levelname)s %(message)s',
                         datefmt  = '%Y%m%d-%H:%M:%S')
-    
     return
     
 
@@ -345,37 +351,26 @@ def get_description(project_urls):
 #
 
 @cli.command(help = "discover updates around github neighborhood of interest")
-@click.option("--verbose",            is_flag = False)
+@click.option("--verbose",            is_flag = True)
+@click.option("--log-http",           is_flag = True)
+@click.option("--no-etag",            is_flag = True)
 @click.option("--format", nargs =  1, default = "html")
 @click.argument('args',   nargs = -1)
 
 
-def discover(args, verbose = False, format = None):
+def discover(args, verbose = False, format = None, log_http = False, no_etag = False):
 
-    # try to trace all http traffic to github - i have not gotten this to work yet
-    traceHTTP = False
+    if log_http:
+        # set to debug to see github3 and http logging
+        setup_logging(stdout = True, level = logging.INFO)
+        # setup_logging(stdout = True, level = logging.DEBUG)
     
-    if traceHTTP:
-        # XXX the urllib3 logging doesn't work?
-        import logging
-
-        stream_handler = logging.StreamHandler()
-        formatter      = logging.Formatter('%(asctime)s %(levelname)s %(message)s')
-
-        stream_handler.setFormatter(formatter)
-        
-        logger = logging.getLogger('requests.packages.urllib3')
-        logger.setLevel(logging.DEBUG)
-        logger.addHandler(stream_handler)
-        
-        logger = logging.getLogger('github3')
-        logger.addHandler(stream_handler)
-        
-        logger.setLevel(logging.DEBUG)
-        pass
-
     githubTracker = GitHubTracker(config)
 
+    if no_etag:
+        githubTracker.use_etag = False
+        pass
+    
     githubTracker.printRatePointsLeft("rate points before")
     result        = githubTracker.discover(*args,
                                            format  = format,
@@ -396,12 +391,14 @@ def undiscover(entities):
     
 
 
-@cli.command(help = "list the entities currently being tracked")
+@cli.command(help = "list the entities currently being discovered/tracked")
 @click.argument('args', nargs = -1)
 
-def tracking(args):
+def discovering(args):
     """
     XXX bad command name - implies that this is related to co/track, versus discover/track
+
+    TODO: maybe just use --list in discover()?
 
     TODO: able to filter by pattern
     TODO: able to sort by alph (default) or date-added
@@ -419,6 +416,20 @@ def tracking(args):
 # the discovery subsystem
 #
 # ####
+
+
+@cli.command(help = "temp command to migrate to new storage scheme")
+
+def updateEntityStore():
+
+    githubTracker = GitHubTracker(config)
+
+    githubTracker._metadataStore.updateStorageScheme()
+    
+    return
+    
+# add alias
+cli.add_command(updateEntityStore, "update-entity-store")
 
 
 

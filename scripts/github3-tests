@@ -7,9 +7,12 @@
 #
 
 import argparse
+import logging
 import os
 import sys
+import time
 
+import click
 import github3
 import yaml
 
@@ -19,6 +22,7 @@ from oompa.tracking.github.GitHub3Helper import GitHub3Helper
 
 
 dumpList = github_utils.dumpList
+
 
 
 
@@ -36,6 +40,17 @@ args          = parser.parse_args()
 # XXX use yaml
 config = {}
 
+# TODO: able to turn on with option (e.g., --log)
+logging.basicConfig(stream=sys.stdout, level=logging.DEBUG)
+
+
+# note that these are not necessary, if you just do the basicConfig above
+#
+# urllib3_logger = logging.getLogger('requests.packages.urllib3')
+# github3_logger = logging.getLogger('github3')
+# 
+# github3_logger.setLevel(logging.DEBUG)
+# urllib3_logger.setLevel(logging.DEBUG)
 
 # XXX still working this out - alternate root when doing aggressive caching for large two-out experiments
 
@@ -48,10 +63,7 @@ helper    = GitHub3Helper(config)
 
 # github_utils.dumpSlots(github3, "github3 module")
 
-
 print("rate points before: %s" % helper.checkRatePointsLeft())
-
-
 
 if args.command == "repos":
 
@@ -72,31 +84,47 @@ elif args.command == "info":
     firstArg = args.extraArgs[0]
 
     if firstArg == "me":
-
+        #
+        # report information about your account
+        #
         me  = helper.github.me()
 
         github_utils.dumpSlotValues(me)
 
         # default rate is 5000/hr
-        # print("  remaining rate limit: %s" % me.ratelimit_remaining)
+        print("  remaining rate limit: %s" % me.ratelimit_remaining)
 
         sys.exit()
         
     elif firstArg == "github3":
+
+        # the github3 module itself (show all slots available)
         github_utils.dumpSlots(github3, "github3 module")
         sys.exit()
+
     elif firstArg == "github":
+
         github_utils.dumpSlots(gitHelper.github, "github obj")
         sys.exit()
         pass
-    
+
     for kind, name, obj in helper.getKindNameAndObject(args.extraArgs):
 
         print("%s: %s - %s" % ( kind, name, obj.name ))
 
         # common across User and Organization
         print("  url:          %s" % obj.html_url)
-        
+
+        # XXX diagnosing why starred_repositories don't report full_name properly
+        if 0:
+            for item in obj.starred_repositories():
+                print("   ITEM: %r" % item)
+                print("     dir: %s" % dir(item))
+                print("     homepage: %s" % item.homepage)
+                xxx
+                pass
+            xxx
+            
         if kind == "User":
 
             user = obj
@@ -107,18 +135,17 @@ elif args.command == "info":
             print("  blog:     %s" % user.blog)
             print("  plan:     %r" % user.plan)
 
+            # XXX 20160325 - trying to isolate a false rate-limit problem
+            
             dumpList(obj, "followers")
             dumpList(obj, "following")
             dumpList(obj, "organizations")
             dumpList(obj, "starred_repositories")
             dumpList(obj, "subscriptions")
-            
+
             # XXX why is this access different?
             for repository in github3.repositories_by(user.login):
                 print("  repo:           %s" % repository)
-                pass
-
-            pass
 
         elif kind == "Organization":
 

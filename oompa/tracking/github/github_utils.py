@@ -1,5 +1,5 @@
 #
-#
+# github_utils.py
 #
 
 """
@@ -9,6 +9,7 @@ TODO: support for metering
 """
 
 import os
+import time
 
 import github3
 
@@ -147,17 +148,30 @@ def dumpSlotValues(obj, label = None, private = False):
 
 
 
-def dumpList(obj, slot, pad = 15):
+def dumpList(obj, slot, pad = 20):
     """
     print the list returned by an object method
+
+    obj is a github3 object (users.User, org.Organization)
 
       e.g., dumpList(user, "followers")
     """
     
     formatStr = "  %%-%ds  %%s" % pad
 
+    # TODO: arrange for each http get to stall slightly
+    stall = None
+    # stall = 0.05
+    
+    # print("# dumpList: %s - %s" % ( slot, obj.__class__ ))
+
+    # the list invokes a function (probably a rest call, ultimately)
     for value in getattr(obj, slot)():
         print(formatStr % ( slot, value ))
+
+        if stall is not None:
+            time.sleep(stall)
+            
         pass
 
     return
@@ -181,7 +195,9 @@ officialKind_d = {
 def getKindAndName(args):
     """
 
+    args can be "user:<githubUsername>", "org:yahoo", "http://github.com/yahoo/someProject"
 
+    note: does not try to guess between user and org right now
     """
 
     for name in args:
@@ -193,6 +209,8 @@ def getKindAndName(args):
             name = name[len("http://github.com/"):]
             pass
 
+        # if 
+        
         if "/" in name:
             yield "Repository", name
             continue

@@ -42,7 +42,8 @@ class TagManager:
 
         # XXX what is current best practice for stashing metadata?
         home             = os.environ["HOME"]
-        self._tags_path  = os.path.join(home, ".oompa", tags_filename)
+        # self._tags_path  = os.path.join(home, ".oompa", tags_filename)
+        self._tags_path  = os.path.join(home, "oompa", "tags", tags_filename)
 
         self._tags_db        = None
 

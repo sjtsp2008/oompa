@@ -6,6 +6,9 @@
 package oompa.tracking.github
 """
 
+from oompa.tracking.github.EntityMetadata       import EntityMetadata
+
+
 
 class GitHubMetadataStore:
     """base class for snapshotting metadata about github objects (users,
@@ -37,6 +40,19 @@ class GitHubMetadataStore:
         raise NotImplementedError
 
 
+    def getEntityMetadata(self, kind, name):
+        """
+        instantiate an EntityMetadata for the specified kind and name
+        """
+
+        entityMetadata               = EntityMetadata(kind, name, self)
+        entityMetadata._githubHelper = self._githubHelper
+
+        self._loadEntityMetadata(entityMetadata)
+        
+        return entityMetadata
+
+    
     def getEntityMetadatas(self, *names, mustExist = True):
         """generate stream of EntityMetadata
 
