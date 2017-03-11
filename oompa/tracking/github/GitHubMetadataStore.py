@@ -63,6 +63,7 @@ class GitHubMetadataStore:
         
         createFolders is used as a flag to be able to not return a
         metadata if the entity has not been discovered before
+
         """
 
         raise NotImplementedError
@@ -78,6 +79,12 @@ class GitHubMetadataStore:
     # get
 
     # set
+
+    def close(self):
+
+        # default implementation does nothing
+        
+        return
     
     pass
 

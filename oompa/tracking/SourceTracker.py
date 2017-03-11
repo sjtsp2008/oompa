@@ -10,18 +10,19 @@ packge oompa.tracking
 import datetime
 import logging
 import os
+import random
 import re
 import shutil
 import sys          # for stdout
 
-from oompa.tracking         import file_utils
+from oompa.tracking             import file_utils
 
-from oompa.tracking.Project import Project
-from oompa.tracking         import vcs_utils
-from oompa.tracking         import VCSBackendFactory
+from oompa.tracking.Project     import Project
+from oompa.tracking             import vcs_utils
+from oompa.tracking             import VCSBackendFactory
 
-from oompa.tracking.Project      import NotAProjectException
-from oompa.tracking.TagManager   import TagManager
+from oompa.tracking.Project     import NotAProjectException
+from oompa.tracking.TagManager  import TagManager
 
 
 class SourceTracker:
@@ -54,10 +55,32 @@ class SourceTracker:
 
         self._tag_mgr        = TagManager(config,
                                           tags_filename = "project-tags.tsv")
+
+        # XXX this is kind of a wart - sampling
+        self._sampleProb = None
+        self._sampleProb = 0.20
         
         return
 
 
+    def setSampleProb(self, sampleProb):
+
+        if sampleProb is None:
+            # TODO: does this mean "keep the default", or "really set it to None again"?
+            return
+        
+        if isinstance(sampleProb, str):
+            sampleProb = int(sampleProb)
+        
+        if isinstance(sampleProb, int):
+            sampleProb = sampleProb / 100.0
+
+        self._sampleProb = sampleProb
+
+        return
+
+    
+    
     def log(self, message = None):
         """
         log the message at info level
@@ -229,6 +252,7 @@ class SourceTracker:
         return
 
 
+
     def _getTagsFromProjectFolder(self, tags, project_folder):
 
         tags        = []
@@ -255,6 +279,8 @@ class SourceTracker:
         """
 
         self.log("SourceTracker.checkout(): %s %s" % ( source_spec, rest ))
+
+        source_spec = vcs_utils.normalize_source_spec(source_spec)
         
         vcs_type = vcs_utils.detect_vcs_type_from_source(source_spec)
 
@@ -373,7 +399,7 @@ class SourceTracker:
             self.log()
             pass
 
-        return
+        return result
 
     
     def updateFolder(self, folder, verbose = False):
@@ -386,9 +412,12 @@ class SourceTracker:
 
         vcs_type = vcs_utils.determine_vcs_type(project_path = folder)
 
-        # self.log("SourceTracker.updateFolder(): %s (vcs_type: %s)" % ( folder, vcs_type ))
-
         if vcs_type:
+
+            if self._prob is not None and random.random() > self._prob:
+                # self.log("  skipping (not sampled): %s" % folder)
+                return "skipped"
+            
             return self.updateProject(folder, verbose = verbose)
 
         children = os.listdir(folder)
@@ -403,35 +432,124 @@ class SourceTracker:
         return
         
 
-    def update_all(self, verbose = False):
+    def findProjectsUnderFolder(self, folder):
+
+        # print("findProjectsUnderFolder(): %s" % ( folder, ))
+        
+        if isinstance(folder, list):
+            for _folder in folder:
+                for project in self.findProjectsUnderFolder(_folder):
+                    yield project
+                    pass
+                pass
+            return
+
+        #
+        # determine if it's a project
+        #
+        vcs_type = vcs_utils.determine_vcs_type(project_path = folder)
+
+        if vcs_type:
+            # print("    it's a project: %s - %s" % ( vcs_type, folder, ))
+            yield folder
+            return
+
+        #
+        # not a project.  find children
+        #
+        children = os.listdir(folder)
+
+        for child in children:
+            childFolder = os.path.join(folder, child)
+            for project in self.findProjectsUnderFolder(childFolder):
+                yield project
+                pass
+            pass
+
+        return
+
+
+    def sampleProjects(self, projects, sampleProb):
+        """
+        TODO: move outward - general
+        """
+        
+        for project in projects:
+            if random.random() <= sampleProb:
+                yield project
+                pass
+            pass
+        
+        return
+    
+    
+    def updateAll(self, verbose = False):
         """
         update all projects under the root tracking folder
 
         """
 
-        return self.updateFolder(self.tracking_folder, verbose = verbose)
+        projects = self.findProjectsUnderFolder(self.tracking_folder)
+
+        if self._sampleProb is not None:
+            self.log("  using sampling probability %s" % self._sampleProb)
+
+            # TODO: shuffle, to remove bias toward earlier projects, if limiting number
+            #       of projects (but then re-sort to original order
+            #       after sampling)
+            
+            projects = self.sampleProjects(projects, self._sampleProb)
+            pass
+
+        for project in projects:
+
+            # TODO: put this under some verbosity flag - i sometimes need to find some
+            #       repo that must have switched to private, and causes update to
+            #       stall (with a pop-up dialog to allow git to use my keychain github
+            #       password - i don't have keychain set up)
+            print("  updating: %s" % project)
+
+            self.updateProject(project, verbose = verbose)
+            pass
+            
+        return
         
 
-    def update(self, *projects, verbose = False):
+    # XXX weird py 2 vs 3 issue - the commented-out version (which seems fine) is a syntax error in 2.7
+    # def update(self, *projects, verbose = False):
+    def update(self, *projects, **kwargs):
+        """update some or all projects that have been previously tracked
+
+        projects, if supplied, is a list of paths, which may or may
+        not be under tracking tree, and might be parent folders (and
+        thus not really projects)
+
+        TODO: better to get a stream of real projects, and optionally filter
+              (and maybe stall)
+
         """
 
-        update some or all projects that have been previously tracked
-
-        projects, if supplied, is a list of paths, which may or may not be under tracking tree
-
-        """
+        verbose = kwargs.get("verbose")
         
         self.log()
-        self.log("# %s - start tacker update" % datetime.datetime.today().strftime("%Y%m%d-%H:%M"))
+        self.log("start tacker update")
         self.log()
 
+        # TODO: get stream of all projects
+        
         if projects:
+
+            # convert from tuple to list
+            projects = list(projects)
+            projects = self.findProjectsUnderFolder(projects)
+
+            # project at this point is just a sequence of folders
             for project in projects:
-                result = self.updateFolder(project, verbose = verbose)
+                result = self.updateProject(project, verbose = verbose)
                 pass
             pass
         else:
-            self.update_all(verbose = verbose)
+            self.updateAll(verbose = verbose)
             pass
         
         self.log()
@@ -458,7 +576,7 @@ class SourceTracker:
         return None
     
         
-    def getProjects(self, folder, patterns = None):
+    def getProjects(self, folder, patterns = None, depth = None):
         """
         generate stream of all Projects at and below folder
 
@@ -469,6 +587,8 @@ class SourceTracker:
               does not matter
         """
 
+        # print("# getProjects: %s (depth: %s)" % ( folder, depth ))
+        
         if patterns:
 
             # base_folder = folder
@@ -514,23 +634,41 @@ class SourceTracker:
         # note: we can't just check if it's a folder - has to be parseable as a real project
         try:
             yield Project(folder, self)
-        except NotAProjectException:
-            #
-            # folder was not a project.  dive in to children to find projects
-            #
-            children = os.listdir(folder)
-            
-            for child in children:
 
-                # XXX maybe a bad idea to put src/tracking under src/
-                if child == "tracking":
-                    continue
+            # can't have sub-Projects, right?
+            return
+        except NotAProjectException:
+            pass
+
+        #
+        # folder was not a project.  dive in to children to find projects
+        #
+        if depth is not None:
+            nextDepth = depth - 1
+
+            if nextDepth < 0:
+                return
+        else:
+            nextDepth = None
+
+        children = os.listdir(folder)
+            
+        for child in children:
+
+            if child == ".git":
+                continue
+            
+            # XXX maybe a bad idea to put src/tracking under src/
+            if child == "tracking":
+                continue
                 
-                childFolder = os.path.join(folder, child)
-                if os.path.isdir(childFolder):
-                    for project in self.getProjects(childFolder):
-                        yield project
-                        pass
+            childFolder = os.path.join(folder, child)
+
+            # print("#   child: %s" % childFolder)
+
+            if os.path.isdir(childFolder):
+                for project in self.getProjects(childFolder, depth = nextDepth):
+                    yield project
                     pass
                 pass
             pass
@@ -644,21 +782,26 @@ class SourceTracker:
         
         return
 
-
-    def findProjects(self, *patterns, depth = None):
+    # XXX same stupid 2 vs 3 problem
+    # def findProjects(self, *patterns, depth = None):
+    def findProjects(self, *patterns, **kwargs):
         """
         simple grep over source tree folders/files
 
-        TODO: currently does depth-first.  probably want breadth-first
-              
+        TODO: breadth first, bail early - currently does depth-first
+        TODO: getProjects supports a patterns parameter
         """
 
+        depth      = kwargs.get("depth")
+        
         re_pattern = "|".join([ ".*?%s" % pattern for pattern in patterns ])
         regex      = re.compile(re_pattern, re.IGNORECASE)
 
-        for project in self.getProjects(self.tracking_folder):
+        # if depth is not None:
+        #    depth += 1
+        
+        for project in self.getProjects(self.tracking_folder, depth = depth):
             if regex.match(project.path) is not None:
-                # yield project.path
                 yield project
                 pass
             pass
@@ -725,6 +868,28 @@ class SourceTracker:
             key = key + ".git"
         
         return self._tag_mgr.setTagInfo(key, tags, description)
+
+    
+    def reset_git(self, project_path, verbose = False):
+        """special-case (backend-specific) hack, perform a hard reset because
+        git can get itself in a knot.
+
+        project_path can be the git folder, or the oompa parent folder
+
+        """
+
+
+        project  = Project(project_path, self)
+        project.setVerbose(verbose)
+        result   = project.reset()
+
+        if result is not None and result != 0:
+            self.log("  reset_git result: %s - %s\n" % ( project_path, result, ))
+            # XXX only if something happened
+            self.log()
+            pass
+
+        return result
     
     pass
     

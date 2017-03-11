@@ -24,8 +24,6 @@ from oompa.tracking.github.GitHub3Helper import GitHub3Helper
 dumpList = github_utils.dumpList
 
 
-
-
 #
 # main
 #
@@ -117,10 +115,15 @@ elif args.command == "info":
 
         # XXX diagnosing why starred_repositories don't report full_name properly
         if 0:
+            print("    repository object dump")
             for item in obj.starred_repositories():
                 print("   ITEM: %r" % item)
-                print("     dir: %s" % dir(item))
-                print("     homepage: %s" % item.homepage)
+                # print("     dir: %s" % dir(item))
+                print("     full_name: %r" % item.repository.full_name)
+                print("     name:      %r" % item.repository.name)
+                print("     homepage:  %s" % item.repository.homepage)
+
+                github_utils.dumpSlotValues(item)
                 xxx
                 pass
             xxx

@@ -106,6 +106,7 @@ class FileMetadataStore(GitHubMetadataStore):
         if os.path.exists(metadataPath):
             # print("FileMetadataStore._loadEntityMetadata - loading meta: %s" % metadataPath)
             entityMetadata._meta = json.load(open(metadataPath))
+            entityMetadata._path = metadataPath
                                  
         return
 
@@ -113,11 +114,10 @@ class FileMetadataStore(GitHubMetadataStore):
     def saveEntityMetadata(self, entityMetadata):
 
         metadataPath = self._getMetadataPath(entityMetadata)
-
-        print("FileMetadataStore.saveEntityMetadata: %s - %s" % ( entityMetadata.name, metadataPath ))
-
         folder       = os.path.dirname(metadataPath)
         
+        # print("FileMetadataStore.saveEntityMetadata: %s - %s" % ( entityMetadata.name, metadataPath ))
+
         if not os.path.exists(folder):
             # TODO: the parent still might not exist
             os.mkdir(folder)
@@ -144,7 +144,7 @@ class FileMetadataStore(GitHubMetadataStore):
         return
 
 
-    def getNamesAndFolders(self, *names, mustExist = True):
+    def getEntityMetadatas(self, *names, mustExist = True):
         """
 
         currently may yield None as folder.
@@ -153,7 +153,7 @@ class FileMetadataStore(GitHubMetadataStore):
         """
 
         xxx
-        
+
         if not names:
 
             # iterate over all
@@ -239,7 +239,9 @@ class FileMetadataStore(GitHubMetadataStore):
             # note that failures don't return None, they return a NullObject
             if github_obj:
                 folder = self.createFolder(github_obj.type)
-                pass
+            else:
+                print("# no github_obj: %s - %s" % ( kind, name ))
+                continue
 
             # TODO: should not lower - just use their type
             kind           = github_obj.type.lower()
@@ -266,31 +268,11 @@ class FileMetadataStore(GitHubMetadataStore):
         delete entities from local tracking db
         """
 
-        # 20160328 - add poison until reorg to new scheme is complete
-        xxx
-        
-        for entitySpec in entitySpecs:
-
-            kindsNames = github_utils.getKindAndName([ entitySpec, ])
-            kindsNames = list(kindsNames)
-            kind, name = kindsNames[0]
-
-            if kind is None:
-                # try both kinds.  but there can only be one of the two
-                xxx
-                pass
-            
-            folder = self.findEntityFolder(name, kind = kind)
-
-            if folder is None:
-                print("XXX entity not tracked: %s (kind: %s)" % ( entitySpec, kind ))
-                continue
-
-            print("# removing folder: %s" % folder)
-
-            shutil.rmtree(folder)
+        for entityMetadata in self.getEntityMetadatas(*entitySpecs, mustExist = True):
+            print("    removing: %s" % entityMetadata._path)
+            os.remove(entityMetadata._path)
             pass
-            
+
         return
 
 

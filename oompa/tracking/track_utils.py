@@ -26,7 +26,7 @@ class Tracker:
 
         self.config     = config
 
-	tracking_folder = config is not None and config.get('tracking.folder')
+        tracking_folder = config is not None and config.get('tracking.folder')
 
         if not tracking_folder:
             # XXX probably does not work on windows

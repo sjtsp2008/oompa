@@ -1,39 +1,57 @@
 Oompa TODO list
 ---------------
 
-- discover - subscriptions should be links to repos
+- "tracker find" is breadth-first
+- "tracker find" is depth-limited by default
+- "tracker find" can takes args to just search a sub-tree
 
-- discover - actual links to followers/following
+- update - new support command "oompa reset /Users/jeff/src/tracking/cloud/db/orientechnologies/orientdb/orientdb"
+  - for when git gets stupidly stuck
+  - (cd ...; git reset --hard origin/master)
 
-- discover - start writing out an update log, that could be used to render the discover report
-  - datetime { kind:..., id:..., updates: [] }
+- update with sampling - maybe the sampling should be at a higher-level in the tree, to
+  ensure that related packages are updated to gether
+  - e.g., analytics, cloud/db, games, dev, ...
+    - just make sure that it's about N% of the total number of repos
 
-- tracker update - record updates to a log (same bus as discover), and render
-  updates in html
-    - links to source repos
+- discover - separate reporting from the update stream
+    - write report from what's already been recorded
+  - write html report from organized updates
+    - next: will need to get README
+      - cache it?
+    - followers/following/starred_repositories/subscriptions
+  - finish date-range support
+
+- discover report - subscriptions should be links to repos
+
+- discover report - actual links to followers/following
+
+- tracker update - record updates to a log (same log bus as discover), and render updates in html
+  - over any time frame
+  - links to source repos
     - collapsible
     - include actual git logs
 
-- submit pull request to github3.py (for repo fix)
-  - or, is that completely in my code?
-  - will need to re-do the change on a branch
+- update - see if there is a way to safely recover from the frequent false "umerged files" problem
+    - git reset --hard origin/master; git pull
+  - but, have to be careful of *real* edits
 
-- discover - if github returns list of all empty strings, it's messed up, and we need to
-  pretend it never happened, and probably bail out, because all of the other
-  results for the run will be bad, too
+- update - if we get a "remote: Repository not found", move the repo to a graveyard folder tree
+  - and maybe launch a "nearby" search for replacement
+    - similar name in same org?
+    - has org started moving projects to another org?
+
+- yaml-based config
 
 - html discover report - i care less about comings and goings of public members than i expected
   - option to suppress, until i can infer tags (using tag or belief propagation with topic models)
-
-- discover - html report - show readme for all new projects
-  - because it's still hard to decide if it's worth a click
 
 - discover - html report - maybe show a description of the parent entity, for projects?
   - could possibly help to nix an entity
     - e.g., "i don't really care about ecmascript right now" ...
 
 - discover - html report -
-  - able to mark any project as:
+  - able to mark/annotate any project as:
     - track-it
     - like-it (but don't track)
     - dont-care
@@ -55,9 +73,18 @@ Oompa TODO list
   - using topbox (or gensim)
   - https://github.com/clips/topbox
 
-- track - handle "re-homing" of projects
-  - e.g., moving from jupyter-incubating/ to jupyter
+- track - automatically handle "re-homing" of projects
+  - on github, repos frequently change parents
+    - e.g., moving from jupyter-incubating/ to jupyter
+    - e.g., https://github.com/jakevdp/mpld3.git to https://github.com/mpld3/mpld3.git
+  - note: the old links continue to work, but we could drift away
+  - so, re-checkout under the new parent, fix tags, etc.
+  - manual is a pain
   - can we do this "offline" - look for redirects?
+
+- new command to synch tracking with src
+  - orphaned links in tracking
+  - untracked projects in src
 
 - discover feedback-in-interface - need another category for "monitor"
     - a sort of quarantine until more knowledge
@@ -65,6 +92,9 @@ Oompa TODO list
 
 - user tag system
   - able to percolate tags based on starred/works-with/contributes-to/forks/...
+
+- discover - able to detect project renames by watching for un-starred and new-starred with same name
+  - maybe able to do that with a more simple redirect from github?
 
 - (abstract) initial support for suggesting where a new project should be checked out
   - topic modeling, probably
@@ -91,6 +121,9 @@ Oompa TODO list
 - discover - indicate if i've checked out and decided-not-interested in project
   - esp if it is forked or fully moved/renamed to different owner
 
+- discover - handle microsoft-style carriage-returns vs newline
+  - sometimes get full-content blurbs
+
 - tool to help manage tags backfill
   - from either full project list, or projects in tracker logs, identify the ones that
     have either no entry at all, or the default "???" entry
@@ -101,7 +134,7 @@ Oompa TODO list
     when i have not changed anything
   - so far, simplest has been do untrack, and then re-co
 
-- integrate with https://github.com/cantino/huginn
+- integrate with https://github.com/cantino/huginn for reactions - build a project, test it, ...
   - ruby-based charlotte/oompa - agents that react to events
     - "hackable Yahoo! Pipes plus IFTTT on your own server"
   - or maybe luigi?  (python)
@@ -115,6 +148,12 @@ Oompa TODO list
   - in case i can't get to them right away
   - for better integration in to RADAR/journal/whatever
   - for timelines/memory
+
+- update - need to support doing 10% every day
+  - runs for hours, affects everything
+    - probably annoys github
+    - probably causes some verizon penalty
+    
 
 - continue with tracker get-tags atomspace
   - i think i need to improve SourceTracker.getProjects

@@ -31,22 +31,18 @@ class Project:
         if self.vcs_type is None:
             raise NotAProjectException(path)
 
+        # the root folder containing .git/, .hg/, whatever
         self._vcs_folder = vcs_utils.find_vcs_folder(project = self)
 
+        # class that can execute "protocol" for git, hg, bzr, ...
         self._backend    = None
 
-        # if out_stream is None:
-        #    out_stream = tracker.out_stream
-        #    pass
-        #
-        # self.out_stream  = out_stream
-        # 
-        # # XXX ???
-        # # XXX bridging to new logging system
-        # self._out_stream = self._tracker.out_stream
+        # we don't need this ourselves - just pass through to backend
+        # self._verbose = False
         
         return
 
+    
     def basename(self):
 
         return os.path.basename(self.path)
@@ -91,12 +87,27 @@ class Project:
         return self._backend
 
 
+    def setVerbose(self, verbose):
+
+        # note that we ourselves don't care about the flag
+        
+        self._get_backend().verbose = verbose
+        
+
     def update(self):
         """
         use project's VCS backend to update source from remote
         """
         return self._get_backend().update(self)
 
+    
+    def reset(self):
+        """
+        use project's VCS backend to perform a reset.  mostly for git strangeness, i think
+        """
+        return self._get_backend().reset(self)
+
+    
     def getSourceURL(self):
 
         return self._get_backend().getSourceURL(self)

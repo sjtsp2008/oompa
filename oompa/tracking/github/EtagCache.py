@@ -1,14 +1,23 @@
 #
+# EtagCache.py
 #
-#
+
+"""
+package oompa.tracking.github
+"""
 
 import json
 import os
 
 
 class EtagCache:
-    """
+    """manage github etags, which are used to cache results locall -
+    request only changes since some snapshot
+
+    tags are per thing per feature (e.g. 
+
     TODO: do this with personal sqlite3, or couch, or mongo, or something
+
     """
     
     def __init__(self, path):
@@ -20,6 +29,11 @@ class EtagCache:
         #
         self.etags_d = self._load()
 
+        self._dirty = False
+
+        # mostly used during testing
+        self._updateEtags = True
+        
         return
 
 
@@ -33,10 +47,12 @@ class EtagCache:
 
     def _save(self):
 
-        file = open(self.path, "w")
-        json.dump(self.etags_d, file, indent = 2)
-        file.close()
-
+        if self._dirty:
+            stream = open(self.path, "w")
+            json.dump(self.etags_d, stream)
+            stream.close()
+            self._dirty = False
+            
         return
     
 
@@ -64,6 +80,9 @@ class EtagCache:
 
         # print("  EtagCache.set(): %s %s %s" % ( thing, qualifier, etag ))
 
+        if not self._updateEtags:
+            return
+        
         if self.get(thing, qualifier) == etag:
             return
 
@@ -72,9 +91,16 @@ class EtagCache:
 
         for_key[qualifier] = etag
 
-        # TODO: set dirty marker, just flush at end
-        self._save()
+        self._dirty = True
         
         return
 
+    
+    def close(self):
+
+        self._save()
+
+        return
+
+    
     pass

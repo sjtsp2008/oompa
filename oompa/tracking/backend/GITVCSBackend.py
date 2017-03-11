@@ -130,7 +130,8 @@ class GITVCSBackend(ExecVCSBackend):
 
     def getSourceURL(self, project):
 
-        config_path = os.path.join(project.get_vcs_folder(), ".git", "config")
+        vcs_folder  = project.get_vcs_folder()
+        config_path = os.path.join(vcs_folder, ".git", "config")
 
         # XXX gross
         for line in open(config_path):
@@ -140,9 +141,59 @@ class GITVCSBackend(ExecVCSBackend):
             if line and line.startswith("url ="):
                 pieces = line.split()
                 return pieces[2]
-
             pass
 
         return
+
+
+    def reset(self, project):
+        """
+
+        perform a git reset --hard, to get out of a self-induced conflict
+        """
+
+        # project.log("updating %s" % ( self.path, ))
+        
+        vcs_folder    = project.get_vcs_folder()
+
+        showedProject = False
+        
+        if self.verbose:
+            project.log("GITVCSBackend.reset(): %s" % ( project.path, ))
+            project.log("  cd %s" % vcs_folder)
+            showedProject = True
+            pass
+
+        self.push_folder(vcs_folder)
+
+        child_stdout  = io.BytesIO()
+        child_stderr  = self.STDOUT
+
+        command       = '%s reset --hard' % self._type
+
+        result  = self._run(command, 
+                            stdout = child_stdout,
+                            stderr = child_stderr)
+
+        if result != 0:
+            project.log("  XXX reset result: %s" % result)
+            project.log()
+            pass
+
+        child_out = self._getChildOutput(child_stdout)
+
+        if child_out:
+            if not showedProject:
+                self._reportUpdatingProject(project)
+                pass
+            project.log()
+            project.log(child_out)
+            project.log()
+            project.log()
+            pass
+
+        self.pop_folder()
+
+        return result
 
     pass

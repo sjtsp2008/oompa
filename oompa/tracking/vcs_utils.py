@@ -17,9 +17,9 @@ from oompa.tracking import file_utils
 
 #
 # local clues - if these folders exist in a folder,
-# it is a certain flavorr of vcs
+# it is a certain flavor of vcs
 #
-# XXX use the backends to discover "their" types, or get from config
+# XXX use the backend classes to discover "their" types, or get from config
 # 
 # _vcs_types  = [ 'hg', 'bzr', 'svn', 'git', 'cvs' ]
 
@@ -57,6 +57,8 @@ def determine_vcs_type(project_path = None,
     if project_path is None:
         project_path = project.path
         pass
+
+    # print("vcs_utils.determine_vcs_type(): %s" % project_path)
     
     for vcs_type_info in _vcs_clues:
         
@@ -67,18 +69,34 @@ def determine_vcs_type(project_path = None,
             vcs_support_folder           = None
             pass
         
-        # print '  %r  %r' % ( vcs_type, vcs_support_folder )
+        # print('  %r  %r' % ( vcs_type, vcs_support_folder ))
         
         if os.path.exists(os.path.join(project_path, vcs_type)):
+            # print("    yep 1")
             return vcs_type
         
         if vcs_support_folder and os.path.exists(os.path.join(project_path, 
                                                               vcs_support_folder)):
+            # print("    yep 2")
             return vcs_type
         
         pass
     
     return None
+
+
+
+def normalize_source_spec(source_spec):
+    
+    # XXX kind of a hack, for shorthand
+    if source_spec.startswith("github:") or source_spec.startswith("gh:"):
+        hint, repo_spec = source_spec.split(":")
+        source_spec = "https://github.com/%s.git" % ( repo_spec, )
+        
+    return source_spec
+    
+
+
 
 
 # prioritized - first match wins
@@ -137,7 +155,7 @@ def find_vcs_folder(project_path = None,
                     project      = None):
     """
     
-    in general, assumes a convention: path/{svn,hg,bzr,...}/<checkout>
+    in general, assumes a convention: path/{git,hg,bzr,svn,...}/<checkout>
     
     note that if multiple types of checkout exist, we will pick
     the first

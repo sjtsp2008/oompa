@@ -1,4 +1,4 @@
-#! /usr/bin/env python
+#! /usr/bin/env python3
 #
 # tracker
 #
@@ -109,16 +109,22 @@ def cli():
 
 
 
+# TODO: in help, report the actual default in SourceTracker
+
 @cli.command(help = "update some or all tracked projects")
 @click.option("--stdout",  is_flag = True)
 @click.option("--verbose", is_flag = True)
+@click.option("--sample", nargs = 1, help = "random sampling percentage, as int.  default to 20 (percent)")
 @click.argument('projects', nargs = -1)
 
-def update(projects, stdout = False, verbose = False):
+def update(projects, stdout = False, verbose = False, sample = None):
 
     setup_logging(stdout = stdout)
 
-    result = tracker.update(*projects, verbose = verbose)
+    tracker.setSampleProb(sample)
+    
+    result = tracker.update(*projects,
+                            verbose = verbose)
     
     return result
 
@@ -167,7 +173,7 @@ def checkout(project_urls):
     
     print("   TRACKING: %r" % project_folder)
 
-    link_path      = tracker.track(project_folder)
+    link_path = tracker.track(project_folder)
 
     print("   tracker link path: %s" % link_path)
 
@@ -175,7 +181,6 @@ def checkout(project_urls):
 
 # "co" is alias for checkout
 cli.add_command(checkout, "co")
-
 
 
 
@@ -226,6 +231,30 @@ def untrack(folders, keep_src = False):
     return
 
 
+@cli.command(help = "reset git after a stupid self-stomping.  just a git reset --hard")
+@click.option("--verbose", is_flag = True)
+@click.argument('folders', nargs = -1)
+
+def reset(folders, verbose = False):
+    """
+    """
+
+    # XXX i think i can do this in click specs, somehow
+    if not folders:
+        print("you must specify at least one project to untrack")
+        return
+
+    for folder in folders:
+        result = tracker.reset_git(folder, verbose = verbose)
+        pass
+
+    return
+
+cli.add_command(reset, "reset-git")
+
+
+
+
 @cli.command(help = "dump all the source urls in a format that can be used to set up tracking on another system")
 @click.argument('patterns', nargs = -1)
 
@@ -241,11 +270,15 @@ def urls(patterns):
 #  - support override depth
 #
 @cli.command(help = "search for specified strings in tracked project folder names")
+@click.option('--depth', nargs = 1)
 @click.argument('patterns', nargs = -1)
 
-def find(patterns):
+def find(patterns, depth = None):
 
-    for project in tracker.findProjects(*patterns):
+    if depth is not None:
+        depth = int(depth)
+
+    for project in tracker.findProjects(*patterns, depth = depth):
 
         # report the actual src folder, not the tracking folder
         # XXX i'm not sure who should do this
@@ -368,16 +401,26 @@ def discover(args, verbose = False, format = None, log_http = False, no_etag = F
     githubTracker = GitHubTracker(config)
 
     if no_etag:
-        githubTracker.use_etag = False
+        tracker.use_etag = False
         pass
+
+    # 
+    # print("discover - starting pure _discoverUpdates")
+    # tracker.printRatePointsLeft("rate points before pure discover")
+    # result        = tracker._discoverUpdates(*args)
+    # print("  done pure _discoverUpdates")
+        
     
     githubTracker.printRatePointsLeft("rate points before")
-    result        = githubTracker.discover(*args,
-                                           format  = format,
-                                           verbose = verbose)
+    result = githubTracker.discover(*args,
+                                    format  = format,
+                                    verbose = verbose)
     githubTracker.printRatePointsLeft("rate points after")
 
+    githubTracker.close()
+    
     return
+
 
 
 @cli.command(help = "remove an entity from set of tracked entities")
@@ -385,9 +428,13 @@ def discover(args, verbose = False, format = None, log_http = False, no_etag = F
 
 def undiscover(entities):
     
-    githubTracker = GitHubTracker(config)
+    tracker = GitHubTracker(config)
 
-    return githubTracker.removeEntities(*entities)
+    result = tracker.removeEntities(*entities)
+
+    tracker.close()
+    
+    return result
     
 
 
@@ -396,17 +443,14 @@ def undiscover(entities):
 
 def discovering(args):
     """
-    XXX bad command name - implies that this is related to co/track, versus discover/track
-
-    TODO: maybe just use --list in discover()?
 
     TODO: able to filter by pattern
     TODO: able to sort by alph (default) or date-added
     """
     
-    githubTracker = GitHubTracker(config)
+    tracker = GitHubTracker(config)
 
-    for entityMetaName in githubTracker.listTracking(args):
+    for entityMetaName in tracker.listTracking(args):
         print("%s" % entityMetaName)
         pass
 
@@ -418,13 +462,40 @@ def discovering(args):
 # ####
 
 
+
+@cli.command(help = "report discovered updates")
+@click.option("--format", nargs =  1, default = "html")
+@click.argument('args',   nargs = -1)
+# TODO: add date-range options
+
+def report(args, format = None):
+
+    tracker = GitHubTracker(config)
+
+    # TODO: get report generator from factory
+    if format != "html":
+        xxx
+
+    # XXX still baking - pass in real dates
+    start_date = "20160417"
+    end_date   = start_date
+        
+    tracker.reportUpdateHTML(*args,
+                             start_date = start_date,
+                             end_date   = end_date)
+    tracker.close()
+    return
+
+
+
+
 @cli.command(help = "temp command to migrate to new storage scheme")
 
 def updateEntityStore():
 
-    githubTracker = GitHubTracker(config)
+    tracker = GitHubTracker(config)
 
-    githubTracker._metadataStore.updateStorageScheme()
+    tracker._metadataStore.updateStorageScheme()
     
     return
     
@@ -513,10 +584,10 @@ elif command == "nash-stats":
     #
     #   Project	Forks	Stars	Watchers	GitHub Months Old	Stars Per Month
 
-    githubTracker = GitHubTracker(config)
-    helper        = githubTracker.githubHelper
+    tracker = GitHubTracker(config)
+    helper        = tracker.githubHelper
     
-    print("rate points before: %s" % githubTracker.checkRatePointsLeft())    
+    print("rate points before: %s" % tracker.checkRatePointsLeft())    
 
     for kind, name, obj in helper.getKindNameAndObject(args):
 
@@ -535,7 +606,7 @@ elif command == "nash-stats":
         
         pass
     
-    print("rate points after:  %s" % githubTracker.checkRatePointsLeft())
+    print("rate points after:  %s" % tracker.checkRatePointsLeft())
     
 else:
     raise Exception("no-such-command", command)

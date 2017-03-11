@@ -39,7 +39,9 @@ def extractBlurb(content):
     # XXX if it's still bytes, then it was not utf8, and we won't be able to split it
     if isinstance(content, bytes):
         return content
-    
+
+    # TODO: maybe replace "\r\n" with "\n"?
+    content        = content.replace("\r", "\n")
     paragraphs     = content.split("\n\n")
     numParagraphs  = len(paragraphs)
     firstParagraph = paragraphs[0]
@@ -163,21 +165,17 @@ class GitHub3Helper:
 
         if os.path.exists(token_path):
             token = open(token_path).read().strip()
-
         else:
             # TODO: crash if passphrase does not exist
             gitpass = open(os.path.join(config_base, "%s.git.passphrase" % username)).read().strip()
 
-        self.github  = github3.login(username, password = gitpass, token = token)
+        self.github   = github3.login(username, password = gitpass, token = token)
 
-        # dump session headers, to check if auth token is really being used
-        # print("GH: %s" % self.github.session.headers)
+        oompa_base    = os.path.join(config_base, "oompa")
+        etags_path    = os.path.join(oompa_base, "github_meta_cache", "etags.json")
+        self._etags   = EtagCache(etags_path)
 
-        # XXX needs to go in a work folder
-        etags_path   = os.path.join(config_base, "oompa", "github_meta_cache", "etags.json")
-        self.etags   = EtagCache(etags_path)
-
-        # TODO: lazy.  some clients may not need meta at all
+        # TODO: be lazy.  some clients/commands may not need meta at all
         self._metadataStore = GitHubMetadataStore.getGitHubMetadataStore(config, self)
 
         return
@@ -313,7 +311,7 @@ class GitHub3Helper:
         etag = None
         
         if use_etag:
-            etag = self.etags.get(thing, "repositories")
+            etag = self._etags.get(thing, "repositories")
             pass
         
         # repos is a GitHubIterator
@@ -335,7 +333,7 @@ class GitHub3Helper:
             pass
 
         if use_etag:
-            self.etags.set(thing, "repositories", repos.etag)
+            self._etags.set(thing, "repositories", repos.etag)
             pass
         
         return _repos
@@ -358,7 +356,7 @@ class GitHub3Helper:
         etag   = None
         
         if use_etag:
-            etag = self.etags.get(githubObj, methodName)
+            etag = self._etags.get(githubObj, methodName)
             pass
 
         # TODO: logging
@@ -382,7 +380,7 @@ class GitHub3Helper:
         # print("    GitHub3Helper.list(): %s - iter etag, last_response, last_status: %s, %s, %s" % ( methodName, iterator.etag, iterator.last_response, iterator.last_status))
         
         if use_etag:
-            self.etags.set(githubObj, methodName, iterator.etag)
+            self._etags.set(githubObj, methodName, iterator.etag)
             pass
         
         if iterator.last_status == 304:
@@ -448,7 +446,7 @@ class GitHub3Helper:
     
                 
     def printRepos(self,
-                   thing = None,
+                   thing          = None,
                    repos          = None,
                    include_readme = True,
                    out_stream     = None,
@@ -467,7 +465,7 @@ class GitHub3Helper:
             repos = self.getRepos(thing, sort = "time")
             pass
 
-        # experiment with avoiding rate limit crashes
+        # experiment with avoiding rate limit crashes on more-info-drill-in
         stall = None
         # stall = 1.0
         # stall = 0.1
@@ -504,6 +502,12 @@ class GitHub3Helper:
             
             if repo.parent is not None:
 
+                # XXX 201612 - Empty started showing up as parent.  temp hack - find the real problem
+                # XXX 20170208 - and then githbu3.empty disappears
+                # if repo.parent is github3.empty.Empty:
+                #    # out_stream.write("      forked: ??? EMPTY")
+                #    pass
+                # else:
                 out_stream.write("      forked: %s\n" % format_link(repo.parent))
 
                 if repo.source != repo.parent:
@@ -587,13 +591,22 @@ class GitHub3Helper:
         """
 
         """
-        
         return self._metadataStore.getEntityMetadatas(*names, mustExist = mustExist)
 
 
     def removeEntities(self, entitySpecs):
 
         return self._metadataStore.removeEntities(entitySpecs)
-        
+
+    
+    def close(self):
+
+        self._etags.close()
+
+        if self._metadataStore is not None:
+            self._metadataStore.close()
+            
+        return
+    
     pass
     

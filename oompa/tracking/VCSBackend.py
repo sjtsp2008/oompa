@@ -148,9 +148,7 @@ class VCSBackend:
         raise NotImplementedError
 
     def update(self, project):
-        """
-
-        perform whatever steps are necessary to update the project,
+        """perform whatever steps are necessary to update the project,
         synching it with a remote repository
 
         """
@@ -158,6 +156,15 @@ class VCSBackend:
         raise NotImplementedError
 
 
+    def reset(self, project):
+        """perform whatever steps are necessary to reset a project,
+        after it gets itself confused (mostly git, i think)
+
+        """
+
+        raise NotImplementedError
+
+    
     def _reportUpdatingProject(self, project):
         """
         project is a tracking.Project
